@@ -11,17 +11,17 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ichernukha.realtimechat"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.ichernukha.realtimechat"
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -31,6 +31,7 @@
         "projectId": "456cdcbb-71d1-4cd1-8869-ba71032f52e7"
       }
     },
+    "owner": "ichernukha",
     "runtimeVersion": {
       "policy": "appVersion"
     },
