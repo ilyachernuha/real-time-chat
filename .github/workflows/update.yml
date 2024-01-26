@@ -5,6 +5,8 @@ on:
       - dev
     paths:
       - 'app/**'
+  workflow_dispatch:
+    
 jobs:
   update:
     name: Publish EAS Update
