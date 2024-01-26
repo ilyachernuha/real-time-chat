@@ -7,14 +7,14 @@ jobs:
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
 
+      - name: Change to app directory
+        run: cd app
+
       - name: 🏗 Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
           cache: npm
-
-      - name: Change to Expo project directory
-        run: cd app
 
       - name: 🏗 Setup EAS
         uses: expo/expo-github-action@v8
