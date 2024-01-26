@@ -7,14 +7,18 @@ jobs:
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
 
-      - name: Change to app directory
-        run: cd app
-
       - name: 🏗 Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
-          cache: npm
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v2
+        with:
+          path: app
+          key: ${{ runner.os }}-node-${{ hashFiles('app/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: 🏗 Setup EAS
         uses: expo/expo-github-action@v8
