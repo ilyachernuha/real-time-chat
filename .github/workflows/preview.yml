@@ -3,6 +3,9 @@ jobs:
   preview:
     name: EAS Preview
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app
     steps:
       - name: Check for EXPO_TOKEN
         run: |
@@ -28,7 +31,6 @@ jobs:
           token: ${{ secrets.EXPO_TOKEN }}
 
       - name: 📦 Install dependencies
-        working-directory: ./app
         run: npm install
 
       - name: 🚀 Create preview
