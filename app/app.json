@@ -14,29 +14,29 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.ichernukha.realtimechat"
+      "bundleIdentifier": "com.teamchallenge.realtimechat"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.ichernukha.realtimechat"
+      "package": "com.teamchallenge.realtimechat"
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
       "eas": {
-        "projectId": "456cdcbb-71d1-4cd1-8869-ba71032f52e7"
+        "projectId": "910b9de6-fbeb-4b9e-ac67-06caf97a19bb"
       }
     },
-    "owner": "ichernukha",
+    "owner": "team-challenge",
     "runtimeVersion": {
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/456cdcbb-71d1-4cd1-8869-ba71032f52e7"
+      "url": "https://u.expo.dev/910b9de6-fbeb-4b9e-ac67-06caf97a19bb"
     }
   }
 }
