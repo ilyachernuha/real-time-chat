@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.teamchallenge.realtimechat"
@@ -28,7 +30,7 @@
     },
     "extra": {
       "eas": {
-        "projectId": "910b9de6-fbeb-4b9e-ac67-06caf97a19bb"
+        "projectId": "d06a97c0-7847-41ec-8068-0df714fd7f3e"
       }
     },
     "owner": "team-challenge",
@@ -36,7 +38,7 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/910b9de6-fbeb-4b9e-ac67-06caf97a19bb"
+      "url": "https://u.expo.dev/d06a97c0-7847-41ec-8068-0df714fd7f3e"
     }
   }
 }
