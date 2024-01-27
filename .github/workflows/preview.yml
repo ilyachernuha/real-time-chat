@@ -33,6 +33,8 @@ jobs:
           eas-version: latest
           packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
+          expo-cache: false
+          eas-cache: false
 
       - name: 📦 Install dependencies
         run: npm install

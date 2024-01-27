@@ -4,15 +4,14 @@ on:
     branches:
       - dev
     paths:
-      - 'app/**'
+      - "app/**"
   workflow_dispatch:
-    
+
 jobs:
   update:
     name: Publish EAS Update
     runs-on: ubuntu-latest
     steps:
-
       - name: 🏗 Setup repo
         uses: actions/checkout@v3
 
@@ -35,6 +34,8 @@ jobs:
           eas-version: latest
           packager: npm
           token: ${{ secrets.EXPO_TOKEN }}
+          expo-cache: false
+          eas-cache: false
 
       - name: 📦 Install dependencies
         run: npm install
