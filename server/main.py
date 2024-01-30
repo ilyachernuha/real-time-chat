@@ -113,7 +113,7 @@ async def disconnect(sid):
 
 @sio.event
 async def message(sid, data):
-    with db_session as db:
+    with db_session() as db:
         try:
             validated_data = schemas.Message(**data)
             user_id = sid_user_data[sid]
@@ -133,7 +133,7 @@ async def message(sid, data):
 
 @sio.event
 async def start_typing(sid, data):
-    with db_session as db:
+    with db_session() as db:
         try:
             room = schemas.Typing(**data).room
             user_id = sid_user_data[sid]
@@ -151,7 +151,7 @@ async def start_typing(sid, data):
 
 @sio.event
 async def stop_typing(sid, data):
-    with db_session as db:
+    with db_session() as db:
         try:
             room = schemas.Typing(**data).room
             user_id = sid_user_data[sid]
