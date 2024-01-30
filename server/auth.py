@@ -49,7 +49,7 @@ def validate_name(name: str):
 
 def validate_login(login: str):
     if not (2 <= len(login) <= 24):
-        raise HTTPException(status_code=400, detail="Login must be 2 to 16 characters long")
+        raise HTTPException(status_code=400, detail="Login must be 2 to 24 characters long")
 
     if not re.match(r"^[a-zA-Z0-9]+$", login):
         raise HTTPException(status_code=400, detail="Login can have only English letters and numbers")
