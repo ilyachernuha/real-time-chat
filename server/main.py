@@ -74,7 +74,7 @@ async def login(credentials: HTTPBasicCredentials = Depends(security), db: Sessi
 
 
 @app.post("/guest_login")
-async def create_user(body: schemas.GuestLogin, db: Session = Depends(get_db)):
+async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
     validate_name(body.name)
     try:
         user_id_str = str(crud.create_guest_user(db, body.name))
