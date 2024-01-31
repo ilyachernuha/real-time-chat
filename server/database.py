@@ -1,6 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.exc import OperationalError
 import os
+import sys
 from dotenv import load_dotenv
 from contextlib import contextmanager
 import db_models
@@ -14,7 +16,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    db_models.Base.metadata.create_all(bind=engine)
+    try:
+        db_models.Base.metadata.create_all(bind=engine)
+    except OperationalError:
+        sys.exit("Could not connect to the database\nAbort")
 
 
 def get_db():
