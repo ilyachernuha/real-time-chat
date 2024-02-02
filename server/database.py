@@ -2,7 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import OperationalError
 import os
-import sys
 from dotenv import load_dotenv
 from contextlib import contextmanager
 import db_models
@@ -19,7 +18,7 @@ def init_db():
     try:
         db_models.Base.metadata.create_all(bind=engine)
     except OperationalError:
-        sys.exit("Could not connect to the database\nAbort")
+        print("Error: Could not connect to the database")
 
 
 def get_db():
