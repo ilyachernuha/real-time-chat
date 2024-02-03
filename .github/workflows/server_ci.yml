@@ -2,12 +2,13 @@ name: Deploy to Dev Server
 
 on:
   workflow_dispatch:
-    
+
   push:
     branches:
       - dev
     paths:
       - "server/**"
+      - ".github/workflows/server_ci.yml"
 
 jobs:
   deploy:
