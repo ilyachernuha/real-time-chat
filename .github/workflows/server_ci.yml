@@ -33,4 +33,4 @@ jobs:
         run: rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server ubuntu@$SERVER_HOST:/home/ubuntu/real-time-chat
 
       - name: Run Deploy Script
-        run: ssh -v -i ~/.ssh/id_rsa ubuntu@$SERVER_HOST "/home/ubuntu/real-time-chat/deploy.sh"
+        run: ssh -i ~/.ssh/id_rsa ubuntu@$SERVER_HOST "/home/ubuntu/real-time-chat/deploy.sh"
