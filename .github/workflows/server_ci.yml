@@ -28,7 +28,7 @@ jobs:
           ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
 
       - name: Rsync Deployment
-        run: rsync -avz ./server $SERVER_IP:/home/ubuntu/real-time-chat
+        run: rsync -avz ./server ubuntu@$SERVER_IP:/home/ubuntu/real-time-chat
 
       - name: Run Deploy Script
-        run: ssh -i ~/.ssh/id_rsa $SERVER_IP "/home/ubuntu/real-time-chat/deploy.sh"
+        run: ssh -i ~/.ssh/id_rsa ubuntu@$SERVER_IP "/home/ubuntu/real-time-chat/deploy.sh"
