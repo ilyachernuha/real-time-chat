@@ -1,12 +1,13 @@
 name: Deploy to Dev Server
 
 on:
+  workflow_dispatch:
+    
   push:
     branches:
       - dev
     paths:
       - "server/**"
-  workflow_dispatch:
 
 jobs:
   deploy:
