@@ -39,15 +39,17 @@
       "url": "https://u.expo.dev/d06a97c0-7847-41ec-8068-0df714fd7f3e"
     },
     "plugins": [
-      "expo-font",
-      {
-        "fonts": [
-          "./assets/fonts/e-Ukraine-Regular.otf",
-          "./assets/fonts/e-UkraineHead-Bold.otf",
-          "./assets/fonts/e-UkraineHead-Light.otf",
-          "./assets/fonts/e-UkraineHead-Regular.otf"
-        ]
-      }
+      [
+        "expo-font",
+        {
+          "fonts": [
+            "./assets/fonts/e-Ukraine-Regular.otf",
+            "./assets/fonts/e-UkraineHead-Bold.otf",
+            "./assets/fonts/e-UkraineHead-Light.otf",
+            "./assets/fonts/e-UkraineHead-Regular.otf"
+          ]
+        }
+      ]
     ]
   }
 }
