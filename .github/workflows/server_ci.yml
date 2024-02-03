@@ -15,7 +15,7 @@ jobs:
     name: Deploy to Dev Server
     runs-on: ubuntu-latest
     env:
-      SERVER_IP: ${{ secrets.SERVER_IP }}
+      SERVER_HOST: ${{ secrets.SERVER_HOST }}
       SERVER_KEY: ${{ secrets.SERVER_KEY }}
 
     steps:
@@ -27,10 +27,10 @@ jobs:
           mkdir -p ~/.ssh
           echo $SERVER_KEY > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+          ssh-keyscan -H $SERVER_HOST >> ~/.ssh/known_hosts
 
-      # - name: Rsync Deployment
-      #   run: rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server ubuntu@$SERVER_IP:/home/ubuntu/real-time-chat
+      - name: Rsync Deployment
+        run: rsync -avz -e "ssh -i ~/.ssh/id_rsa" ./server ubuntu@$SERVER_HOST:/home/ubuntu/real-time-chat
 
       - name: Run Deploy Script
-        run: ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@$SERVER_IP "/home/ubuntu/real-time-chat/deploy.sh"
+        run: ssh -i ~/.ssh/id_rsa ubuntu@$SERVER_HOST "/home/ubuntu/real-time-chat/deploy.sh"
