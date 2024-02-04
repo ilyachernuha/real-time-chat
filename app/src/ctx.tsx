@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { setCurrentUser } from "./store/chatSlice";
 
 const AuthContext = createContext<{
-  signIn: (username: string) => void;
+  signIn: (username: string) => null | Promise<boolean>;
   signOut: () => void;
   session?: string | null;
   isLoading: boolean;
@@ -29,15 +29,20 @@ export function useSession() {
 
 export function SessionProvider(props: React.PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState("session");
-  const dispatch = useDispatch();
 
   return (
     <AuthContext.Provider
       value={{
         signIn: async (username: string) => {
-          const user = await authService.login(username);
-          setSession(user.token);
-          dispatch(setCurrentUser(user));
+          let success = false;
+          try {
+            const user = await authService.login(username);
+            setSession(user.token);
+            success = true;
+          } catch (error) {
+            success = false;
+          }
+          return success;
         },
         signOut: () => {
           setSession(null);

@@ -31,7 +31,12 @@ export default function Layout() {
     <Provider store={store}>
       <SessionProvider>
         <SafeAreaProvider>
-          <Slot />
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              animation: "none",
+            }}
+          />
           <StatusBar style="light" />
         </SafeAreaProvider>
       </SessionProvider>

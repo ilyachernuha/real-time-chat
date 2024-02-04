@@ -25,18 +25,23 @@ const InputField: React.FC<InputFieldProps> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        { borderColor: value ? colors.main.blue : colors.secondary.light_grey },
+      ]}
+    >
       <TextInput
-        style={[styles.input, fonts.regular_14, style]}
+        style={[styles.input, fonts.regular_14]}
         placeholder={placeholder}
         value={value}
         onChangeText={onChangeText}
         placeholderTextColor={colors.secondary.light_grey}
-        secureTextEntry={!showPassword}
+        secureTextEntry={isPassword && !showPassword}
       />
       {isPassword && (
         <MaterialCommunityIcons
-          name={showPassword ? "eye-off" : "eye"}
+          name={showPassword ? "eye" : "eye-off"}
           size={24}
           color={colors.secondary.light_grey}
           style={styles.icon}
@@ -52,7 +57,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    borderColor: colors.secondary.light_grey,
     borderWidth: 1,
     borderRadius: 12,
     height: 44,
