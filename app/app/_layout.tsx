@@ -1,10 +1,10 @@
 import { useFonts } from "expo-font";
-import { SplashScreen, Slot, Stack } from "expo-router";
+import { SplashScreen, Stack } from "expo-router";
 import { useEffect } from "react";
 import store from "../src/store/store";
 import { Provider } from "react-redux";
 import { SessionProvider } from "../src/ctx";
-import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 
 SplashScreen.preventAutoHideAsync();

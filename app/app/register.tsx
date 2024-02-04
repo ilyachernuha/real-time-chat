@@ -1,7 +1,4 @@
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import authService from "../src/services/authService";
-import { setCurrentUser } from "../src/store/chatSlice";
 import {
   View,
   Text,
@@ -24,7 +21,6 @@ const Register = () => {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [passwordConfirm, setPasswordConfirm] = useState<string>("");
-  const dispatch = useDispatch();
 
   const insets = useSafeAreaInsets();
 

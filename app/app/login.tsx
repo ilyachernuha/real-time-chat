@@ -11,13 +11,9 @@ import Heading from "../src/components/UI/Heading";
 import InputField from "../src/components/UI/InputField";
 import Button from "../src/components/UI/Button";
 import { colors, fonts } from "../src/config/theme";
-import { Link, Stack, router } from "expo-router";
+import { Link, router } from "expo-router";
 import { useSession } from "../src/ctx";
-import {
-  SafeAreaView,
-  useSafeAreaInsets,
-} from "react-native-safe-area-context";
-import { StatusBar } from "expo-status-bar";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Login = () => {
   const [username, setUsername] = useState<string>("");
