@@ -1,4 +1,4 @@
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Slot, Stack } from "expo-router";
 import { Text } from "react-native";
 import { useSession } from "../../src/ctx";
 
@@ -19,5 +19,5 @@ export default function AppLayout() {
   }
 
   // This layout can be deferred because it's not the root layout.
-  return <Stack />;
+  return <Slot />;
 }

@@ -1,10 +1,16 @@
 import { useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableWithoutFeedback,
+  Keyboard,
+} from "react-native";
 import Logo from "../src/components/Logo";
 import Heading from "../src/components/UI/Heading";
 import InputField from "../src/components/UI/InputField";
 import Button from "../src/components/UI/Button";
-import { colors } from "../src/config/theme";
+import { colors, fonts } from "../src/config/theme";
 import { Link, Stack, router } from "expo-router";
 import { useSession } from "../src/ctx";
 import {
@@ -23,63 +29,75 @@ const Login = () => {
 
   const handleLogin = async () => {
     if (username.trim()) {
-      signIn(username);
+      const success = await signIn(username);
       // Navigate after signing in. You may want to tweak this to ensure sign-in is
       // successful before navigating.
-      router.replace("/");
+      if (success) {
+        router.replace("/");
+      } else {
+        // Handle sign-in failure (e.g., display an error message)
+      }
     }
   };
 
   return (
-    <View style={[styles.container, { paddingTop: 48 + insets.top }]}>
-      <Logo />
-      <View style={{ marginTop: 24, marginBottom: 32 }}>
-        <Heading>Welcome back!</Heading>
-        <Text
-          style={{
-            color: colors.secondary.light_grey,
-            textAlign: "center",
-            paddingVertical: 15,
-          }}
-        >
-          Do not have an account?{" "}
-          <Link
-            href="/register"
-            style={{
-              color: colors.main.blue,
-            }}
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={[styles.container, { paddingTop: 48 + insets.top }]}>
+        <Logo />
+        <View style={{ marginTop: 24, marginBottom: 32 }}>
+          <Heading>Welcome back!</Heading>
+          <Text
+            style={[
+              {
+                color: colors.secondary.light_grey,
+                textAlign: "center",
+                paddingVertical: 15,
+              },
+              fonts.regular_12,
+            ]}
           >
-            Sign Up!
-          </Link>
-        </Text>
-      </View>
-      <View style={{ gap: 48 }}>
-        <View style={{ gap: 24 }}>
-          <InputField
-            placeholder="Enter your username"
-            value={username}
-            onChangeText={setUsername}
-          />
-          <InputField
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={setPassword}
-            isPassword
-          />
+            Do not have an account?{" "}
+            <Link
+              href="/register"
+              style={{
+                color: colors.main.blue,
+              }}
+            >
+              Sign Up!
+            </Link>
+          </Text>
         </View>
-        <Button title="Sign In" onPress={handleLogin} />
+        <View style={{ gap: 48 }}>
+          <View style={{ gap: 24 }}>
+            <InputField
+              placeholder="Enter your username"
+              value={username}
+              onChangeText={setUsername}
+            />
+            <InputField
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={setPassword}
+              isPassword
+            />
+          </View>
+          <Button title="Sign In" onPress={handleLogin} />
+        </View>
+        <Link
+          href="/forgot"
+          style={[
+            {
+              color: colors.main.blue,
+              textAlign: "center",
+              paddingVertical: 15,
+            },
+            fonts.regular_12,
+          ]}
+        >
+          Forgot password?
+        </Link>
       </View>
-      <Link
-        href="/forgot"
-        style={{
-          color: colors.main.blue,
-          textAlign: "center",
-          paddingVertical: 15,
-        }}
-      >
-        Forgot password?
-      </Link>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 
