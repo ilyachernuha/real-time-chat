@@ -1,4 +1,4 @@
-import { Redirect, Slot, Stack } from "expo-router";
+import { Redirect, Slot } from "expo-router";
 import { Text } from "react-native";
 import { useSession } from "../../src/ctx";
 

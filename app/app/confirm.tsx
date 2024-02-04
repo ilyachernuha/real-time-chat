@@ -1,7 +1,3 @@
-import { useState } from "react";
-import { useDispatch } from "react-redux";
-import authService from "../src/services/authService";
-import { setCurrentUser } from "../src/store/chatSlice";
 import {
   View,
   Text,
@@ -13,24 +9,11 @@ import {
 } from "react-native";
 import Logo from "../src/components/Logo";
 import Heading from "../src/components/UI/Heading";
-import InputField from "../src/components/UI/InputField";
-import Button from "../src/components/UI/Button";
 import { colors, fonts } from "../src/config/theme";
-import { Link, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const Confirm = () => {
-  const [email, setEmail] = useState<string>("");
-  const [username, setUsername] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [passwordConfirm, setPasswordConfirm] = useState<string>("");
-  const dispatch = useDispatch();
-
   const insets = useSafeAreaInsets();
-
-  const handleRegister = async () => {
-    router.navigate("/confirm");
-  };
 
   return (
     <KeyboardAvoidingView
@@ -47,9 +30,9 @@ const Confirm = () => {
                 {
                   color: colors.secondary.light_grey,
                   textAlign: "center",
-                  paddingVertical: 15,
+                  paddingVertical: 16,
                 },
-                fonts.regular_12,
+                fonts.regular_14,
               ]}
             >
               We have sent you an email! Confirm your email address to continue
