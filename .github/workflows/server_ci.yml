@@ -1,0 +1,34 @@
+name: Deploy to Dev Server
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - "server/**"
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy to Dev Server
+    runs-on: ubuntu-latest
+    env:
+      SERVER_IP: ${{ secrets.SERVER_IP }}
+      SERVER_KEY: ${{ secrets.SERVER_KEY }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo $SERVER_KEY > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+
+      - name: Rsync Deployment
+        run: rsync -avz ./server $SERVER_IP:/home/ubuntu/real-time-chat
+
+      - name: Run Deploy Script
+        run: ssh -i ~/.ssh/id_rsa $SERVER_IP "/home/ubuntu/real-time-chat/deploy.sh"
