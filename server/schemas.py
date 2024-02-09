@@ -1,12 +1,16 @@
 from pydantic import BaseModel, EmailStr
-from typing import Optional
 
 
 class Registration(BaseModel):
-    name: str
-    login: str
+    username: str
+    email: EmailStr
     password: str
-    email: Optional[EmailStr] = None
+    device_info: str = "Unknown"
+
+
+class RegistrationConfirmation(BaseModel):
+    application_id: str
+    confirmation_code: str
 
 
 class GuestLogin(BaseModel):
@@ -24,3 +28,7 @@ class Message(BaseModel):
 
 class Typing(BaseModel):
     room: str
+
+
+class Email(BaseModel):
+    email: EmailStr
