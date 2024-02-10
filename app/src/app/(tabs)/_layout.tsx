@@ -2,12 +2,12 @@ import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, Redirect, Tabs } from "expo-router";
 import { Pressable } from "react-native";
-
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { useSession } from "@/providers/AuthProvider";
-import { RegularText } from "@/components/StyledText";
+import { Bold } from "@/components/StyledText";
+import { SafeAreaView } from "@/components/Themed";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>["name"]; color: string }) {
@@ -20,7 +20,11 @@ export default function TabLayout() {
 
   // You can keep the splash screen open, or render a loading screen like we do here.
   if (isLoading) {
-    return <RegularText>Loading...</RegularText>;
+    return (
+      <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
+        <Bold style={{ textAlign: "center" }}>Loading...</Bold>
+      </SafeAreaView>
+    );
   }
 
   // Only require authentication within the (app) group's layout as users
@@ -38,6 +42,12 @@ export default function TabLayout() {
         // Disable the static render of the header on web
         // to prevent a hydration error in React Navigation v6.
         headerShown: useClientOnlyValue(false, true),
+        headerStyle: {
+          backgroundColor: Colors[colorScheme ?? "light"].secondaryLightGrey,
+        },
+        tabBarStyle: {
+          backgroundColor: Colors[colorScheme ?? "light"].secondaryLightGrey,
+        },
       }}
     >
       <Tabs.Screen

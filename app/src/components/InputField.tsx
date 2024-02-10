@@ -1,6 +1,6 @@
 import React, { ComponentProps, useState } from "react";
 import { TextInput, StyleSheet, TextStyle, View } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
 
@@ -10,9 +10,10 @@ interface InputFieldProps {
   onChangeText: ComponentProps<typeof TextInput>["onChangeText"];
   style?: TextStyle | TextStyle[];
   isPassword?: boolean;
+  isUsername?: boolean;
 }
 
-const InputField: React.FC<InputFieldProps> = ({ placeholder, value, onChangeText, isPassword }) => {
+const InputField: React.FC<InputFieldProps> = ({ placeholder, value, onChangeText, isPassword, isUsername }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const toggleShowPassword = () => {
@@ -20,7 +21,15 @@ const InputField: React.FC<InputFieldProps> = ({ placeholder, value, onChangeTex
   };
 
   return (
-    <View style={[styles.container, { borderColor: value ? Colors.dark.mainBlue : Colors.dark.secondaryLightGrey }]}>
+    <View style={[styles.container, { borderColor: value ? Colors.dark.mainPurple : Colors.dark.secondaryLightGrey }]}>
+      {isUsername && (
+        <MaterialIcons
+          name="alternate-email"
+          size={24}
+          color={Colors.dark.secondaryLightGrey}
+          style={{ paddingRight: 0 }}
+        />
+      )}
       <TextInput
         style={[styles.input, Fonts.regular14]}
         placeholder={placeholder}
@@ -28,6 +37,7 @@ const InputField: React.FC<InputFieldProps> = ({ placeholder, value, onChangeTex
         onChangeText={onChangeText}
         placeholderTextColor={Colors.dark.secondaryLightGrey}
         secureTextEntry={isPassword && !showPassword}
+        autoCapitalize="none"
       />
       {isPassword && (
         <MaterialCommunityIcons
@@ -52,6 +62,7 @@ const styles = StyleSheet.create({
     height: 44,
     paddingHorizontal: 16,
     backgroundColor: Colors.dark.mainDarkGrey,
+    gap: 4,
   },
   input: {
     flex: 1,

@@ -13,14 +13,14 @@ export default function Login() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const { signIn } = useSession();
+  const { session, signIn } = useSession();
 
   const handleLogin = async () => {
     if (username.trim()) {
-      const success = await signIn(username);
+      const token = await signIn(username, password);
       // Navigate after signing in. You may want to tweak this to ensure sign-in is
       // successful before navigating.
-      if (success) {
+      if (token) {
         router.replace("/");
       } else {
         // Handle sign-in failure (e.g., display an error message)
@@ -39,21 +39,21 @@ export default function Login() {
           lightColor={Colors.dark.secondaryLightGrey}
         >
           Do not have an account?{" "}
-          <Link href="/register" style={{ color: Colors.dark.mainBlue }}>
+          <Link href="/register" style={{ color: Colors.dark.mainPurple }}>
             Sign Up!
           </Link>
         </Regular12>
       </View>
       <View style={{ gap: 48 }}>
         <View style={{ gap: 24 }}>
-          <InputField placeholder="Enter your username" value={username} onChangeText={setUsername} />
+          <InputField placeholder="Enter your username" value={username} onChangeText={setUsername} isUsername />
           <InputField placeholder="Enter your password" value={password} onChangeText={setPassword} isPassword />
         </View>
         <Button title="Sign In" onPress={handleLogin} />
       </View>
       <Link
         href="/forgot"
-        style={[{ color: Colors.dark.mainBlue, textAlign: "center", paddingVertical: 15 }, Fonts.regular12]}
+        style={[{ color: Colors.dark.mainPurple, textAlign: "center", paddingVertical: 15 }, Fonts.regular12]}
       >
         Forgot password?
       </Link>
