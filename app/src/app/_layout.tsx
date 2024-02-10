@@ -65,6 +65,7 @@ function RootLayoutNav() {
           statusBarColor: backgroundColor,
           navigationBarColor: backgroundColor,
           contentStyle: { backgroundColor },
+          animation: "fade",
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />

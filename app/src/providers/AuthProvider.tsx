@@ -8,6 +8,7 @@ const AuthContext = createContext<{
   signOut: () => void;
   signUp: (username: string, email: string, password: string) => Promise<string | void>;
   confirm: (confirmationCode: string) => Promise<string | void>;
+  guestLogin: (username: string) => Promise<string | void>;
   session?: string | null;
   isLoading: boolean;
   applicationId: string | null;
@@ -16,6 +17,7 @@ const AuthContext = createContext<{
   signOut: () => null,
   signUp: async () => {},
   confirm: async () => {},
+  guestLogin: async () => {},
   session: null,
   isLoading: false,
   applicationId: null,
@@ -61,6 +63,11 @@ export function AuthProvider(props: React.PropsWithChildren) {
             setSession(token);
             return token;
           }
+        },
+        guestLogin: async (username) => {
+          const { token } = await authService.guestLogin(username);
+          setSession(token);
+          return token;
         },
         session,
         isLoading,
