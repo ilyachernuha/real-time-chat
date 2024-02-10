@@ -6,15 +6,27 @@ import { SafeAreaView, View } from "@/components/Themed";
 import Logo from "@/components/Logo";
 import InputField from "@/components/InputField";
 import Button from "@/components/Button";
+import { useSession } from "@/providers/AuthProvider";
 
 export default function Register() {
+  const { signUp, applicationId } = useSession();
+
   const [email, setEmail] = useState<string>("");
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [passwordConfirm, setPasswordConfirm] = useState<string>("");
 
-  const handleRegister = async () => {
-    router.navigate("/confirm");
+  const onRegister = async () => {
+    if (username.trim()) {
+      const applicationId = await signUp(username, email, password);
+      // Navigate after signing in. You may want to tweak this to ensure sign-in is
+      // successful before navigating.
+      if (applicationId) {
+        router.navigate("/confirm");
+      } else {
+        // Handle sign-in failure (e.g., display an error message)
+      }
+    }
   };
 
   return (
@@ -33,7 +45,7 @@ export default function Register() {
           lightColor={Colors.dark.secondaryLightGrey}
         >
           I have an account!{" "}
-          <Link href="/login" style={{ color: Colors.dark.mainBlue }}>
+          <Link href="/login" style={{ color: Colors.dark.mainPurple }}>
             Sign In!
           </Link>
         </Regular12>
@@ -50,7 +62,7 @@ export default function Register() {
             isPassword
           />
         </View>
-        <Button title="Create an account" onPress={handleRegister} />
+        <Button title="Create an account" onPress={onRegister} />
       </View>
     </SafeAreaView>
   );

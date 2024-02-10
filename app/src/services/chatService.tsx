@@ -1,12 +1,12 @@
 import io, { Socket } from "socket.io-client";
 import { ChatMessage, ChatMessageReceive } from "../types";
-import { apiUrl } from "../constants/constants";
+import API from "@/constants/API";
 
 class ChatService {
   private socket: Socket;
 
   constructor() {
-    this.socket = io(apiUrl, { autoConnect: false });
+    this.socket = io(API.apiURL, { autoConnect: false });
   }
 
   connect(token: string) {
