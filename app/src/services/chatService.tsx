@@ -1,6 +1,6 @@
 import io, { Socket } from "socket.io-client";
 import { ChatMessage, ChatMessageReceive } from "../types";
-import { apiUrl } from "../utils/constants";
+import { apiUrl } from "../constants/constants";
 
 class ChatService {
   private socket: Socket;
