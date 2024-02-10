@@ -5,7 +5,7 @@ import Colors from "@/constants/Colors";
 import { SafeAreaView, View } from "@/components/Themed";
 import Logo from "@/components/Logo";
 import InputField from "@/components/InputField";
-import Button from "@/components/Button";
+import { Button } from "@/components/Buttons";
 import { useSession } from "@/providers/AuthProvider";
 
 export default function Register() {

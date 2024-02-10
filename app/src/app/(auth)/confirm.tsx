@@ -1,4 +1,5 @@
-import Button from "@/components/Button";
+import { Button } from "@/components/Buttons";
+import CodeInput from "@/components/CodeInput";
 import InputField from "@/components/InputField";
 import Logo from "@/components/Logo";
 import { Bold, Regular14 } from "@/components/StyledText";
@@ -13,7 +14,7 @@ export default function Confirm() {
 
   const [confirmationCode, setConfirmationCode] = useState("");
 
-  const onConfirm = async () => {
+  const onConfirm = async (confirmationCode: string) => {
     if (confirmationCode.trim()) {
       const token = await confirm(confirmationCode);
       // Navigate after signing in. You may want to tweak this to ensure sign-in is
@@ -38,9 +39,8 @@ export default function Confirm() {
         >
           We have sent you an email! Enter the confirmation code to continue registration!
         </Regular14>
-        <InputField onChangeText={setConfirmationCode} placeholder="Confirmation Code" value={confirmationCode} />
+        <CodeInput onComplete={onConfirm} />
       </View>
-      <Button title="Confirm" onPress={onConfirm} />
     </SafeAreaView>
   );
 }

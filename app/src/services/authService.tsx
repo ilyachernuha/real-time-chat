@@ -44,13 +44,13 @@ class AuthService {
     return { id: user_id, token, name: "Name" };
   }
 
-  async guestLogin(username: string): Promise<CurrentUser> {
+  async guestLogin(name: string): Promise<CurrentUser> {
     const {
       data: { user_id, token },
     } = await axios.post(`${API.apiURL}/guest_login`, {
-      username,
+      name,
     });
-    return { id: user_id, token: token, name: username };
+    return { id: user_id, token: token, name };
   }
 
   // Add more methods as needed for real authentication
