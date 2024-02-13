@@ -1,29 +1,35 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.responses import HTMLResponse
 import socketio
 from pydantic import ValidationError
+from jinja2 import Environment, FileSystemLoader
 import time
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 import datetime
+import os
+from dotenv import load_dotenv
 import schemas
 from database import init_db, get_db, db_session
 import crud
 import db_models
-from email_utils import send_email_confirmation
+from email_utils import send_email_confirmation, send_reset_password_email
 from auth import (
     generate_token, validate_token, validata_token_in_header, ph, validate_username, validate_password, verify_password,
     validate_name
 )
 
 
+load_dotenv()
 init_db()
 app = FastAPI()
 security = HTTPBasic()
 sio = socketio.AsyncServer(async_mode="asgi")
 sid_user_data = dict()
+template_env = Environment(loader=FileSystemLoader("html_templates"))
 
 
 app.add_middleware(
@@ -122,13 +128,89 @@ async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
 
-@app.post("/change_name")
+@app.put("/change_name")
 async def change_name(body: schemas.UpdateName, user_id: str = Depends(validata_token_in_header),
                       db: Session = Depends(get_db)):
     validate_name(body.new_name)
     try:
         user = crud.update_user_name(db, uuid.UUID(user_id), body.new_name)
         return {"status": "success", "new_name": user.name}
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
+@app.put("/change_password")
+async def change_password(body: schemas.UpdatePassword, db: Session = Depends(get_db)):
+    try:
+        user = crud.get_user_by_id(db, uuid.UUID(body.user_id))
+        if user is None:
+            raise HTTPException(status_code=404, detail="Account with this user id does not exist")
+        if user.is_guest:
+            raise HTTPException(status_code=400, detail="This is a guest user")
+
+        verify_password(user.account_data.hashed_password, body.old_password)
+        validate_password(body.new_password)
+        new_password_hash = ph.hash(body.new_password)
+
+        crud.update_password(db, uuid.UUID(body.user_id), new_password_hash)
+        return {"status": "success"}
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
+@app.post("/reset_password")
+async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_db)):
+    try:
+        user = crud.get_user_by_email(db, body.email)
+        if user is None:
+            raise HTTPException(status_code=404, detail="Account with this email does not exist")
+        if user.is_guest:
+            raise HTTPException(status_code=400, detail="This is a guest user")
+        application = crud.create_reset_password_application(db, user.account_data.user_id)
+        send_reset_password_email(receiver=body.email, application_id=str(application.application_id))
+
+        return {"status": "email sent"}
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
+@app.get("/reset_password_page/{application_id}")
+async def reset_password_page(application_id: str, db: Session = Depends(get_db)):
+    try:
+        application = crud.get_reset_password_application(db, uuid.UUID(application_id))
+        if application is None:
+            raise HTTPException(status_code=404, detail="Application not found")
+        if application.status == db_models.ResetPasswordApplication.Status.used:
+            raise HTTPException(status_code=400, detail="This application is already used")
+        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
+            raise HTTPException(status_code=400, detail="This application is expired")
+
+        url = os.getenv("BASE_URL") + "/finish_reset_password"
+        response = template_env.get_template("reset_password_page.html").render(url=url, application_id=application_id)
+        return HTMLResponse(response)
+
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
+@app.put("/finish_reset_password")
+async def finish_reset_password(body: schemas.FinishResetPassword, db: Session = Depends(get_db)):
+    try:
+        application = crud.get_reset_password_application(db, uuid.UUID(body.application_id))
+        if application is None:
+            raise HTTPException(status_code=404, detail="Application not found")
+        if application.status == db_models.ResetPasswordApplication.Status.used:
+            raise HTTPException(status_code=400, detail="This application is already used")
+        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
+            raise HTTPException(status_code=400, detail="This application is expired")
+
+        validate_password(body.new_password)
+        new_password_hash = ph.hash(body.new_password)
+        crud.update_password(db, application.user_id, new_password_hash)
+        crud.make_reset_password_application_used(db, application.application_id)
+
+        return {"status": "success"}
+
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 

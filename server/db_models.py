@@ -58,4 +58,17 @@ class RegisterApplication(Base):
     timestamp = Column(DateTime, default=datetime.datetime.utcnow())
     confirmation_code = Column(String(4), nullable=False, default=lambda: f"{secrets.randbelow(10000):04d}")
     failed_attempts = Column(Integer, default=0)
-    status = Column(SQLAlchemyEnum(Status), default=Status.pending)
+    status = Column(SQLAlchemyEnum(Status, name="register_application_status"), default=Status.pending)
+
+
+class ResetPasswordApplication(Base):
+    __tablename__ = "reset_password_applications"
+
+    class Status(Enum):
+        pending = 1
+        used = 2
+
+    application_id = Column(UUID, primary_key=True)
+    user_id = Column(UUID, nullable=False)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow())
+    status = Column(SQLAlchemyEnum(Status, name="reset_password_status"), default=Status.pending)

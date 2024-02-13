@@ -48,6 +48,13 @@ def update_user_name(db: Session, user_id: uuid.UUID, new_name: str):
     return user
 
 
+def update_password(db: Session, user_id: uuid.UUID, new_password_hash: str):
+    user = get_user_by_id(db, user_id)
+    user.account_data.hashed_password = new_password_hash
+    db.commit()
+    return user
+
+
 # REGISTER APPLICATIONS
 
 
@@ -99,5 +106,29 @@ def increase_failed_registration_confirmations(db: Session, application_id: uuid
 def make_register_application_failed(db: Session, application_id: uuid.UUID):
     application = get_register_application_by_id(db, application_id)
     application.status = db_models.RegisterApplication.Status.failed
+    db.commit()
+    return application
+
+
+# RESET PASSWORD APPLICATIONS
+
+
+def create_reset_password_application(db: Session, user_id: uuid.UUID):
+    application_id = uuid.uuid4()
+    application = db_models.ResetPasswordApplication(application_id=application_id, user_id=user_id)
+
+    db.add(application)
+    db.commit()
+    return application
+
+
+def get_reset_password_application(db: Session, application_id: uuid.UUID):
+    return db.query(db_models.ResetPasswordApplication).filter(db_models.ResetPasswordApplication.application_id
+                                                               == application_id).first()
+
+
+def make_reset_password_application_used(db: Session, application_id: uuid.UUID):
+    application = get_reset_password_application(db, application_id)
+    application.status = db_models.ResetPasswordApplication.Status.used
     db.commit()
     return application
