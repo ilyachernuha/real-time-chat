@@ -21,6 +21,10 @@ class UpdateName(BaseModel):
     new_name: str
 
 
+class UpdateUsername(BaseModel):
+    new_username: str
+
+
 class UpdatePassword(BaseModel):
     user_id: str
     old_password: str

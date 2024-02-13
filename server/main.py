@@ -139,6 +139,31 @@ async def change_name(body: schemas.UpdateName, user_id: str = Depends(validata_
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
 
+@app.put("/change_username")
+async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security),
+                          db: Session = Depends(get_db)):
+    try:
+        username = credentials.username
+        password = credentials.password
+
+        try:
+            schemas.Email(email=username)
+            user = crud.get_user_by_email(db, username)
+        except ValidationError:
+            user = crud.get_user_by_username(db, username)
+
+        if user is None:
+            raise HTTPException(status_code=400, detail="Account with this login does not exist")
+        verify_password(user.account_data.hashed_password, password)
+
+        validate_username(body.new_username)
+        crud.update_username(db, user.user_id, body.new_username)
+        return {"status": "success", "new_username": user.account_data.username}
+
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
 @app.put("/change_password")
 async def change_password(body: schemas.UpdatePassword, db: Session = Depends(get_db)):
     try:

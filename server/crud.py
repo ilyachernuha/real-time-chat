@@ -48,6 +48,13 @@ def update_user_name(db: Session, user_id: uuid.UUID, new_name: str):
     return user
 
 
+def update_username(db: Session, user_id: uuid.UUID, new_username: str):
+    user = get_user_by_id(db, user_id)
+    user.account_data.username = new_username
+    db.commit()
+    return user
+
+
 def update_password(db: Session, user_id: uuid.UUID, new_password_hash: str):
     user = get_user_by_id(db, user_id)
     user.account_data.hashed_password = new_password_hash
