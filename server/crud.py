@@ -55,6 +55,13 @@ def update_username(db: Session, user_id: uuid.UUID, new_username: str):
     return user
 
 
+def update_email(db: Session, user_id: uuid.UUID, new_email: str):
+    user = get_user_by_id(db, user_id)
+    user.account_data.email = new_email
+    db.commit()
+    return user
+
+
 def update_password(db: Session, user_id: uuid.UUID, new_password_hash: str):
     user = get_user_by_id(db, user_id)
     user.account_data.hashed_password = new_password_hash
@@ -103,7 +110,7 @@ def confirm_register_application_and_invalidate_others_with_same_email(db: Sessi
     return application
 
 
-def increase_failed_registration_confirmations(db: Session, application_id: uuid.UUID):
+def increase_failed_registration_attempts(db: Session, application_id: uuid.UUID):
     application = get_register_application_by_id(db, application_id)
     application.failed_attempts += 1
     db.commit()
@@ -137,5 +144,52 @@ def get_reset_password_application(db: Session, application_id: uuid.UUID):
 def make_reset_password_application_used(db: Session, application_id: uuid.UUID):
     application = get_reset_password_application(db, application_id)
     application.status = db_models.ResetPasswordApplication.Status.used
+    db.commit()
+    return application
+
+
+# CHANGE EMAIL APPLICATIONS
+
+
+def create_change_email_application(db: Session, user_id: uuid.UUID, new_email: str):
+    application_id = uuid.uuid4()
+    old_email = get_user_by_id(db, user_id).account_data.email
+    application = db_models.ChangeEmailApplication(application_id=application_id, user_id=user_id,
+                                                   new_email=new_email, old_email=old_email)
+
+    db.add(application)
+    db.commit()
+    return application
+
+
+def get_change_email_application_by_id(db: Session, application_id: uuid.UUID):
+    return db.query(db_models.ChangeEmailApplication).filter(db_models.ChangeEmailApplication.application_id
+                                                             == application_id).first()
+
+
+def make_change_email_application_confirmed(db: Session, application_id: uuid.UUID):
+    application = get_change_email_application_by_id(db, application_id)
+    application.status = db_models.ChangeEmailApplication.Status.confirmed
+    db.commit()
+    return application
+
+
+def increase_failed_change_email_attempts(db: Session, application_id: uuid.UUID):
+    application = get_change_email_application_by_id(db, application_id)
+    application.failed_attempts += 1
+    db.commit()
+    return application
+
+
+def make_change_email_application_failed(db: Session, application_id: uuid.UUID):
+    application = get_change_email_application_by_id(db, application_id)
+    application.status = db_models.ChangeEmailApplication.Status.failed
+    db.commit()
+    return application
+
+
+def make_change_email_application_reverted(db: Session, application_id: uuid.UUID):
+    application = get_change_email_application_by_id(db, application_id)
+    application.status = db_models.ChangeEmailApplication.Status.reverted
     db.commit()
     return application

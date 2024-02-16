@@ -25,6 +25,15 @@ class UpdateUsername(BaseModel):
     new_username: str
 
 
+class UpdateEmail(BaseModel):
+    new_email: EmailStr
+
+
+class UpdateEmailConfirmation(BaseModel):
+    application_id: str
+    confirmation_code: str
+
+
 class UpdatePassword(BaseModel):
     user_id: str
     old_password: str

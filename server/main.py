@@ -16,7 +16,10 @@ import schemas
 from database import init_db, get_db, db_session
 import crud
 import db_models
-from email_utils import send_email_confirmation, send_reset_password_email
+from email_utils import (
+    send_registration_confirmation, send_reset_password_email, send_change_email_confirmation,
+    send_email_change_rollback
+)
 from auth import (
     generate_token, validate_token, validata_token_in_header, ph, validate_username, validate_password, verify_password,
     validate_name
@@ -59,7 +62,8 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
         application = crud.create_register_application(db=db, username=body.username,
                                                        email=body.email, hashed_password=hashed_password)
         application_id = str(application.application_id)
-        send_email_confirmation(receiver=body.email, code=application.confirmation_code, device_info=body.device_info)
+        send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
+                                       device_info=body.device_info)
         return {"status": "Email confirmation required", "application_id": application_id}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -80,7 +84,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
         if application.status != db_models.RegisterApplication.Status.pending:
             raise HTTPException(status_code=403, detail="This email is already in use")
         if application.confirmation_code != body.confirmation_code:
-            application = crud.increase_failed_registration_confirmations(db, uuid.UUID(body.application_id))
+            application = crud.increase_failed_registration_attempts(db, uuid.UUID(body.application_id))
             if application.failed_attempts >= 3:
                 crud.make_register_application_failed(db, uuid.UUID(body.application_id))
             raise HTTPException(status_code=400, detail="Incorrect confirmation code")
@@ -160,6 +164,78 @@ async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCr
         crud.update_username(db, user.user_id, body.new_username)
         return {"status": "success", "new_username": user.account_data.username}
 
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
+@app.post("/change_email")
+async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security),
+                       db: Session = Depends(get_db)):
+    try:
+        username = credentials.username
+        password = credentials.password
+
+        try:
+            schemas.Email(email=username)
+            user = crud.get_user_by_email(db, username)
+        except ValidationError:
+            user = crud.get_user_by_username(db, username)
+
+        if user is None:
+            raise HTTPException(status_code=400, detail="Account with this login does not exist")
+        verify_password(user.account_data.hashed_password, password)
+
+        application = crud.create_change_email_application(db, user.user_id, body.new_email)
+        send_change_email_confirmation(body.new_email, application.confirmation_code, user.account_data.username)
+        application_id_str = str(application.application_id)
+        return {"status": "Email confirmation required", "application_id": application_id_str}
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
+@app.post("/finish_change_email")
+async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session = Depends(get_db)):
+    try:
+        application = crud.get_change_email_application_by_id(db, uuid.UUID(body.application_id))
+        if application is None:
+            raise HTTPException(status_code=404, detail="Application not found")
+        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
+            raise HTTPException(status_code=403, detail="Application expired")
+        if application.status == db_models.ChangeEmailApplication.Status.failed:
+            raise HTTPException(status_code=400, detail="Too many failed attempts")
+        if application.status != db_models.ChangeEmailApplication.Status.pending:
+            raise HTTPException(status_code=400, detail="Application is already used")
+        if application.confirmation_code != body.confirmation_code:
+            application = crud.increase_failed_change_email_attempts(db, application.application_id)
+            if application.failed_attempts >= 3:
+                crud.make_change_email_application_failed(db, uuid.UUID(body.application_id))
+            raise HTTPException(status_code=400, detail="Incorrect confirmation code")
+
+        user = crud.update_email(db, application.user_id, application.new_email)
+        application = crud.make_change_email_application_confirmed(db, application.application_id)
+        send_email_change_rollback(application.old_email, str(application.application_id), user.account_data.username)
+        return {"status": "Email changed", "new_email": user.account_data.email}
+
+    except SQLAlchemyError:
+        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+
+@app.get("/rollback_email_change/{application_id}")
+async def rollback_email_change(application_id: str, db: Session = Depends(get_db)):
+    try:
+        application = crud.get_change_email_application_by_id(db, uuid.UUID(application_id))
+        if application is None:
+            raise HTTPException(status_code=404, detail="Application not found")
+        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(hours=72):
+            raise HTTPException(status_code=400, detail="Rollback time expired")
+        if application.status == db_models.ChangeEmailApplication.Status.reverted:
+            raise HTTPException(status_code=400, detail="Application already rolled back")
+        if application.status != db_models.ChangeEmailApplication.Status.confirmed:
+            raise HTTPException(status_code=400, detail="Application is not confirmed")
+
+        crud.update_email(db, application.user_id, application.old_email)
+        crud.make_change_email_application_reverted(db, uuid.UUID(application_id))
+        return {"status": "Email change rolled back"}
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
