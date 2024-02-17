@@ -19,14 +19,17 @@ class GuestLogin(BaseModel):
 
 class UpdateName(BaseModel):
     new_name: str
+    # Bearer token must be included in HTTP header
 
 
 class UpdateUsername(BaseModel):
     new_username: str
+    # Basic auth must be included in HTTP header
 
 
 class UpdateEmail(BaseModel):
     new_email: EmailStr
+    # Basic auth must be included in HTTP header
 
 
 class UpdateEmailConfirmation(BaseModel):
