@@ -205,19 +205,13 @@ async def rollback_email_change(application_id: str, db: Session = Depends(get_d
 
 
 @app.put("/change_password")
-async def change_password(body: schemas.UpdatePassword, db: Session = Depends(get_db)):
+async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security),
+                          db: Session = Depends(get_db)):
     try:
-        user = crud.get_user_by_id(db, uuid.UUID(body.user_id))
-        if user is None:
-            raise HTTPException(status_code=404, detail="Account with this user id does not exist")
-        if user.is_guest:
-            raise HTTPException(status_code=400, detail="This is a guest user")
-
-        verify_password(user.account_data.hashed_password, body.old_password)
+        user = get_user_by_basic_auth(db, credentials)
         validate_password(body.new_password)
         new_password_hash = ph.hash(body.new_password)
-
-        crud.update_password(db, uuid.UUID(body.user_id), new_password_hash)
+        crud.update_password(db, user.user_id, new_password_hash)
         return {"status": "success"}
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
