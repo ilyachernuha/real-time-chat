@@ -5,19 +5,20 @@ import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { useAuth } from "@/hooks/useAuth";
 import { router } from "expo-router";
+import { useState } from "react";
 
 export default function Confirm() {
   const { confirm } = useAuth();
 
+  const [error, setError] = useState(false);
+
   const handleConfirm = async (confirmationCode: string) => {
     if (confirmationCode.trim()) {
-      const token = await confirm(confirmationCode);
-      // Navigate after signing in. You may want to tweak this to ensure sign-in is
-      // successful before navigating.
-      if (token) {
+      try {
+        await confirm(confirmationCode);
         router.replace("/");
-      } else {
-        // Handle sign-in failure (e.g., display an error message)
+      } catch (error) {
+        setError(true);
       }
     }
   };
@@ -34,7 +35,7 @@ export default function Confirm() {
         >
           We have sent you an email! Enter the confirmation code to continue registration!
         </Regular14>
-        <CodeInput onComplete={handleConfirm} />
+        <CodeInput onComplete={handleConfirm} error={error} setError={setError} />
       </View>
     </SafeAreaView>
   );
