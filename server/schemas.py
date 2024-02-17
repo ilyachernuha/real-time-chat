@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, UUID4
 
 
 class Registration(BaseModel):
@@ -9,7 +9,7 @@ class Registration(BaseModel):
 
 
 class RegistrationConfirmation(BaseModel):
-    application_id: str
+    application_id: UUID4
     confirmation_code: str
 
 
@@ -30,7 +30,7 @@ class UpdateEmail(BaseModel):
 
 
 class UpdateEmailConfirmation(BaseModel):
-    application_id: str
+    application_id: UUID4
     confirmation_code: str
 
 
@@ -43,7 +43,7 @@ class ResetPassword(BaseModel):
 
 
 class FinishResetPassword(BaseModel):
-    application_id: str
+    application_id: UUID4
     new_password: str
 
 

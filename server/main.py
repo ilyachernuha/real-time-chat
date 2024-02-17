@@ -74,7 +74,7 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
 @app.post("/finish_registration")
 async def finish_registration(body: schemas.RegistrationConfirmation, db: Session = Depends(get_db)):
     try:
-        application = crud.get_register_application_by_id(db, uuid.UUID(body.application_id))
+        application = crud.get_register_application_by_id(db, body.application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Register application not found")
         if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
@@ -84,9 +84,9 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
         if application.status != db_models.RegisterApplication.Status.pending:
             raise HTTPException(status_code=403, detail="This email is already in use")
         if application.confirmation_code != body.confirmation_code:
-            application = crud.increase_failed_registration_attempts(db, uuid.UUID(body.application_id))
+            application = crud.increase_failed_registration_attempts(db, body.application_id)
             if application.failed_attempts >= 3:
-                crud.make_register_application_failed(db, uuid.UUID(body.application_id))
+                crud.make_register_application_failed(db, body.application_id)
             raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
         crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
@@ -160,7 +160,7 @@ async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredenti
 @app.post("/finish_change_email")
 async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session = Depends(get_db)):
     try:
-        application = crud.get_change_email_application_by_id(db, uuid.UUID(body.application_id))
+        application = crud.get_change_email_application_by_id(db, body.application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Application not found")
         if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
@@ -172,7 +172,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
         if application.confirmation_code != body.confirmation_code:
             application = crud.increase_failed_change_email_attempts(db, application.application_id)
             if application.failed_attempts >= 3:
-                crud.make_change_email_application_failed(db, uuid.UUID(body.application_id))
+                crud.make_change_email_application_failed(db, body.application_id)
             raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
         user = crud.update_email(db, application.user_id, application.new_email)
@@ -185,9 +185,9 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
 
 
 @app.get("/rollback_email_change/{application_id}")
-async def rollback_email_change(application_id: str, db: Session = Depends(get_db)):
+async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends(get_db)):
     try:
-        application = crud.get_change_email_application_by_id(db, uuid.UUID(application_id))
+        application = crud.get_change_email_application_by_id(db, application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Application not found")
         if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(hours=72):
@@ -198,7 +198,7 @@ async def rollback_email_change(application_id: str, db: Session = Depends(get_d
             raise HTTPException(status_code=400, detail="Application is not confirmed")
 
         crud.update_email(db, application.user_id, application.old_email)
-        crud.make_change_email_application_reverted(db, uuid.UUID(application_id))
+        crud.make_change_email_application_reverted(db, application_id)
         return {"status": "Email change rolled back"}
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
@@ -234,9 +234,9 @@ async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_
 
 
 @app.get("/reset_password_page/{application_id}")
-async def reset_password_page(application_id: str, db: Session = Depends(get_db)):
+async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(get_db)):
     try:
-        application = crud.get_reset_password_application(db, uuid.UUID(application_id))
+        application = crud.get_reset_password_application(db, application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Application not found")
         if application.status == db_models.ResetPasswordApplication.Status.used:
@@ -255,7 +255,7 @@ async def reset_password_page(application_id: str, db: Session = Depends(get_db)
 @app.put("/finish_reset_password")
 async def finish_reset_password(body: schemas.FinishResetPassword, db: Session = Depends(get_db)):
     try:
-        application = crud.get_reset_password_application(db, uuid.UUID(body.application_id))
+        application = crud.get_reset_password_application(db, body.application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Application not found")
         if application.status == db_models.ResetPasswordApplication.Status.used:
