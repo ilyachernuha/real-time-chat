@@ -7,12 +7,15 @@ import Fonts from "@/constants/Fonts";
 type Props = {
   codeLength?: number;
   onComplete: (code: string) => void;
+  error: boolean;
+  setError: React.Dispatch<React.SetStateAction<boolean>>;
 };
 
-const CodeInput: React.FC<Props> = ({ codeLength = 4, onComplete }) => {
+const CodeInput: React.FC<Props> = ({ codeLength = 4, onComplete, error, setError }) => {
   const [code, setCode] = useState(new Array(codeLength).fill(""));
 
   const handleChangeText = (text: string, index: number) => {
+    setError(false);
     const newCode = [...code];
     newCode[index] = text;
     setCode(newCode);
@@ -31,7 +34,7 @@ const CodeInput: React.FC<Props> = ({ codeLength = 4, onComplete }) => {
       {code.map((digit, index) => (
         <TextInput
           key={index}
-          style={[styles.input, digit ? styles.inputFilled : null]}
+          style={[styles.input, digit ? styles.inputFilled : null, error ? styles.inputError : null]}
           onChangeText={(text) => handleChangeText(text, index)}
           value={digit}
           maxLength={1}
@@ -72,6 +75,10 @@ const styles = StyleSheet.create({
   },
   inputFilled: {
     borderColor: Colors.dark.mainPurple,
+  },
+  inputError: {
+    color: Colors.dark.mainErrorRed,
+    borderColor: Colors.dark.mainErrorRed,
   },
 });
 
