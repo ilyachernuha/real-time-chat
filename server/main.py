@@ -22,7 +22,7 @@ from email_utils import (
 )
 from auth import (
     generate_token, validate_token, validata_token_in_header, ph, validate_username, validate_password, verify_password,
-    validate_name
+    validate_name, get_user_by_basic_auth
 )
 
 
@@ -102,18 +102,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
 @app.post("/login")
 async def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     try:
-        username = credentials.username
-        password = credentials.password
-
-        try:
-            schemas.Email(email=username)
-            user = crud.get_user_by_email(db, username)
-        except ValidationError:
-            user = crud.get_user_by_username(db, username)
-
-        if user is None:
-            raise HTTPException(status_code=400, detail="Account with this login does not exist")
-        verify_password(user.account_data.hashed_password, password)
+        user = get_user_by_basic_auth(db, credentials)
         user_id_str = str(user.user_id)
         token = generate_token(user_id_str)
         return {"user_id": user_id_str, "token": token}
@@ -147,23 +136,10 @@ async def change_name(body: schemas.UpdateName, user_id: str = Depends(validata_
 async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security),
                           db: Session = Depends(get_db)):
     try:
-        username = credentials.username
-        password = credentials.password
-
-        try:
-            schemas.Email(email=username)
-            user = crud.get_user_by_email(db, username)
-        except ValidationError:
-            user = crud.get_user_by_username(db, username)
-
-        if user is None:
-            raise HTTPException(status_code=400, detail="Account with this login does not exist")
-        verify_password(user.account_data.hashed_password, password)
-
+        user = get_user_by_basic_auth(db, credentials)
         validate_username(body.new_username)
         crud.update_username(db, user.user_id, body.new_username)
         return {"status": "success", "new_username": user.account_data.username}
-
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
@@ -172,19 +148,7 @@ async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCr
 async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security),
                        db: Session = Depends(get_db)):
     try:
-        username = credentials.username
-        password = credentials.password
-
-        try:
-            schemas.Email(email=username)
-            user = crud.get_user_by_email(db, username)
-        except ValidationError:
-            user = crud.get_user_by_username(db, username)
-
-        if user is None:
-            raise HTTPException(status_code=400, detail="Account with this login does not exist")
-        verify_password(user.account_data.hashed_password, password)
-
+        user = get_user_by_basic_auth(db, credentials)
         application = crud.create_change_email_application(db, user.user_id, body.new_email)
         send_change_email_confirmation(body.new_email, application.confirmation_code, user.account_data.username)
         application_id_str = str(application.application_id)

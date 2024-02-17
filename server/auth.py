@@ -2,9 +2,12 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials, OAuth2PasswordBear
 from fastapi import Depends, HTTPException
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
+from sqlalchemy.orm import Session
+from pydantic import BaseModel, EmailStr, ValidationError
 import jwt
 import secrets
 import re
+import crud
 
 
 security = HTTPBasic()
@@ -71,3 +74,30 @@ def verify_password(hashed_password, password):
             raise HTTPException(status_code=400, detail="Incorrect username or password")
     except Argon2Error:
         raise HTTPException(status_code=400, detail="Incorrect username or password")
+
+
+def is_email(string_to_check: str):
+    class Email(BaseModel):
+        email: EmailStr
+
+    try:
+        Email(email=string_to_check)
+        return True
+    except ValidationError:
+        return False
+
+
+def get_user_by_basic_auth(db: Session, credentials: HTTPBasicCredentials):
+    username = credentials.username
+    password = credentials.password
+
+    if is_email(username):
+        user = crud.get_user_by_email(db, username)
+    else:
+        user = crud.get_user_by_username(db, username)
+
+    if user is None:
+        raise HTTPException(status_code=400, detail="Account with this login does not exist")
+
+    verify_password(user.account_data.hashed_password, password)
+    return user

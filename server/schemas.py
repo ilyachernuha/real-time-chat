@@ -56,7 +56,3 @@ class Message(BaseModel):
 
 class Typing(BaseModel):
     room: str
-
-
-class Email(BaseModel):
-    email: EmailStr
