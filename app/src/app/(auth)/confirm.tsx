@@ -1,20 +1,15 @@
-import { Button } from "@/components/Buttons";
 import CodeInput from "@/components/CodeInput";
-import InputField from "@/components/InputField";
 import Logo from "@/components/Logo";
 import { Bold, Regular14 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
-import { useSession } from "@/providers/AuthProvider";
+import { useAuth } from "@/hooks/useAuth";
 import { router } from "expo-router";
-import { useState } from "react";
 
 export default function Confirm() {
-  const { confirm } = useSession();
+  const { confirm } = useAuth();
 
-  const [confirmationCode, setConfirmationCode] = useState("");
-
-  const onConfirm = async (confirmationCode: string) => {
+  const handleConfirm = async (confirmationCode: string) => {
     if (confirmationCode.trim()) {
       const token = await confirm(confirmationCode);
       // Navigate after signing in. You may want to tweak this to ensure sign-in is
@@ -39,7 +34,7 @@ export default function Confirm() {
         >
           We have sent you an email! Enter the confirmation code to continue registration!
         </Regular14>
-        <CodeInput onComplete={onConfirm} />
+        <CodeInput onComplete={handleConfirm} />
       </View>
     </SafeAreaView>
   );

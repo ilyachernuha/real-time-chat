@@ -10,6 +10,8 @@ import { useState } from "react";
 export default function ForgotPassword() {
   const [email, setEmail] = useState<string>("");
 
+  const [emailError, setEmailError] = useState<string>("Invalid data");
+
   const handleReset = async () => {
     router.navigate("/reset");
   };
@@ -27,10 +29,8 @@ export default function ForgotPassword() {
           Do not excite! Enter your email and{"\n"}we will reset password!
         </Regular12>
       </View>
-      <View style={{ gap: 48 }}>
-        <View style={{ gap: 24 }}>
-          <InputField placeholder="Enter your email" value={email} onChangeText={setEmail} />
-        </View>
+      <View style={{ gap: 24 }}>
+        <InputField placeholder="Enter your email" value={email} onChangeText={setEmail} error={emailError} />
         <Button title="Reset" onPress={handleReset} />
       </View>
     </SafeAreaView>
