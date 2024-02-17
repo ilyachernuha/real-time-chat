@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, UUID4
 
 
 class Registration(BaseModel):
@@ -9,7 +9,7 @@ class Registration(BaseModel):
 
 
 class RegistrationConfirmation(BaseModel):
-    application_id: str
+    application_id: UUID4
     confirmation_code: str
 
 
@@ -19,6 +19,35 @@ class GuestLogin(BaseModel):
 
 class UpdateName(BaseModel):
     new_name: str
+    # Bearer token must be included in HTTP header
+
+
+class UpdateUsername(BaseModel):
+    new_username: str
+    # Basic auth must be included in HTTP header
+
+
+class UpdateEmail(BaseModel):
+    new_email: EmailStr
+    # Basic auth must be included in HTTP header
+
+
+class UpdateEmailConfirmation(BaseModel):
+    application_id: UUID4
+    confirmation_code: str
+
+
+class UpdatePassword(BaseModel):
+    new_password: str
+
+
+class ResetPassword(BaseModel):
+    email: EmailStr
+
+
+class FinishResetPassword(BaseModel):
+    application_id: UUID4
+    new_password: str
 
 
 class Message(BaseModel):
@@ -28,7 +57,3 @@ class Message(BaseModel):
 
 class Typing(BaseModel):
     room: str
-
-
-class Email(BaseModel):
-    email: EmailStr
