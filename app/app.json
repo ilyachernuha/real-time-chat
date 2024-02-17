@@ -2,32 +2,34 @@
   "expo": {
     "name": "real-time-chat",
     "slug": "real-time-chat",
-    "scheme": "whisper",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/images/icon.png",
+    "scheme": "whisper",
+    "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#030708"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.teamchallenge.realtimechat"
+      "bundleIdentifier": "com.teamchallenge.realtimechat",
+      "backgroundColor": "#030708"
     },
     "android": {
+      "backgroundColor": "#030708",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#030708"
       },
       "package": "com.teamchallenge.realtimechat"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
     },
     "extra": {
       "eas": {
@@ -55,6 +57,10 @@
       ],
       "expo-router",
       "expo-secure-store"
-    ]
-  }
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  },
+  "backgroundColor": "#030708"
 }
