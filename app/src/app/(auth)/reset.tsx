@@ -10,6 +10,9 @@ export default function Reset() {
   const [password, setPassword] = useState<string>("");
   const [passwordConfirm, setPasswordConfirm] = useState<string>("");
 
+  const [passwordError, setPasswordError] = useState<string>("Invalid data");
+  const [passwordConfirmError, setPasswordConfirmError] = useState<string>("Invalid data");
+
   const handleReset = async () => {};
 
   return (
@@ -25,14 +28,21 @@ export default function Reset() {
           Enter a new password to restore access
         </Regular12>
       </View>
-      <View style={{ gap: 48 }}>
-        <View style={{ gap: 24 }}>
-          <InputField placeholder="Enter new password" value={password} onChangeText={setPassword} isPassword />
+      <View style={{ gap: 24 }}>
+        <View>
+          <InputField
+            placeholder="Enter new password"
+            value={password}
+            onChangeText={setPassword}
+            isPassword
+            error={passwordError}
+          />
           <InputField
             placeholder="Confirm new password"
             value={passwordConfirm}
             onChangeText={setPasswordConfirm}
             isPassword
+            error={passwordConfirmError}
           />
         </View>
         <Button title="Change password" onPress={handleReset} />

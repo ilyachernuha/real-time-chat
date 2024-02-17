@@ -1,5 +1,5 @@
 import * as SecureStore from "expo-secure-store";
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect } from "react";
 import useAsyncState, { UseStateHook } from "./useAsyncState";
 
 export async function setStorageItemAsync(key: string, value: string | null) {

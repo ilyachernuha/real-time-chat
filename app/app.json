@@ -15,9 +15,11 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.teamchallenge.realtimechat"
+      "bundleIdentifier": "com.teamchallenge.realtimechat",
+      "backgroundColor": "#030708"
     },
     "android": {
+      "backgroundColor": "#030708",
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#030708"
@@ -59,5 +61,6 @@
     "experiments": {
       "typedRoutes": true
     }
-  }
+  },
+  "backgroundColor": "#030708"
 }

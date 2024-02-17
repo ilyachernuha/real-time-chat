@@ -5,9 +5,9 @@ import { Pressable } from "react-native";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
-import { useSession } from "@/providers/AuthProvider";
 import { Bold } from "@/components/StyledText";
 import { SafeAreaView } from "@/components/Themed";
+import { useAuth } from "@/hooks/useAuth";
 
 // You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
 function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>["name"]; color: string }) {
@@ -15,7 +15,7 @@ function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>["nam
 }
 
 export default function TabLayout() {
-  const { session, isLoading } = useSession();
+  const { session, isLoading } = useAuth();
   const colorScheme = useColorScheme();
 
   // You can keep the splash screen open, or render a loading screen like we do here.
