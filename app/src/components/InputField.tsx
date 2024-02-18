@@ -1,9 +1,8 @@
-import React, { ComponentProps, useState } from "react";
+import React, { ComponentProps } from "react";
 import { TextInput, StyleSheet, TextStyle, View } from "react-native";
-import { MaterialCommunityIcons, MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
-import { Text } from "./Themed";
 import { Light } from "./StyledText";
 
 interface InputFieldProps {
@@ -12,22 +11,26 @@ interface InputFieldProps {
   onChangeText: ComponentProps<typeof TextInput>["onChangeText"];
   style?: TextStyle | TextStyle[];
   isPassword?: boolean;
-  isUsername?: boolean;
   error?: string;
+  hidePassword?: boolean;
+  toggleHidePassword?: () => void;
 }
 
-const InputField: React.FC<InputFieldProps> = ({ placeholder, value, onChangeText, isPassword, isUsername, error }) => {
-  const [showPassword, setShowPassword] = useState(false);
-
-  const toggleShowPassword = () => {
-    setShowPassword(!showPassword);
-  };
-
+const InputField: React.FC<InputFieldProps> = ({
+  placeholder,
+  value,
+  onChangeText,
+  isPassword,
+  error,
+  hidePassword,
+  toggleHidePassword,
+}) => {
   return (
     <View style={{ paddingBottom: 24 }}>
       <View
         style={[
           styles.container,
+          { paddingRight: isPassword ? 0 : 16 },
           {
             borderColor: error
               ? Colors.dark.mainErrorRed
@@ -37,30 +40,22 @@ const InputField: React.FC<InputFieldProps> = ({ placeholder, value, onChangeTex
           },
         ]}
       >
-        {isUsername && (
-          <MaterialIcons
-            name="alternate-email"
-            size={24}
-            color={Colors.dark.secondaryLightGrey}
-            style={{ paddingRight: 0 }}
-          />
-        )}
         <TextInput
           style={[{ flex: 1, color: error ? Colors.dark.mainErrorRed : Colors.dark.text }, Fonts.regular14]}
           placeholder={placeholder}
           value={value}
           onChangeText={onChangeText}
           placeholderTextColor={Colors.dark.secondaryLightGrey}
-          secureTextEntry={isPassword && !showPassword}
+          secureTextEntry={isPassword && hidePassword}
           autoCapitalize="none"
         />
         {isPassword && (
           <MaterialCommunityIcons
-            name={showPassword ? "eye" : "eye-off"}
+            name={hidePassword ? "eye-off" : "eye"}
             size={24}
             color={Colors.dark.secondaryLightGrey}
-            onPress={toggleShowPassword}
-            style={{ position: "absolute", right: 8, padding: 10 }}
+            onPress={toggleHidePassword}
+            style={{ padding: 10 }}
           />
         )}
       </View>
@@ -77,9 +72,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 12,
     height: 44,
-    paddingHorizontal: 16,
+    paddingLeft: 16,
     backgroundColor: Colors.dark.mainDarkGrey,
-    gap: 4,
   },
   input: {
     flex: 1,
