@@ -55,7 +55,7 @@ class RegisterApplication(Base):
     username = Column(String, nullable=False)
     email = Column(String, nullable=False)
     hashed_password = Column(String, nullable=False)
-    timestamp = Column(DateTime(timezone=True), default=datetime.now(timezone.utc))
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     confirmation_code = Column(String(4), nullable=False, default=lambda: f"{secrets.randbelow(10000):04d}")
     failed_attempts = Column(Integer, default=0)
     status = Column(SQLAlchemyEnum(Status, name="register_application_status"), default=Status.pending)
@@ -70,7 +70,7 @@ class ResetPasswordApplication(Base):
 
     application_id = Column(UUID, primary_key=True)
     user_id = Column(UUID, nullable=False)
-    timestamp = Column(DateTime(timezone=True), default=datetime.now(timezone.utc))
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     status = Column(SQLAlchemyEnum(Status, name="reset_password_status"), default=Status.pending)
 
 
@@ -87,7 +87,7 @@ class ChangeEmailApplication(Base):
     user_id = Column(UUID, nullable=False)
     new_email = Column(String, nullable=False)
     old_email = Column(String, nullable=False)
-    timestamp = Column(DateTime(timezone=True), default=datetime.now(timezone.utc))
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     confirmation_code = Column(String(4), nullable=False, default=lambda: f"{secrets.randbelow(10000):04d}")
     failed_attempts = Column(Integer, default=0)
     status = Column(SQLAlchemyEnum(Status, name="change_email_status"), default=Status.pending)
