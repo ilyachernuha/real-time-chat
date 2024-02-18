@@ -8,6 +8,7 @@ import InputField from "@/components/InputField";
 import { Button } from "@/components/Buttons";
 import { useAuth } from "@/hooks/useAuth";
 import axios from "axios";
+import PasswordInputWithConfirm from "@/components/PasswordInputWithConfirm";
 
 export default function Register() {
   const { signUp, applicationId } = useAuth();
@@ -151,19 +152,13 @@ export default function Register() {
             onChangeText={handleUsernameChange}
             error={usernameError}
           />
-          <InputField
-            placeholder="Enter your password"
-            value={password}
-            onChangeText={handlePasswordChange}
-            isPassword
-            error={passwordError}
-          />
-          <InputField
-            placeholder="Confirm your password"
-            value={passwordConfirm}
-            onChangeText={handlePasswordConfirmChange}
-            isPassword
-            error={passwordConfirmError}
+          <PasswordInputWithConfirm
+            password={password}
+            onPasswordChange={handlePasswordChange}
+            passwordError={passwordError}
+            passwordConfirm={passwordConfirm}
+            onPasswordConfirmChange={handlePasswordConfirmChange}
+            passwordConfirmError={passwordConfirmError}
           />
         </View>
         <Button title="Create an account" onPress={handleRegister} />

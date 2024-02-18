@@ -19,6 +19,8 @@ export default function Login() {
   const [usernameError, setUsernameError] = useState<string>("");
   const [passwordError, setPasswordError] = useState<string>("");
 
+  const [hidePassword, setHidePassword] = useState(true);
+
   const { signIn, guestLogin } = useAuth();
 
   const handleUsernameChange = (text: string) => {
@@ -109,7 +111,6 @@ export default function Login() {
           placeholder="Enter your username"
           value={username}
           onChangeText={handleUsernameChange}
-          isUsername
           error={usernameError}
         />
         <InputField
@@ -118,6 +119,8 @@ export default function Login() {
           onChangeText={handlePasswordChange}
           isPassword
           error={passwordError}
+          hidePassword={hidePassword}
+          toggleHidePassword={() => setHidePassword(!hidePassword)}
         />
       </View>
       <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
