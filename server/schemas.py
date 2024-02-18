@@ -39,6 +39,7 @@ class UpdateEmailConfirmation(BaseModel):
 
 class UpdatePassword(BaseModel):
     new_password: str
+    # Basic auth must be included in HTTP header
 
 
 class ResetPassword(BaseModel):

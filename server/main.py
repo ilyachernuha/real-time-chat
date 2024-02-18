@@ -9,7 +9,7 @@ import time
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
-import datetime
+from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
 import schemas
@@ -77,7 +77,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
         application = crud.get_register_application_by_id(db, body.application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Register application not found")
-        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
+        if datetime.now(timezone.utc) > application.timestamp + timedelta(minutes=15):
             raise HTTPException(status_code=403, detail="Register application expired")
         if application.status == db_models.RegisterApplication.Status.failed:
             raise HTTPException(status_code=400, detail="Too many failed attempts")
@@ -163,7 +163,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
         application = crud.get_change_email_application_by_id(db, body.application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Application not found")
-        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
+        if datetime.now(timezone.utc) > application.timestamp + timedelta(minutes=15):
             raise HTTPException(status_code=403, detail="Application expired")
         if application.status == db_models.ChangeEmailApplication.Status.failed:
             raise HTTPException(status_code=400, detail="Too many failed attempts")
@@ -190,7 +190,7 @@ async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends
         application = crud.get_change_email_application_by_id(db, application_id)
         if application is None:
             raise HTTPException(status_code=404, detail="Application not found")
-        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(hours=72):
+        if datetime.now(timezone.utc) > application.timestamp + timedelta(hours=72):
             raise HTTPException(status_code=400, detail="Rollback time expired")
         if application.status == db_models.ChangeEmailApplication.Status.reverted:
             raise HTTPException(status_code=400, detail="Application already rolled back")
@@ -241,7 +241,7 @@ async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(g
             raise HTTPException(status_code=404, detail="Application not found")
         if application.status == db_models.ResetPasswordApplication.Status.used:
             raise HTTPException(status_code=400, detail="This application is already used")
-        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
+        if datetime.now(timezone.utc) > application.timestamp + timedelta(minutes=15):
             raise HTTPException(status_code=400, detail="This application is expired")
 
         url = os.getenv("BASE_URL") + "/finish_reset_password"
@@ -260,7 +260,7 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
             raise HTTPException(status_code=404, detail="Application not found")
         if application.status == db_models.ResetPasswordApplication.Status.used:
             raise HTTPException(status_code=400, detail="This application is already used")
-        if datetime.datetime.utcnow() > application.timestamp + datetime.timedelta(minutes=15):
+        if datetime.now(timezone.utc) > application.timestamp + timedelta(minutes=15):
             raise HTTPException(status_code=400, detail="This application is expired")
 
         validate_password(body.new_password)
