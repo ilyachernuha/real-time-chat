@@ -114,13 +114,8 @@ def confirm_register_application_and_invalidate_others_with_same_email(db: Sessi
 def increase_failed_registration_attempts(db: Session, application_id: uuid.UUID):
     application = get_register_application_by_id(db, application_id)
     application.failed_attempts += 1
-    db.commit()
-    return application
-
-
-def make_register_application_failed(db: Session, application_id: uuid.UUID):
-    application = get_register_application_by_id(db, application_id)
-    application.status = db_models.RegisterApplication.Status.failed
+    if application.failed_attempts >= 3:
+        application.status = db_models.RegisterApplication.Status.failed
     db.commit()
     return application
 
@@ -202,13 +197,8 @@ def make_change_email_application_confirmed(db: Session, application_id: uuid.UU
 def increase_failed_change_email_attempts(db: Session, application_id: uuid.UUID):
     application = get_change_email_application_by_id(db, application_id)
     application.failed_attempts += 1
-    db.commit()
-    return application
-
-
-def make_change_email_application_failed(db: Session, application_id: uuid.UUID):
-    application = get_change_email_application_by_id(db, application_id)
-    application.status = db_models.ChangeEmailApplication.Status.failed
+    if application.failed_attempts >= 3:
+        application.status = db_models.ChangeEmailApplication.Status.failed
     db.commit()
     return application
 
