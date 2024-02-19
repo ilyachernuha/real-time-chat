@@ -1,21 +1,20 @@
+import { LoginRequest, RegisterRequest } from "@/services/types";
 import { createContext } from "react";
 
 export const AuthContext = createContext<{
-  signIn: (username: string, password: string) => Promise<string | void>;
-  signOut: () => void;
-  signUp: (username: string, email: string, password: string) => Promise<string | void>;
-  confirm: (confirmationCode: string) => Promise<string | void>;
-  guestLogin: (username: string) => Promise<string | void>;
-  session?: string | null;
+  signIn: (credentials: LoginRequest) => Promise<void>;
+  signOut: () => Promise<void>;
+  signUp: (credentials: RegisterRequest) => Promise<void>;
+  confirm: (confirmationCode: string) => Promise<void>;
+  guestLogin: (username: string) => Promise<void>;
   isLoading: boolean;
-  applicationId: string | null;
+  token: string | null;
 }>({
   signIn: async () => {},
-  signOut: () => null,
+  signOut: async () => {},
   signUp: async () => {},
   confirm: async () => {},
   guestLogin: async () => {},
-  session: null,
   isLoading: false,
-  applicationId: null,
+  token: null,
 });

@@ -1,71 +1,60 @@
 import "@/polyfills";
 import axios from "axios";
 import API from "@/constants/API";
+import {
+  ConfirmRequest,
+  ConfirmResponse,
+  GuestLoginRequest,
+  GuestLoginResponse,
+  LoginRequest,
+  LoginResponse,
+  RegisterRequest,
+  RegisterResponse,
+} from "./types";
 
-type LoginResponse = {
-  user_id: string;
-  token: string;
-};
+const api = axios.create({
+  baseURL: API.apiURL,
+});
 
-type RegisterResponse = {
-  status: string;
-  application_id: string;
-};
-
-type ConfirmResponse = {
-  user_id: string;
-  token: string;
-};
-
-type GuestLoginResponse = {
-  user_id: string;
-  token: string;
-};
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        console.error("Server responded with an error:", error.response.status, error.response.data);
+        throw error;
+      } else if (error.request) {
+        console.error("No response received for the request");
+        throw new Error("The request was made but no response was received");
+      } else {
+        console.error("Error setting up the request:", error.message);
+        throw new Error("Something happened in setting up the request that triggered an Error");
+      }
+    } else {
+      console.error("An unexpected error occurred:", error);
+      throw new Error("An unexpected error occurred");
+    }
+  }
+);
 
 export default {
-  login: async (username: string, password: string) => {
-    const {
-      data: { user_id, token },
-    } = await axios.post<LoginResponse>(
-      `${API.apiURL}/login`,
-      {},
-      {
-        auth: {
-          username,
-          password,
-        },
-      }
-    );
-    return { id: user_id, token: token, name: username };
+  login: async (credentials: LoginRequest) => {
+    const response = await api.post<LoginResponse>("/login", {}, { auth: credentials });
+    return response.data;
   },
 
-  register: async (username: string, email: string, password: string) => {
-    const {
-      data: { status, application_id },
-    } = await axios.post<RegisterResponse>(`${API.apiURL}/create_account`, {
-      username,
-      email,
-      password,
-    });
-    return { status, applicationId: application_id };
+  register: async (credentials: RegisterRequest) => {
+    const response = await api.post<RegisterResponse>("/create_account", credentials);
+    return response.data;
   },
 
-  confirm: async (applicationId: string, confirmationCode: string) => {
-    const {
-      data: { user_id, token },
-    } = await axios.post<ConfirmResponse>(`${API.apiURL}/finish_registration`, {
-      application_id: applicationId,
-      confirmation_code: confirmationCode,
-    });
-    return { id: user_id, token, name: "Name" };
+  confirm: async (confirmation: ConfirmRequest) => {
+    const response = await api.post<ConfirmResponse>("finish_registration", confirmation);
+    return response.data;
   },
 
-  guestLogin: async (name: string) => {
-    const {
-      data: { user_id, token },
-    } = await axios.post<GuestLoginResponse>(`${API.apiURL}/guest_login`, {
-      name,
-    });
-    return { id: user_id, token: token, name };
+  guestLogin: async (guest: GuestLoginRequest) => {
+    const response = await api.post<GuestLoginResponse>("/guest_login", guest);
+    return response.data;
   },
 };
