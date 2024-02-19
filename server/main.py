@@ -9,6 +9,7 @@ import time
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import datetime, timezone, timedelta
 import os
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ import schemas
 from database import init_db, get_db, db_session
 import crud
 import db_models
+import bg_tasks
 from email_utils import (
     send_registration_confirmation, send_reset_password_email, send_change_email_confirmation,
     send_email_change_rollback
@@ -42,6 +44,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.on_event("startup")
+def init_scheduler():
+    scheduler = AsyncIOScheduler()
+    scheduler.add_job(bg_tasks.expire_applications_task, "interval", minutes=1)
+    scheduler.add_job(bg_tasks.expire_email_rollback_task, "interval", hours=1)
+    scheduler.start()
 
 
 @app.get("/ping")
@@ -192,13 +202,13 @@ async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends
             raise HTTPException(status_code=404, detail="Application not found")
         if datetime.now(timezone.utc) > application.timestamp + timedelta(hours=72):
             raise HTTPException(status_code=400, detail="Rollback time expired")
-        if application.status == db_models.ChangeEmailApplication.Status.reverted:
+        if application.status == db_models.ChangeEmailApplication.Status.rolled_back:
             raise HTTPException(status_code=400, detail="Application already rolled back")
         if application.status != db_models.ChangeEmailApplication.Status.confirmed:
             raise HTTPException(status_code=400, detail="Application is not confirmed")
 
         crud.update_email(db, application.user_id, application.old_email)
-        crud.make_change_email_application_reverted(db, application_id)
+        crud.make_change_email_application_rolled_back(db, application_id)
         return {"status": "Email change rolled back"}
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")

@@ -1,6 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import update
 import uuid
+from datetime import datetime, timezone, timedelta
 import db_models
 
 
@@ -124,6 +125,18 @@ def make_register_application_failed(db: Session, application_id: uuid.UUID):
     return application
 
 
+def expire_register_applications(db: Session, expire_time: timedelta):
+    expired_applications = db.query(db_models.RegisterApplication).filter(
+        db_models.RegisterApplication.status == db_models.RegisterApplication.Status.pending,
+        datetime.now(timezone.utc) > db_models.RegisterApplication.timestamp + expire_time
+    ).all()
+
+    for application in expired_applications:
+        application.status = db_models.RegisterApplication.Status.expired
+
+    db.commit()
+
+
 # RESET PASSWORD APPLICATIONS
 
 
@@ -146,6 +159,18 @@ def make_reset_password_application_used(db: Session, application_id: uuid.UUID)
     application.status = db_models.ResetPasswordApplication.Status.used
     db.commit()
     return application
+
+
+def expire_reset_password_applications(db: Session, expire_time: timedelta):
+    expired_applications = db.query(db_models.ResetPasswordApplication).filter(
+        db_models.ResetPasswordApplication.status == db_models.ResetPasswordApplication.Status.pending,
+        datetime.now(timezone.utc) > db_models.ResetPasswordApplication.timestamp + expire_time
+    ).all()
+
+    for application in expired_applications:
+        application.status = db_models.ResetPasswordApplication.Status.expired
+
+    db.commit()
 
 
 # CHANGE EMAIL APPLICATIONS
@@ -188,8 +213,32 @@ def make_change_email_application_failed(db: Session, application_id: uuid.UUID)
     return application
 
 
-def make_change_email_application_reverted(db: Session, application_id: uuid.UUID):
+def make_change_email_application_rolled_back(db: Session, application_id: uuid.UUID):
     application = get_change_email_application_by_id(db, application_id)
-    application.status = db_models.ChangeEmailApplication.Status.reverted
+    application.status = db_models.ChangeEmailApplication.Status.rolled_back
     db.commit()
     return application
+
+
+def expire_change_email_applications(db: Session, expire_time: timedelta):
+    expired_applications = db.query(db_models.ChangeEmailApplication).filter(
+        db_models.ChangeEmailApplication.status == db_models.ChangeEmailApplication.Status.pending,
+        datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time
+    ).all()
+
+    for application in expired_applications:
+        application.status = db_models.ChangeEmailApplication.Status.expired
+
+    db.commit()
+
+
+def expire_change_email_rollback(db: Session, expire_time: timedelta):
+    expired_applications = db.query(db_models.ChangeEmailApplication).filter(
+        db_models.ChangeEmailApplication.rollback_status == db_models.ChangeEmailApplication.RollbackStatus.pending,
+        datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time
+    ).all()
+
+    for application in expired_applications:
+        application.status = db_models.ChangeEmailApplication.RollbackStatus.expired
+
+    db.commit()
