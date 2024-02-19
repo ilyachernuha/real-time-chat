@@ -1,30 +1,18 @@
-import React, { ComponentProps } from "react";
-import { TextInput, StyleSheet, TextStyle, View } from "react-native";
+import React from "react";
+import { TextInput, StyleSheet, View, TextInputProps } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
 import { Light } from "./StyledText";
 
-interface InputFieldProps {
-  placeholder: string;
-  value: string;
-  onChangeText: ComponentProps<typeof TextInput>["onChangeText"];
-  style?: TextStyle | TextStyle[];
+interface InputFieldProps extends TextInputProps {
+  error?: boolean | string;
   isPassword?: boolean;
-  error?: string;
-  hidePassword?: boolean;
   toggleHidePassword?: () => void;
 }
 
-const InputField: React.FC<InputFieldProps> = ({
-  placeholder,
-  value,
-  onChangeText,
-  isPassword,
-  error,
-  hidePassword,
-  toggleHidePassword,
-}) => {
+const InputField = (props: InputFieldProps) => {
+  const { error, toggleHidePassword, isPassword, ...otherProps } = props;
   return (
     <View style={{ paddingBottom: 24 }}>
       <View
@@ -34,7 +22,7 @@ const InputField: React.FC<InputFieldProps> = ({
           {
             borderColor: error
               ? Colors.dark.mainErrorRed
-              : value
+              : otherProps.value
               ? Colors.dark.mainPurple
               : Colors.dark.secondaryLightGrey,
           },
@@ -42,16 +30,12 @@ const InputField: React.FC<InputFieldProps> = ({
       >
         <TextInput
           style={[{ flex: 1, color: error ? Colors.dark.mainErrorRed : Colors.dark.text }, Fonts.regular14]}
-          placeholder={placeholder}
-          value={value}
-          onChangeText={onChangeText}
           placeholderTextColor={Colors.dark.secondaryLightGrey}
-          secureTextEntry={isPassword && hidePassword}
-          autoCapitalize="none"
+          {...otherProps}
         />
         {isPassword && (
           <MaterialCommunityIcons
-            name={hidePassword ? "eye-off" : "eye"}
+            name={otherProps.secureTextEntry ? "eye-off" : "eye"}
             size={24}
             color={Colors.dark.secondaryLightGrey}
             onPress={toggleHidePassword}

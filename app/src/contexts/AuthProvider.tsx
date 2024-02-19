@@ -4,37 +4,39 @@ import { useState } from "react";
 import AuthService from "@/services/AuthService";
 
 export function AuthProvider(props: React.PropsWithChildren) {
-  const [[isLoading, session], setSession] = useStorageState("session");
+  const [[isLoading, token], setToken] = useStorageState("token");
 
   const [applicationId, setApplicationId] = useState<string | null>(null);
 
   return (
     <AuthContext.Provider
       value={{
-        signIn: async (username, password) => {
-          const { token } = await AuthService.login(username, password);
-          setSession(token);
+        signIn: async (credentials) => {
+          const { token } = await AuthService.login(credentials);
+          setToken(token);
         },
-        signOut: () => {
-          setSession(null);
+        signOut: async () => {
+          setToken(null);
         },
-        signUp: async (username, email, password) => {
-          const { applicationId } = await AuthService.register(username, email, password);
-          setApplicationId(applicationId);
+        signUp: async (credentials) => {
+          const { application_id } = await AuthService.register(credentials);
+          setApplicationId(application_id);
         },
         confirm: async (confirmationCode) => {
           if (applicationId) {
-            const { token } = await AuthService.confirm(applicationId, confirmationCode);
-            setSession(token);
+            const { token } = await AuthService.confirm({
+              application_id: applicationId,
+              confirmation_code: confirmationCode,
+            });
+            setToken(token);
           }
         },
         guestLogin: async (username) => {
-          const { token } = await AuthService.guestLogin(username);
-          setSession(token);
+          const { token } = await AuthService.guestLogin({ name: username });
+          setToken(token);
         },
-        session,
+        token,
         isLoading,
-        applicationId,
       }}
     >
       {props.children}
