@@ -8,6 +8,7 @@ import jwt
 import secrets
 import re
 import crud
+import db_models
 
 
 security = HTTPBasic()
@@ -101,3 +102,37 @@ def get_user_by_basic_auth(db: Session, credentials: HTTPBasicCredentials):
 
     verify_password(user.account_data.hashed_password, password)
     return user
+
+
+def check_register_application_status(status: db_models.RegisterApplication.Status):
+    if status == db_models.RegisterApplication.Status.expired:
+        raise HTTPException(status_code=403, detail="Register application expired")
+    if status == db_models.RegisterApplication.Status.failed:
+        raise HTTPException(status_code=400, detail="Too many failed attempts")
+    if status != db_models.RegisterApplication.Status.pending:
+        raise HTTPException(status_code=403, detail="This email is already in use")
+
+
+def check_change_email_application_status(status: db_models.ChangeEmailApplication.Status):
+    if status == db_models.ChangeEmailApplication.Status.expired:
+        raise HTTPException(status_code=403, detail="Application expired")
+    if status == db_models.ChangeEmailApplication.Status.failed:
+        raise HTTPException(status_code=400, detail="Too many failed attempts")
+    if status != db_models.ChangeEmailApplication.Status.pending:
+        raise HTTPException(status_code=400, detail="Application is already used")
+
+
+def check_change_email_rollback_status(status: db_models.ChangeEmailApplication.RollbackStatus):
+    if status == db_models.ChangeEmailApplication.RollbackStatus.expired:
+        raise HTTPException(status_code=400, detail="Rollback time expired")
+    if status == db_models.ChangeEmailApplication.RollbackStatus.completed:
+        raise HTTPException(status_code=400, detail="Application already rolled back")
+    if status == db_models.ChangeEmailApplication.RollbackStatus.unavailable:
+        raise HTTPException(status_code=400, detail="Application is not confirmed")
+
+
+def check_reset_password_application_status(status: db_models.ResetPasswordApplication.Status):
+    if status == db_models.ResetPasswordApplication.Status.used:
+        raise HTTPException(status_code=400, detail="This application is already used")
+    if status == db_models.ResetPasswordApplication.Status.expired:
+        raise HTTPException(status_code=400, detail="This application is expired")

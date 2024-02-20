@@ -50,6 +50,7 @@ class RegisterApplication(Base):
         confirmed = 2
         failed = 3
         confirmed_elsewhere = 4
+        expired = 5
 
     application_id = Column(UUID, primary_key=True)
     username = Column(String, nullable=False)
@@ -67,6 +68,7 @@ class ResetPasswordApplication(Base):
     class Status(Enum):
         pending = 1
         used = 2
+        expired = 3
 
     application_id = Column(UUID, primary_key=True)
     user_id = Column(UUID, nullable=False)
@@ -81,7 +83,14 @@ class ChangeEmailApplication(Base):
         pending = 1
         confirmed = 2
         failed = 3
-        reverted = 4
+        expired = 4
+        rolled_back = 5
+
+    class RollbackStatus(Enum):
+        unavailable = 1
+        pending = 2
+        completed = 3
+        expired = 4
 
     application_id = Column(UUID, primary_key=True)
     user_id = Column(UUID, nullable=False)
@@ -91,3 +100,5 @@ class ChangeEmailApplication(Base):
     confirmation_code = Column(String(4), nullable=False, default=lambda: f"{secrets.randbelow(10000):04d}")
     failed_attempts = Column(Integer, default=0)
     status = Column(SQLAlchemyEnum(Status, name="change_email_status"), default=Status.pending)
+    rollback_status = Column(SQLAlchemyEnum(RollbackStatus, name="email_roll_back_status"),
+                             default=RollbackStatus.unavailable)
