@@ -166,7 +166,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
             crud.increase_failed_change_email_attempts(db, application.application_id)
             raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
-        auth_utils.check_if_email_is_available(db, application.email)
+        auth_utils.check_if_email_is_available(db, application.new_email)
         user = crud.update_email(db, application.user_id, application.new_email)
         application = crud.make_change_email_application_confirmed(db, application.application_id)
         email_utils.send_email_change_rollback(application.old_email,

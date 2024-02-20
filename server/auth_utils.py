@@ -112,6 +112,8 @@ def check_if_username_is_available(db: Session, username: str):
 def check_if_email_is_available(db: Session, email: str):
     if crud.get_user_by_email(db, email):
         raise HTTPException(status_code=400, detail="Account with this email already exists")
+    if crud.get_pending_rollback_change_email_application_by_email(db, email):
+        raise HTTPException(status_code=400, detail="This email is temporarily reserved")
 
 
 def check_register_application_status(status: db_models.RegisterApplication.Status):

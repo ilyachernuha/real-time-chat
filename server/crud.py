@@ -187,9 +187,17 @@ def get_change_email_application_by_id(db: Session, application_id: uuid.UUID):
                                                              == application_id).first()
 
 
+def get_pending_rollback_change_email_application_by_email(db: Session, email: str):
+    return (db.query(db_models.ChangeEmailApplication).
+            filter(db_models.ChangeEmailApplication.old_email == email).
+            filter(db_models.ChangeEmailApplication.rollback_status ==
+                   db_models.ChangeEmailApplication.RollbackStatus.pending)).first()
+
+
 def make_change_email_application_confirmed(db: Session, application_id: uuid.UUID):
     application = get_change_email_application_by_id(db, application_id)
     application.status = db_models.ChangeEmailApplication.Status.confirmed
+    application.rollback_status = db_models.ChangeEmailApplication.RollbackStatus.pending
     db.commit()
     return application
 
