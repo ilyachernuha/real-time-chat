@@ -121,14 +121,14 @@ def increase_failed_registration_attempts(db: Session, application_id: uuid.UUID
 
 
 def expire_register_applications(db: Session, expire_time: timedelta):
-    expired_applications = db.query(db_models.RegisterApplication).filter(
-        db_models.RegisterApplication.status == db_models.RegisterApplication.Status.pending,
-        datetime.now(timezone.utc) > db_models.RegisterApplication.timestamp + expire_time
-    ).all()
+    stmt = (
+        update(db_models.RegisterApplication).
+        where(db_models.RegisterApplication.status == db_models.RegisterApplication.Status.pending).
+        where(datetime.now(timezone.utc) > db_models.RegisterApplication.timestamp + expire_time).
+        values(status=db_models.RegisterApplication.Status.expired)
+    )
 
-    for application in expired_applications:
-        application.status = db_models.RegisterApplication.Status.expired
-
+    db.execute(stmt)
     db.commit()
 
 
@@ -157,14 +157,14 @@ def make_reset_password_application_used(db: Session, application_id: uuid.UUID)
 
 
 def expire_reset_password_applications(db: Session, expire_time: timedelta):
-    expired_applications = db.query(db_models.ResetPasswordApplication).filter(
-        db_models.ResetPasswordApplication.status == db_models.ResetPasswordApplication.Status.pending,
-        datetime.now(timezone.utc) > db_models.ResetPasswordApplication.timestamp + expire_time
-    ).all()
+    stmt = (
+        update(db_models.ResetPasswordApplication).
+        where(db_models.ResetPasswordApplication.status == db_models.ResetPasswordApplication.Status.pending).
+        where(datetime.now(timezone.utc) > db_models.ResetPasswordApplication.timestamp + expire_time).
+        values(status=db_models.ResetPasswordApplication.Status.expired)
+    )
 
-    for application in expired_applications:
-        application.status = db_models.ResetPasswordApplication.Status.expired
-
+    db.execute(stmt)
     db.commit()
 
 
@@ -187,9 +187,17 @@ def get_change_email_application_by_id(db: Session, application_id: uuid.UUID):
                                                              == application_id).first()
 
 
+def get_pending_rollback_change_email_application_by_email(db: Session, email: str):
+    return (db.query(db_models.ChangeEmailApplication).
+            filter(db_models.ChangeEmailApplication.old_email == email).
+            filter(db_models.ChangeEmailApplication.rollback_status ==
+                   db_models.ChangeEmailApplication.RollbackStatus.pending)).first()
+
+
 def make_change_email_application_confirmed(db: Session, application_id: uuid.UUID):
     application = get_change_email_application_by_id(db, application_id)
     application.status = db_models.ChangeEmailApplication.Status.confirmed
+    application.rollback_status = db_models.ChangeEmailApplication.RollbackStatus.pending
     db.commit()
     return application
 
@@ -211,24 +219,25 @@ def make_change_email_application_rolled_back(db: Session, application_id: uuid.
 
 
 def expire_change_email_applications(db: Session, expire_time: timedelta):
-    expired_applications = db.query(db_models.ChangeEmailApplication).filter(
-        db_models.ChangeEmailApplication.status == db_models.ChangeEmailApplication.Status.pending,
-        datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time
-    ).all()
+    stmt = (
+        update(db_models.ChangeEmailApplication).
+        where(db_models.ChangeEmailApplication.status == db_models.ChangeEmailApplication.Status.pending).
+        where(datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time).
+        values(status=db_models.ChangeEmailApplication.Status.expired)
+    )
 
-    for application in expired_applications:
-        application.status = db_models.ChangeEmailApplication.Status.expired
-
+    db.execute(stmt)
     db.commit()
 
 
 def expire_change_email_rollback(db: Session, expire_time: timedelta):
-    expired_applications = db.query(db_models.ChangeEmailApplication).filter(
-        db_models.ChangeEmailApplication.rollback_status == db_models.ChangeEmailApplication.RollbackStatus.pending,
-        datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time
-    ).all()
+    stmt = (
+        update(db_models.ChangeEmailApplication).
+        where(db_models.ChangeEmailApplication.rollback_status ==
+              db_models.ChangeEmailApplication.RollbackStatus.pending).
+        where(datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time).
+        values(rollback_status=db_models.ChangeEmailApplication.RollbackStatus.expired)
+    )
 
-    for application in expired_applications:
-        application.status = db_models.ChangeEmailApplication.RollbackStatus.expired
-
+    db.execute(stmt)
     db.commit()
