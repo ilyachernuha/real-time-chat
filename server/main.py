@@ -57,10 +57,8 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
     auth_utils.validate_password(body.password)
     hashed_password = auth_utils.ph.hash(body.password)
     try:
-        if crud.get_user_by_username(db, body.username):
-            raise HTTPException(status_code=400, detail="This username is taken")
-        if crud.get_user_by_email(db, body.email):
-            raise HTTPException(status_code=400, detail="Account with this email already exists")
+        auth_utils.check_if_username_is_available(db, body.username)
+        auth_utils.check_if_email_is_available(db, body.email)
         application = crud.create_register_application(db=db, username=body.username,
                                                        email=body.email, hashed_password=hashed_password)
         application_id = str(application.application_id)
@@ -84,6 +82,8 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
             crud.increase_failed_registration_attempts(db, body.application_id)
             raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
+        auth_utils.check_if_username_is_available(db, application.username)
+        auth_utils.check_if_email_is_available(db, application.email)
         crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
         user_id = str(crud.create_user(db=db, username=application.username,
                                        hashed_password=application.hashed_password, name=application.username,
@@ -133,6 +133,7 @@ async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCr
     try:
         user = auth_utils.get_user_by_basic_auth(db, credentials)
         auth_utils.validate_username(body.new_username)
+        auth_utils.check_if_username_is_available(db, body.new_username)
         crud.update_username(db, user.user_id, body.new_username)
         return {"status": "success", "new_username": user.account_data.username}
     except SQLAlchemyError:
@@ -144,6 +145,7 @@ async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredenti
                        db: Session = Depends(get_db)):
     try:
         user = auth_utils.get_user_by_basic_auth(db, credentials)
+        auth_utils.check_if_email_is_available(db, body.new_email)
         application = crud.create_change_email_application(db, user.user_id, body.new_email)
         email_utils.send_change_email_confirmation(body.new_email, application.confirmation_code,
                                                    user.account_data.username)
@@ -164,6 +166,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
             crud.increase_failed_change_email_attempts(db, application.application_id)
             raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
+        auth_utils.check_if_email_is_available(db, application.email)
         user = crud.update_email(db, application.user_id, application.new_email)
         application = crud.make_change_email_application_confirmed(db, application.application_id)
         email_utils.send_email_change_rollback(application.old_email,
