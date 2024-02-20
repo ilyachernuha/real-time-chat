@@ -1,5 +1,5 @@
 import { Button } from "@/components/Buttons";
-import InputField from "@/components/InputField";
+import InputField from "@/components/InputFields";
 import Logo from "@/components/Logo";
 import { Bold, Regular12 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
