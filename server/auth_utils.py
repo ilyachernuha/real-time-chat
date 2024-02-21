@@ -33,7 +33,7 @@ def validate_token(token: str):
         return None
 
 
-def validata_token_in_header(token: str = Depends(oauth2_scheme)):
+def validate_token_in_header(token: str = Depends(oauth2_scheme)):
     user_id = validate_token(token)
     if user_id is None:
         raise HTTPException(status_code=400, detail="Invalid token")
