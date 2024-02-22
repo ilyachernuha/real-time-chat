@@ -117,7 +117,7 @@ async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
 
 
 @app.put("/change_name")
-async def change_name(body: schemas.UpdateName, user_id: str = Depends(auth_utils.validata_token_in_header),
+async def change_name(body: schemas.UpdateName, user_id: str = Depends(auth_utils.validate_token_in_header),
                       db: Session = Depends(get_db)):
     auth_utils.validate_name(body.new_name)
     try:
