@@ -1,14 +1,13 @@
 import React, { useState } from "react";
-import { StyleSheet } from "react-native";
 import { Formik, FormikErrors, FormikHelpers, FormikTouched } from "formik";
 import * as Yup from "yup";
-import { View } from "./Themed";
-import { Button, SecondaryButton } from "./Buttons";
-import { DividerWithText } from "./Dividers";
+import { View } from "../Themed";
+import { Button, SecondaryButton } from "../Buttons";
+import { DividerWithText } from "../Dividers";
 import { Link } from "expo-router";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
-import InputField from "./InputFields";
+import InputField from "../InputFields";
 
 export interface LoginFormValues {
   username: string;
@@ -89,21 +88,11 @@ const LoginForm = ({ onLogin, onGuestLogin }: LoginFormProps) => {
               Forgot password?
             </Link>
           </View>
-          <View>
-            <Button onPress={() => handleSubmit()} title="Sign In" disabled={isSubmitting} />
-            <DividerWithText text="or" />
-            <SecondaryButton
-              title="Log In as a Guest"
-              onPress={() => onGuestLogin(values, { setSubmitting, ...formikHelpers }, errors, touched)}
-              disabled={isSubmitting}
-            />
-          </View>
+          <Button onPress={() => handleSubmit()} title="Sign In" disabled={isSubmitting} />
         </View>
       )}
     </Formik>
   );
 };
-
-const styles = StyleSheet.create({});
 
 export default LoginForm;
