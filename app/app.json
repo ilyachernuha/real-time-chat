@@ -24,7 +24,21 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#030708"
       },
-      "package": "com.teamchallenge.realtimechat"
+      "package": "com.teamchallenge.realtimechat",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "http",
+              "host": "192.168.0.103",
+              "port": "8000"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro",

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.teamchallenge.realtimechat",
+      "sha256_cert_fingerprints": [
+        "A7:D8:9B:F5:E5:F5:AB:7F:5A:5C:F6:9C:17:B8:3B:B8:45:C7:2F:E1:7A:AC:8F:C1:2E:49:F0:C7:76:8D:E2:FA"
+      ]
+    }
+  }
+]

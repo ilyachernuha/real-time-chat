@@ -1,27 +1,27 @@
-import Logo from "@/components/Logo";
+import { router } from "expo-router";
 import { Bold, Regular12 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
-import ForgotPasswordForm, { ForgotPasswordFormValues } from "@/components/auth/ForgotPasswordForm";
 import Colors from "@/constants/Colors";
+import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
-import { isAxiosError } from "axios";
-import { router } from "expo-router";
 import { FormikHelpers } from "formik";
+import { isAxiosError } from "axios";
 import { Alert } from "react-native";
+import GuestLoginForm, { GuestLoginFormValues } from "@/components/auth/GuestLoginForm";
 
-export default function ForgotPassword() {
-  const { forgotPassword } = useAuth();
+export default function Guest() {
+  const { guestLogin } = useAuth();
 
-  const handleForgot = async (
-    values: ForgotPasswordFormValues,
-    { setSubmitting, setErrors }: FormikHelpers<ForgotPasswordFormValues>
+  const handleGuestLogin = async (
+    values: GuestLoginFormValues,
+    { setSubmitting, setErrors }: FormikHelpers<GuestLoginFormValues>
   ) => {
     try {
-      await forgotPassword(values.email);
-      router.navigate(`/sent/${values.email}`);
+      await guestLogin(values.username);
+      router.replace("/");
     } catch (error) {
       if (isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
-        setErrors({ email: error.response.data.detail });
+        setErrors({ username: error.response.data.detail });
       } else {
         Alert.alert("Unexpected Error", "An unexpected error occurred. Please try again later.");
       }
@@ -34,16 +34,16 @@ export default function ForgotPassword() {
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 48 }}>
       <Logo />
       <View style={{ marginTop: 24, marginBottom: 32 }}>
-        <Bold style={{ textAlign: "center" }}>Forgot password?</Bold>
+        <Bold style={{ textAlign: "center" }}>Login as a guest!</Bold>
         <Regular12
-          style={{ textAlign: "center", paddingTop: 15 }}
+          style={[{ textAlign: "center", padding: 15 }]}
           darkColor={Colors.dark.secondaryLightGrey}
           lightColor={Colors.dark.secondaryLightGrey}
         >
-          Do not excite! Enter your email and{"\n"}we will reset password!
+          Please provide a username
         </Regular12>
       </View>
-      <ForgotPasswordForm onReset={handleForgot} />
+      <GuestLoginForm onGuestLogin={handleGuestLogin} />
     </SafeAreaView>
   );
 }

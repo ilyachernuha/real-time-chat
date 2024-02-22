@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 import socketio
 from pydantic import ValidationError
 from jinja2 import Environment, FileSystemLoader
@@ -50,6 +51,7 @@ def init_scheduler():
 async def ping():
     return "pong"
 
+app.mount("/public", StaticFiles(directory="public"), name="public")
 
 @app.post("/create_account")
 async def register(body: schemas.Registration, db: Session = Depends(get_db)):

@@ -1,16 +1,7 @@
 import "@/polyfills";
 import axios from "axios";
 import API from "@/constants/API";
-import {
-  ConfirmRequest,
-  ConfirmResponse,
-  GuestLoginRequest,
-  GuestLoginResponse,
-  LoginRequest,
-  LoginResponse,
-  RegisterRequest,
-  RegisterResponse,
-} from "./types";
+import * as types from "./types";
 
 const api = axios.create({
   baseURL: API.apiURL,
@@ -38,23 +29,32 @@ api.interceptors.response.use(
 );
 
 export default {
-  login: async (credentials: LoginRequest) => {
-    const response = await api.post<LoginResponse>("/login", {}, { auth: credentials });
+  login: async (credentials: types.LoginRequest) => {
+    const response = await api.post<types.LoginResponse>("/login", {}, { auth: credentials });
     return response.data;
   },
 
-  register: async (credentials: RegisterRequest) => {
-    const response = await api.post<RegisterResponse>("/create_account", credentials);
+  register: async (credentials: types.RegisterRequest) => {
+    const response = await api.post<types.RegisterResponse>("/create_account", credentials);
     return response.data;
   },
 
-  confirm: async (confirmation: ConfirmRequest) => {
-    const response = await api.post<ConfirmResponse>("finish_registration", confirmation);
+  confirm: async (confirmation: types.ConfirmRequest) => {
+    const response = await api.post<types.ConfirmResponse>("finish_registration", confirmation);
     return response.data;
   },
 
-  guestLogin: async (guest: GuestLoginRequest) => {
-    const response = await api.post<GuestLoginResponse>("/guest_login", guest);
+  guestLogin: async (guest: types.GuestLoginRequest) => {
+    const response = await api.post<types.GuestLoginResponse>("/guest_login", guest);
+    return response.data;
+  },
+
+  forgotPassword: async (guest: types.ForgotPasswordRequest) => {
+    const response = await api.post<types.ForgotPasswordResponse>("/reset_password", guest);
+    return response.data;
+  },
+  resetPassword: async (credentials: types.ResetPasswordRequest) => {
+    const response = await api.put<types.ResetPasswordResponse>("/finish_reset_password", credentials);
     return response.data;
   },
 };
