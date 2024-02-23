@@ -21,6 +21,7 @@ def init_db():
         print("Error: Could not connect to the database")
 
 
+# to be used by FastAPI Depends()
 def get_db():
     db = SessionLocal()
     try:
@@ -29,6 +30,7 @@ def get_db():
         db.close()
 
 
+# to be used in a with statement outside FastAPI
 @contextmanager
 def db_session():
     db = SessionLocal()
