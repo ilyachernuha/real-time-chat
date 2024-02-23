@@ -51,7 +51,6 @@ def init_scheduler():
 async def ping():
     return "pong"
 
-app.mount("/public", StaticFiles(directory="public"), name="public")
 
 @app.post("/create_account")
 async def register(body: schemas.Registration, db: Session = Depends(get_db)):
@@ -330,4 +329,5 @@ async def stop_typing(sid, data):
             pass
 
 
+app.mount("/public", StaticFiles(directory="public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))
