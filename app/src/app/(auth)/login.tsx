@@ -4,11 +4,13 @@ import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
-import LoginForm, { LoginFormValues } from "@/components/LoginForm";
+import LoginForm, { LoginFormValues } from "@/components/auth/LoginForm";
 import { FormikErrors, FormikHelpers, FormikTouched } from "formik";
 import { isAxiosError } from "axios";
 import { Alert } from "react-native";
 import Fonts from "@/constants/Fonts";
+import { DividerWithText } from "@/components/Dividers";
+import { SecondaryButton } from "@/components/Buttons";
 
 export default function Login() {
   const { signIn, guestLogin } = useAuth();
@@ -76,6 +78,8 @@ export default function Login() {
         </View>
       </View>
       <LoginForm onLogin={handleLogin} onGuestLogin={handleGuestLogin} />
+      <DividerWithText text="or" />
+      <SecondaryButton title="Log In as a Guest" onPress={() => router.navigate("/guest")} />
     </SafeAreaView>
   );
 }

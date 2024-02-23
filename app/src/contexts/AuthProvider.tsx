@@ -35,6 +35,12 @@ export function AuthProvider(props: React.PropsWithChildren) {
           const { token } = await AuthService.guestLogin({ name: username });
           setToken(token);
         },
+        forgotPassword: async (email) => {
+          await AuthService.forgotPassword({ email });
+        },
+        resetPassword: async (credentials) => {
+          await AuthService.resetPassword(credentials);
+        },
         token,
         isLoading,
       }}

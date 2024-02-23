@@ -4,7 +4,7 @@ import Colors from "@/constants/Colors";
 import { SafeAreaView, View } from "@/components/Themed";
 import Logo from "@/components/Logo";
 import { useAuth } from "@/hooks/useAuth";
-import RegistrationForm, { RegistrationFormValues } from "@/components/RegistrationForm";
+import RegistrationForm, { RegistrationFormValues } from "@/components/auth/RegistrationForm";
 import { FormikHelpers } from "formik";
 import { isAxiosError } from "axios";
 import { Alert } from "react-native";

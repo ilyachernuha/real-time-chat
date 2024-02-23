@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { StyleSheet } from "react-native";
 import { Formik, FormikHelpers } from "formik";
 import * as Yup from "yup";
-import { View } from "./Themed";
-import { Button } from "./Buttons";
-import InputField from "./InputFields";
+import { View } from "../Themed";
+import { Button } from "../Buttons";
+import InputField from "../InputFields";
 
 export interface RegistrationFormValues {
   email: string;
@@ -92,7 +91,5 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
     </Formik>
   );
 };
-
-const styles = StyleSheet.create({});
 
 export default RegistrationForm;

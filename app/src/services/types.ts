@@ -37,3 +37,20 @@ export type GuestLoginResponse = {
   user_id: string;
   token: string;
 };
+
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export type ForgotPasswordResponse = {
+  status: string;
+};
+
+export interface ResetPasswordRequest {
+  application_id: string;
+  new_password: string;
+}
+
+export type ResetPasswordResponse = {
+  status: "success";
+};
