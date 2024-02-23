@@ -4,27 +4,23 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import socketio
-from jinja2 import Environment, FileSystemLoader
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import os
-from dotenv import load_dotenv
 import schemas
 from database import init_db, get_db
 import crud
 import bg_tasks
 import email_utils
 import auth_utils
+import html_generator
 from sio import sio
 
 
-load_dotenv()
 init_db()
 app = FastAPI()
 security = HTTPBasic()
-template_env = Environment(loader=FileSystemLoader("html_templates"))
 
 
 app.add_middleware(
@@ -226,11 +222,7 @@ async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(g
         if application is None:
             raise HTTPException(status_code=404, detail="Application not found")
         auth_utils.check_reset_password_application_status(application.status)
-
-        url = os.getenv("BASE_URL") + "/finish_reset_password"
-        response = template_env.get_template("reset_password_page.html").render(url=url, application_id=application_id)
-        return HTMLResponse(response)
-
+        return HTMLResponse(html_generator.generate_reset_password_page(str(application_id)))
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
