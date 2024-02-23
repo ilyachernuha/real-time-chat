@@ -166,7 +166,6 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
         email_utils.send_email_change_rollback(application.old_email,
                                                str(application.application_id), user.account_data.username)
         return {"status": "Email changed", "new_email": user.account_data.email}
-
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
@@ -241,7 +240,6 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
         crud.make_reset_password_application_used(db, application.application_id)
 
         return {"status": "success"}
-
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
