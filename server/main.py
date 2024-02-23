@@ -4,9 +4,7 @@ from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 import socketio
-from pydantic import ValidationError
 from jinja2 import Environment, FileSystemLoader
-import time
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,19 +12,18 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import os
 from dotenv import load_dotenv
 import schemas
-from database import init_db, get_db, db_session
+from database import init_db, get_db
 import crud
 import bg_tasks
 import email_utils
 import auth_utils
+from sio import sio
 
 
 load_dotenv()
 init_db()
 app = FastAPI()
 security = HTTPBasic()
-sio = socketio.AsyncServer(async_mode="asgi")
-sid_user_data = dict()
 template_env = Environment(loader=FileSystemLoader("html_templates"))
 
 
@@ -255,78 +252,6 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
 
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
-
-
-@sio.event
-async def connect(sid, environ, auth):
-    token = auth.get("token")
-    if token is None:
-        return False
-    user_id = auth_utils.validate_token(token)
-    if user_id is None:
-        return False
-    sid_user_data[sid] = user_id
-
-
-@sio.event
-async def disconnect(sid):
-    sid_user_data.pop(sid, None)
-
-
-@sio.event
-async def message(sid, data):
-    with db_session() as db:
-        try:
-            validated_data = schemas.Message(**data)
-            user_id = sid_user_data[sid]
-            name = crud.get_user_by_id(db, user_id).name
-            await sio.emit("message", {
-                "user": {
-                    "id": user_id,
-                    "name": name
-                },
-                "text": validated_data.text,
-                "room": validated_data.room,
-                "timestamp": int(time.time() * 1000)
-            })
-        except ValidationError:
-            pass
-
-
-@sio.event
-async def start_typing(sid, data):
-    with db_session() as db:
-        try:
-            room = schemas.Typing(**data).room
-            user_id = sid_user_data[sid]
-            name = crud.get_user_by_id(db, user_id).name
-            await sio.emit("start_typing", {
-                "user": {
-                    "id": user_id,
-                    "name": name
-                },
-                "room": room
-            })
-        except ValidationError:
-            pass
-
-
-@sio.event
-async def stop_typing(sid, data):
-    with db_session() as db:
-        try:
-            room = schemas.Typing(**data).room
-            user_id = sid_user_data[sid]
-            name = crud.get_user_by_id(db, user_id).name
-            await sio.emit("stop_typing", {
-                "user": {
-                    "id": user_id,
-                    "name": name
-                },
-                "room": room
-            })
-        except ValidationError:
-            pass
 
 
 app.mount("/public", StaticFiles(directory="public"))
