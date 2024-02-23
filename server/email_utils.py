@@ -37,7 +37,7 @@ def send_email(receiver: str, subject: str, text: str):
 
 
 def send_registration_confirmation(receiver: str, code: str, device_info: str):
-    message_text = html_generator.generate_email_confirmation(code=code, device_info=device_info)
+    message_text = html_generator.generate_register_confirmation_email(code=code, device_info=device_info)
     send_email(receiver=receiver, subject="Email confirmation", text=message_text)
 
 

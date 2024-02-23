@@ -9,8 +9,8 @@ template_env = Environment(loader=FileSystemLoader("html_templates"))
 base_url = os.getenv("BASE_URL")
 
 
-def generate_email_confirmation(code: str, device_info: str):
-    return template_env.get_template("confirmation_email.html").render(code=code, device=device_info)
+def generate_register_confirmation_email(code: str, device_info: str):
+    return template_env.get_template("register_confirmation_email.html").render(code=code, device=device_info)
 
 
 def generate_reset_password_email(application_id: str):
@@ -24,7 +24,7 @@ def generate_reset_password_page(application_id: str):
 
 
 def generate_change_email_confirmation(code: str, username: str):
-    return template_env.get_template("reset_email_confirmation.html").render(code=code, username=username)
+    return template_env.get_template("change_email_confirmation.html").render(code=code, username=username)
 
 
 def generate_change_email_rollback(application_id: str, username: str):
