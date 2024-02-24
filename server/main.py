@@ -48,6 +48,14 @@ async def access_token_validation_error_handler(request: Request, exc: auth_util
     )
 
 
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Unexpected database error"}
+    )
+
+
 @app.get("/ping")
 async def ping():
     return "pong"
@@ -69,81 +77,70 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
         return {"status": "Email confirmation required", "application_id": application_id}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
 
 
 @app.post("/finish_registration")
 async def finish_registration(body: schemas.RegistrationConfirmation, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_register_application_by_id(db, body.application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Register application not found")
-        auth_utils.check_register_application_status(application.status)
-        if application.confirmation_code != body.confirmation_code:
-            crud.increase_failed_registration_attempts(db, body.application_id)
-            raise HTTPException(status_code=400, detail="Incorrect confirmation code")
+    application = crud.get_register_application_by_id(db, body.application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Register application not found")
+    auth_utils.check_register_application_status(application.status)
+    if application.confirmation_code != body.confirmation_code:
+        crud.increase_failed_registration_attempts(db, body.application_id)
+        raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
-        auth_utils.check_if_username_is_available(db, application.username)
-        auth_utils.check_if_email_is_available(db, application.email)
-        crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
-        user = crud.create_user(db=db, username=application.username, hashed_password=application.hashed_password,
-                                name=application.username, email=application.email)
-        refresh_token = auth_utils.generate_refresh_token()
-        session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
-                                      device_info="unknown")
-        user_id_str = str(user.user_id)
-        session_id_str = str(session.session_id)
-        access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
-        return {
-            "user_id": user_id_str,
-            "session_id": session_id_str,
-            "refresh_token": refresh_token,
-            "access_token": access_token
-        }
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    auth_utils.check_if_username_is_available(db, application.username)
+    auth_utils.check_if_email_is_available(db, application.email)
+    crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
+    user = crud.create_user(db=db, username=application.username, hashed_password=application.hashed_password,
+                            name=application.username, email=application.email)
+    refresh_token = auth_utils.generate_refresh_token()
+    session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                  device_info="unknown")
+    user_id_str = str(user.user_id)
+    session_id_str = str(session.session_id)
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }
 
 
 @app.post("/login")
 async def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        refresh_token = auth_utils.generate_refresh_token()
-        session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
-                                      device_info="unknown")
-        user_id_str = str(user.user_id)
-        session_id_str = str(session.session_id)
-        access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
-        return {
-            "user_id": user_id_str,
-            "session_id": session_id_str,
-            "refresh_token": refresh_token,
-            "access_token": access_token
-        }
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    refresh_token = auth_utils.generate_refresh_token()
+    session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                  device_info="unknown")
+    user_id_str = str(user.user_id)
+    session_id_str = str(session.session_id)
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }
 
 
 @app.post("/guest_login")
 async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
     auth_utils.validate_name(body.name)
-    try:
-        user = crud.create_guest_user(db, body.name)
-        refresh_token = auth_utils.generate_refresh_token()
-        session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
-                                      device_info="unknown")
-        user_id_str = str(user.user_id)
-        session_id_str = str(session.session_id)
-        access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
-        return {
-            "user_id": user_id_str,
-            "session_id": session_id_str,
-            "refresh_token": refresh_token,
-            "access_token": access_token
-        }
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = crud.create_guest_user(db, body.name)
+    refresh_token = auth_utils.generate_refresh_token()
+    session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                  device_info="unknown")
+    user_id_str = str(user.user_id)
+    session_id_str = str(session.session_id)
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }
 
 
 @app.post("/token_refresh")
@@ -163,134 +160,107 @@ async def change_name(body: schemas.UpdateName,
                       token_data: dict = Depends(auth_utils.extract_access_token_data_depends),
                       db: Session = Depends(get_db)):
     auth_utils.validate_name(body.new_name)
-    try:
-        user = crud.update_user_name(db, uuid.UUID(token_data["user_id"]), body.new_name)
-        return {"status": "success", "new_name": user.name}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = crud.update_user_name(db, uuid.UUID(token_data["user_id"]), body.new_name)
+    return {"status": "success", "new_name": user.name}
 
 
 @app.put("/change_username")
 async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security),
                           db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        auth_utils.validate_username(body.new_username)
-        auth_utils.check_if_username_is_available(db, body.new_username)
-        crud.update_username(db, user.user_id, body.new_username)
-        return {"status": "success", "new_username": user.account_data.username}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    auth_utils.validate_username(body.new_username)
+    auth_utils.check_if_username_is_available(db, body.new_username)
+    crud.update_username(db, user.user_id, body.new_username)
+    return {"status": "success", "new_username": user.account_data.username}
 
 
 @app.post("/change_email")
 async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security),
                        db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        auth_utils.check_if_email_is_available(db, body.new_email)
-        application = crud.create_change_email_application(db, user.user_id, body.new_email)
-        email_utils.send_change_email_confirmation(body.new_email, application.confirmation_code,
-                                                   user.account_data.username)
-        application_id_str = str(application.application_id)
-        return {"status": "Email confirmation required", "application_id": application_id_str}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    auth_utils.check_if_email_is_available(db, body.new_email)
+    application = crud.create_change_email_application(db, user.user_id, body.new_email)
+    email_utils.send_change_email_confirmation(body.new_email, application.confirmation_code,
+                                               user.account_data.username)
+    application_id_str = str(application.application_id)
+    return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
 @app.post("/finish_change_email")
 async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_change_email_application_by_id(db, body.application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_change_email_application_status(application.status)
-        if application.confirmation_code != body.confirmation_code:
-            crud.increase_failed_change_email_attempts(db, application.application_id)
-            raise HTTPException(status_code=400, detail="Incorrect confirmation code")
+    application = crud.get_change_email_application_by_id(db, body.application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_change_email_application_status(application.status)
+    if application.confirmation_code != body.confirmation_code:
+        crud.increase_failed_change_email_attempts(db, application.application_id)
+        raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
-        auth_utils.check_if_email_is_available(db, application.new_email)
-        user = crud.update_email(db, application.user_id, application.new_email)
-        application = crud.make_change_email_application_confirmed(db, application.application_id)
-        email_utils.send_email_change_rollback(application.old_email,
-                                               str(application.application_id), user.account_data.username)
-        return {"status": "Email changed", "new_email": user.account_data.email}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    auth_utils.check_if_email_is_available(db, application.new_email)
+    user = crud.update_email(db, application.user_id, application.new_email)
+    application = crud.make_change_email_application_confirmed(db, application.application_id)
+    email_utils.send_email_change_rollback(application.old_email,
+                                           str(application.application_id), user.account_data.username)
+    return {"status": "Email changed", "new_email": user.account_data.email}
 
 
 @app.get("/rollback_email_change/{application_id}")
 async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_change_email_application_by_id(db, application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_change_email_rollback_status(application.status)
+    application = crud.get_change_email_application_by_id(db, application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_change_email_rollback_status(application.status)
 
-        crud.update_email(db, application.user_id, application.old_email)
-        crud.make_change_email_application_rolled_back(db, application_id)
-        return {"status": "Email change rolled back"}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    crud.update_email(db, application.user_id, application.old_email)
+    crud.make_change_email_application_rolled_back(db, application_id)
+    return {"status": "Email change rolled back"}
 
 
 @app.put("/change_password")
 async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security),
                           db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        auth_utils.validate_password(body.new_password)
-        new_password_hash = auth_utils.ph.hash(body.new_password)
-        crud.update_password(db, user.user_id, new_password_hash)
-        return {"status": "success"}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    auth_utils.validate_password(body.new_password)
+    new_password_hash = auth_utils.ph.hash(body.new_password)
+    crud.update_password(db, user.user_id, new_password_hash)
+    return {"status": "success"}
 
 
 @app.post("/reset_password")
 async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_db)):
-    try:
-        user = crud.get_user_by_email(db, body.email)
-        if user is None:
-            raise HTTPException(status_code=404, detail="Account with this email does not exist")
-        if user.is_guest:
-            raise HTTPException(status_code=400, detail="This is a guest user")
-        application = crud.create_reset_password_application(db, user.account_data.user_id)
-        email_utils.send_reset_password_email(receiver=body.email, application_id=str(application.application_id))
+    user = crud.get_user_by_email(db, body.email)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Account with this email does not exist")
+    if user.is_guest:
+        raise HTTPException(status_code=400, detail="This is a guest user")
+    application = crud.create_reset_password_application(db, user.account_data.user_id)
+    email_utils.send_reset_password_email(receiver=body.email, application_id=str(application.application_id))
 
-        return {"status": "email sent"}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    return {"status": "email sent"}
 
 
 @app.get("/reset_password_page/{application_id}")
 async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_reset_password_application(db, application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_reset_password_application_status(application.status)
-        return HTMLResponse(html_generator.generate_reset_password_page(str(application_id)))
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    application = crud.get_reset_password_application(db, application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_reset_password_application_status(application.status)
+    return HTMLResponse(html_generator.generate_reset_password_page(str(application_id)))
 
 
 @app.put("/finish_reset_password")
 async def finish_reset_password(body: schemas.FinishResetPassword, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_reset_password_application(db, body.application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_reset_password_application_status(application.status)
+    application = crud.get_reset_password_application(db, body.application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_reset_password_application_status(application.status)
 
-        auth_utils.validate_password(body.new_password)
-        new_password_hash = auth_utils.ph.hash(body.new_password)
-        crud.update_password(db, application.user_id, new_password_hash)
-        crud.make_reset_password_application_used(db, application.application_id)
+    auth_utils.validate_password(body.new_password)
+    new_password_hash = auth_utils.ph.hash(body.new_password)
+    crud.update_password(db, application.user_id, new_password_hash)
+    crud.make_reset_password_application_used(db, application.application_id)
 
-        return {"status": "success"}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    return {"status": "success"}
 
 
 app.mount("/public", StaticFiles(directory="public"))
