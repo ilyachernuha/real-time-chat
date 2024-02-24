@@ -40,12 +40,12 @@ def init_scheduler():
     scheduler.start()
 
 
-# @app.exception_handler(auth_utils.AccessTokenValidationError)
-# async def access_token_validation_error_handler(request: Request, exc: auth_utils.AccessTokenValidationError):
-#     return JSONResponse(
-#         status_code=401,
-#         content={"detail": str(exc)}
-#     )
+@app.exception_handler(auth_utils.AccessTokenValidationError)
+async def access_token_validation_error_handler(request: Request, exc: auth_utils.AccessTokenValidationError):
+    return JSONResponse(
+        status_code=401,
+        content={"detail": str(exc)}
+    )
 
 
 @app.get("/ping")
