@@ -1,4 +1,4 @@
-from fastapi.security import HTTPBasic, HTTPBasicCredentials, OAuth2PasswordBearer
+from fastapi.security import HTTPBasicCredentials, OAuth2PasswordBearer
 from fastapi import Depends, HTTPException
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
@@ -6,38 +6,58 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, ValidationError
 import jwt
 import secrets
+import hashlib
 import re
+import time
 import crud
 import db_models
 
 
-security = HTTPBasic()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 ph = PasswordHasher()
 secret_key = secrets.token_hex(256)
 
 
-def generate_token(user_id):
-    token = jwt.encode({'user': user_id}, secret_key, algorithm='HS256')
+class AccessTokenValidationError(Exception):
+    def __init__(self, message):
+        super().__init__(message)
+
+
+def generate_access_token(user_id_str: str, session_id_str: str):
+    token = jwt.encode({
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "exp": int(time.time()) + 900
+    }, secret_key, algorithm="HS256")
     return token
 
 
-def validate_token(token: str):
+def extract_access_token_data(token: str):
     try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-        user_id = payload['user']
-        return user_id
+        return jwt.decode(token, secret_key, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
-        return None
+        raise AccessTokenValidationError("Token expired")
     except jwt.InvalidTokenError:
-        return None
+        raise AccessTokenValidationError("Invalid token")
 
 
-def validate_token_in_header(token: str = Depends(oauth2_scheme)):
-    user_id = validate_token(token)
-    if user_id is None:
-        raise HTTPException(status_code=400, detail="Invalid token")
-    return user_id
+def extract_access_token_data_depends(token: str = Depends(oauth2_scheme)):
+    return extract_access_token_data(token)
+
+
+def generate_refresh_token():
+    return secrets.token_urlsafe(64)
+
+
+def hash_refresh_token(token: str):
+    return hashlib.sha512(token.encode()).hexdigest()
+
+
+def get_and_validate_session_from_refresh_token(db: Session, token: str):
+    session = crud.get_session_by_refresh_token_hash(db, hash_refresh_token(token))
+    if session is None:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    return session
 
 
 def validate_name(name: str):

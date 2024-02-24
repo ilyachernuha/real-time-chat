@@ -1,7 +1,7 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import socketio
 import uuid
@@ -38,6 +38,14 @@ def init_scheduler():
     scheduler.add_job(bg_tasks.expire_applications_task, "interval", minutes=1)
     scheduler.add_job(bg_tasks.expire_email_rollback_task, "interval", hours=1)
     scheduler.start()
+
+
+# @app.exception_handler(auth_utils.AccessTokenValidationError)
+# async def access_token_validation_error_handler(request: Request, exc: auth_utils.AccessTokenValidationError):
+#     return JSONResponse(
+#         status_code=401,
+#         content={"detail": str(exc)}
+#     )
 
 
 @app.get("/ping")
@@ -79,11 +87,20 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
         auth_utils.check_if_username_is_available(db, application.username)
         auth_utils.check_if_email_is_available(db, application.email)
         crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
-        user_id = str(crud.create_user(db=db, username=application.username,
-                                       hashed_password=application.hashed_password, name=application.username,
-                                       email=application.email))
-        token = auth_utils.generate_token(user_id)
-        return {"user_id": user_id, "token": token}
+        user = crud.create_user(db=db, username=application.username, hashed_password=application.hashed_password,
+                                name=application.username, email=application.email)
+        refresh_token = auth_utils.generate_refresh_token()
+        session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                      device_info="unknown")
+        user_id_str = str(user.user_id)
+        session_id_str = str(session.session_id)
+        access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+        return {
+            "user_id": user_id_str,
+            "session_id": session_id_str,
+            "refresh_token": refresh_token,
+            "access_token": access_token
+        }
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
@@ -92,9 +109,18 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
 async def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
     try:
         user = auth_utils.get_user_by_basic_auth(db, credentials)
+        refresh_token = auth_utils.generate_refresh_token()
+        session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                      device_info="unknown")
         user_id_str = str(user.user_id)
-        token = auth_utils.generate_token(user_id_str)
-        return {"user_id": user_id_str, "token": token}
+        session_id_str = str(session.session_id)
+        access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+        return {
+            "user_id": user_id_str,
+            "session_id": session_id_str,
+            "refresh_token": refresh_token,
+            "access_token": access_token
+        }
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
@@ -103,19 +129,42 @@ async def login(credentials: HTTPBasicCredentials = Depends(security), db: Sessi
 async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
     auth_utils.validate_name(body.name)
     try:
-        user_id_str = str(crud.create_guest_user(db, body.name))
-        token = auth_utils.generate_token(user_id_str)
-        return {"user_id": user_id_str, "token": token}
+        user = crud.create_guest_user(db, body.name)
+        refresh_token = auth_utils.generate_refresh_token()
+        session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                      device_info="unknown")
+        user_id_str = str(user.user_id)
+        session_id_str = str(session.session_id)
+        access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+        return {
+            "user_id": user_id_str,
+            "session_id": session_id_str,
+            "refresh_token": refresh_token,
+            "access_token": access_token
+        }
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")
 
 
+@app.post("/token_refresh")
+async def token_refresh(body: schemas.TokenRefresh, db: Session = Depends(get_db)):
+    session = auth_utils.get_and_validate_session_from_refresh_token(db, body.refresh_token)
+    user_id_str = str(session.user.user_id)
+    session_id_str = str(session.session_id)
+    new_refresh_token = auth_utils.generate_refresh_token()
+    crud.update_session_refresh_token_hash_and_update_expire_time(db, session.session_id,
+                                                                  auth_utils.hash_refresh_token(new_refresh_token))
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {"access_token": access_token, "new_refresh_token": new_refresh_token}
+
+
 @app.put("/change_name")
-async def change_name(body: schemas.UpdateName, user_id: str = Depends(auth_utils.validate_token_in_header),
+async def change_name(body: schemas.UpdateName,
+                      token_data: dict = Depends(auth_utils.extract_access_token_data_depends),
                       db: Session = Depends(get_db)):
     auth_utils.validate_name(body.new_name)
     try:
-        user = crud.update_user_name(db, uuid.UUID(user_id), body.new_name)
+        user = crud.update_user_name(db, uuid.UUID(token_data["user_id"]), body.new_name)
         return {"status": "success", "new_name": user.name}
     except SQLAlchemyError:
         raise HTTPException(status_code=500, detail="Unexpected database error")

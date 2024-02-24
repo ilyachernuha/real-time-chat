@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from sqlalchemy import update
+from sqlalchemy import update, delete
 import uuid
 from datetime import datetime, timezone, timedelta
 import db_models
@@ -17,7 +17,7 @@ def create_user(db: Session, username: str, hashed_password: str, name: str, ema
 
     db.add(user)
     db.commit()
-    return user_id
+    return user
 
 
 def create_guest_user(db: Session, name: str):
@@ -26,7 +26,7 @@ def create_guest_user(db: Session, name: str):
 
     db.add(guest)
     db.commit()
-    return user_id
+    return guest
 
 
 def get_user_by_id(db: Session, user_id: uuid.UUID):
@@ -237,6 +237,67 @@ def expire_change_email_rollback(db: Session, expire_time: timedelta):
               db_models.ChangeEmailApplication.RollbackStatus.pending).
         where(datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time).
         values(rollback_status=db_models.ChangeEmailApplication.RollbackStatus.expired)
+    )
+
+    db.execute(stmt)
+    db.commit()
+
+
+# SESSIONS
+
+
+def create_session(db: Session, user: db_models.User, refresh_token_hash: str, device_info: str):
+    session_id = uuid.uuid4()
+    session = db_models.Session(session_id=session_id, user_id=user.user_id, refresh_token_hash=refresh_token_hash,
+                                device_info=device_info, user=user)
+
+    db.add(session)
+    db.commit()
+    return session
+
+
+def get_session_by_id(db: Session, session_id: uuid.UUID):
+    return db.query(db_models.Session).filter(db_models.Session.session_id == session_id).first()
+
+
+def get_session_by_refresh_token_hash(db: Session, refresh_token_hash: str):
+    return db.query(db_models.Session).filter(db_models.Session.refresh_token_hash == refresh_token_hash).first()
+
+
+def get_sessions_by_user_id(db: Session, user_id: uuid.UUID):
+    return db.query(db_models.Session).filter(db_models.Session.user_id == user_id).all()
+
+
+def update_session_refresh_token_hash_and_update_expire_time(db: Session, session_id: uuid.UUID,
+                                                             new_refresh_token_hash: str):
+    session = get_session_by_id(db, session_id)
+    session.refresh_token_hash = new_refresh_token_hash
+    session.expire_time = datetime.now(timezone.utc) + timedelta(days=60)
+    db.commit()
+    return session
+
+
+def delete_session(db: Session, session_id: uuid.UUID):
+    session = get_session_by_id(db, session_id)
+    db.delete(session)
+    db.commit()
+
+
+def delete_sessions_by_user_id(db: Session, user_id: uuid.UUID):
+    stmt = (
+        delete(db_models.Session).
+        where(db_models.Session.user_id == user_id)
+    )
+
+    db.execute(stmt)
+    db.commit()
+
+
+def delete_sessions_by_user_id_except_one(db: Session, user_id: uuid.UUID, session_id: uuid.UUID):
+    stmt = (
+        delete(db_models.Session).
+        where(db_models.Session.user_id == user_id).
+        where(db_models.Session.session_id != session_id)
     )
 
     db.execute(stmt)
