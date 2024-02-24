@@ -66,17 +66,15 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
     auth_utils.validate_username(body.username)
     auth_utils.validate_password(body.password)
     hashed_password = auth_utils.ph.hash(body.password)
-    try:
-        auth_utils.check_if_username_is_available(db, body.username)
-        auth_utils.check_if_email_is_available(db, body.email)
-        application = crud.create_register_application(db=db, username=body.username,
-                                                       email=body.email, hashed_password=hashed_password)
-        application_id = str(application.application_id)
-        email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
-                                                   device_info=body.device_info)
-        return {"status": "Email confirmation required", "application_id": application_id}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
+
+    auth_utils.check_if_username_is_available(db, body.username)
+    auth_utils.check_if_email_is_available(db, body.email)
+    application = crud.create_register_application(db=db, username=body.username,
+                                                   email=body.email, hashed_password=hashed_password)
+    application_id = str(application.application_id)
+    email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
+                                               device_info=body.device_info)
+    return {"status": "Email confirmation required", "application_id": application_id}
 
 
 @app.post("/finish_registration")
