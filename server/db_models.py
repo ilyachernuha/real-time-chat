@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, validates
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 from enum import Enum
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import secrets
 
 
@@ -18,6 +18,7 @@ class User(Base):
     is_guest = Column(Boolean, nullable=False)
     name = Column(String, nullable=False)
     account_data = relationship("AccountData", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
 
     @validates("is_guest", "account_data")
     def validate_user(self, key, value):
@@ -102,3 +103,14 @@ class ChangeEmailApplication(Base):
     status = Column(SQLAlchemyEnum(Status, name="change_email_status"), default=Status.pending)
     rollback_status = Column(SQLAlchemyEnum(RollbackStatus, name="email_roll_back_status"),
                              default=RollbackStatus.unavailable)
+
+
+class Session(Base):
+    __tablename__ = "sessions"
+
+    session_id = Column(UUID, primary_key=True)
+    user_id = Column(UUID, ForeignKey("users.user_id"), index=True)
+    refresh_token_hash = Column(String, nullable=False, unique=True)
+    device_info = Column(String)
+    latest_activity = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    user = relationship("User", back_populates="sessions")

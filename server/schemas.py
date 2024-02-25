@@ -17,6 +17,10 @@ class GuestLogin(BaseModel):
     name: str
 
 
+class TokenRefresh(BaseModel):
+    refresh_token: str
+
+
 class UpdateName(BaseModel):
     new_name: str
     # Bearer token must be included in HTTP header
@@ -39,7 +43,12 @@ class UpdateEmailConfirmation(BaseModel):
 
 class UpdatePassword(BaseModel):
     new_password: str
+    session_id: UUID4
     # Basic auth must be included in HTTP header
+
+
+class CloseSession(BaseModel):
+    session_id: UUID4
 
 
 class ResetPassword(BaseModel):
