@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "real-time-chat",
+    "name": "Whisper",
     "slug": "real-time-chat",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -69,7 +69,13 @@
         }
       ],
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": { "usesCleartextTraffic": true }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
