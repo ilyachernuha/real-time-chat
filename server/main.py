@@ -73,6 +73,7 @@ async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
 async def ping():
     return "pong"
 
+app.mount("/public", StaticFiles(directory="public"), name="public")
 
 @app.post("/create_account")
 async def register(body: schemas.Registration, db: Session = Depends(get_db)):
