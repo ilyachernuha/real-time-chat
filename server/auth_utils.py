@@ -10,13 +10,17 @@ import uuid
 import hashlib
 import re
 import time
+import os
+from dotenv import load_dotenv
 import crud
 import db_models
 from exceptions import AccessTokenValidationError, FieldSubmitError
 
 
+load_dotenv()
+
 ph = PasswordHasher()
-secret_key = secrets.token_hex(256)
+secret_key = os.getenv("SECRET_KEY")
 
 
 def generate_access_token(user_id_str: str, session_id_str: str):
