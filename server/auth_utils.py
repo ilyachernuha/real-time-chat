@@ -1,11 +1,12 @@
-from fastapi.security import HTTPBasicCredentials, OAuth2PasswordBearer
-from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBasicCredentials
+from fastapi import HTTPException
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, ValidationError
 import jwt
 import secrets
+import uuid
 import hashlib
 import re
 import time
@@ -13,7 +14,6 @@ import crud
 import db_models
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 ph = PasswordHasher()
 secret_key = secrets.token_hex(256)
 
@@ -34,6 +34,7 @@ def generate_access_token(user_id_str: str, session_id_str: str):
 
 def extract_access_token_data(token: str):
     try:
+        print(token)
         return jwt.decode(token, secret_key, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         raise AccessTokenValidationError("Token expired")
@@ -41,8 +42,8 @@ def extract_access_token_data(token: str):
         raise AccessTokenValidationError("Invalid token")
 
 
-def extract_access_token_data_depends(token: str = Depends(oauth2_scheme)):
-    return extract_access_token_data(token)
+def extract_user_id_from_access_token(token: str):
+    return uuid.UUID(extract_access_token_data(token)["user_id"])
 
 
 def generate_refresh_token():

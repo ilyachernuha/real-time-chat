@@ -1,6 +1,6 @@
 from fastapi import FastAPI, Depends, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import socketio
@@ -8,6 +8,7 @@ import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from typing import Annotated
 import schemas
 from database import init_db, get_db
 import crud
@@ -20,7 +21,8 @@ from sio import sio
 
 init_db()
 app = FastAPI()
-security = HTTPBasic()
+security_basic = HTTPBasic()
+security_bearer = HTTPBearer()
 
 
 app.add_middleware(
@@ -107,7 +109,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
 
 
 @app.post("/login")
-async def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
+async def login(credentials: HTTPBasicCredentials = Depends(security_basic), db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
     refresh_token = auth_utils.generate_refresh_token()
     session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
@@ -154,16 +156,16 @@ async def token_refresh(body: schemas.TokenRefresh, db: Session = Depends(get_db
 
 
 @app.put("/change_name")
-async def change_name(body: schemas.UpdateName,
-                      token_data: dict = Depends(auth_utils.extract_access_token_data_depends),
+async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     auth_utils.validate_name(body.new_name)
-    user = crud.update_user_name(db, uuid.UUID(token_data["user_id"]), body.new_name)
+    user = crud.update_user_name(db, user_id, body.new_name)
     return {"status": "success", "new_name": user.name}
 
 
 @app.put("/change_username")
-async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security),
+async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
     auth_utils.validate_username(body.new_username)
@@ -173,7 +175,7 @@ async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCr
 
 
 @app.post("/change_email")
-async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security),
+async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security_basic),
                        db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
     auth_utils.check_if_email_is_available(db, body.new_email)
@@ -215,7 +217,7 @@ async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends
 
 
 @app.put("/change_password")
-async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security),
+async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
     auth_utils.validate_password(body.new_password)
