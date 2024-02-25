@@ -20,7 +20,7 @@ def generate_reset_password_email(application_id: str):
 
 def generate_reset_password_page(application_id: str):
     url = base_url + "/finish_reset_password"
-    template_env.get_template("reset_password_page.html").render(url=url, application_id=application_id)
+    return template_env.get_template("reset_password_page.html").render(url=url, application_id=application_id)
 
 
 def generate_change_email_confirmation(code: str, username: str):
