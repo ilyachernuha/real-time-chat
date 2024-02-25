@@ -19,7 +19,7 @@ export default function Register() {
   ) => {
     try {
       await signUp(values);
-      router.navigate("/confirm");
+      router.navigate(`/confirm/${values.email}`);
     } catch (error) {
       if (isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
         Alert.alert("Validation Error", error.response.data.detail);
