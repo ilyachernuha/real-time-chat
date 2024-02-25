@@ -112,5 +112,5 @@ class Session(Base):
     user_id = Column(UUID, ForeignKey("users.user_id"), index=True)
     refresh_token_hash = Column(String, nullable=False, unique=True)
     device_info = Column(String)
-    expire_time = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc) + timedelta(days=60))
+    latest_activity = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     user = relationship("User", back_populates="sessions")

@@ -272,7 +272,7 @@ def update_session_refresh_token_hash_and_update_expire_time(db: Session, sessio
                                                              new_refresh_token_hash: str):
     session = get_session_by_id(db, session_id)
     session.refresh_token_hash = new_refresh_token_hash
-    session.expire_time = datetime.now(timezone.utc) + timedelta(days=60)
+    session.latest_activity = datetime.now(timezone.utc)
     db.commit()
     return session
 
