@@ -222,6 +222,7 @@ async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCr
     auth_utils.validate_password(body.new_password)
     new_password_hash = auth_utils.ph.hash(body.new_password)
     crud.update_password(db, user.user_id, new_password_hash)
+    crud.delete_sessions_by_user_id_except_one(db, user.user_id, body.session_id)
     return {"status": "success"}
 
 
@@ -258,6 +259,7 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
     new_password_hash = auth_utils.ph.hash(body.new_password)
     crud.update_password(db, application.user_id, new_password_hash)
     crud.make_reset_password_application_used(db, application.application_id)
+    crud.delete_sessions_by_user_id(db, application.user_id)
 
     return {"status": "success"}
 

@@ -43,6 +43,7 @@ class UpdateEmailConfirmation(BaseModel):
 
 class UpdatePassword(BaseModel):
     new_password: str
+    session_id: UUID4
     # Basic auth must be included in HTTP header
 
 
