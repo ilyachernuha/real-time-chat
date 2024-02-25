@@ -34,7 +34,6 @@ def generate_access_token(user_id_str: str, session_id_str: str):
 
 def extract_access_token_data(token: str):
     try:
-        print(token)
         return jwt.decode(token, secret_key, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         raise AccessTokenValidationError("Token expired")

@@ -1,5 +1,7 @@
 import socketio
+from socketio.exceptions import ConnectionRefusedError
 import time
+import uuid
 import auth_utils
 from database import db_session
 import crud
@@ -12,14 +14,24 @@ sid_user_data = dict()
 
 
 @sio.event
-async def connect(sid, environ, auth):
-    token = auth.get("token")
-    if token is None:
+async def connect(sid, environ):
+    auth_header = environ.get("HTTP_AUTHORIZATION")
+    if auth_header is None:
         return False
-    user_id = auth_utils.validate_token(token)
-    if user_id is None:
-        return False
-    sid_user_data[sid] = user_id
+    scheme, token = auth_header.split()
+    if scheme != "Bearer":
+        raise ConnectionRefusedError("Unsupported auth type")
+    try:
+        token_data = auth_utils.extract_access_token_data(token)
+    except auth_utils.AccessTokenValidationError as e:
+        raise ConnectionRefusedError(str(e))
+
+    with db_session() as db:
+        session = crud.get_session_by_id(db, uuid.UUID(token_data["session_id"]))
+        if session is None:
+            raise ConnectionRefusedError("Session not found")
+
+    sid_user_data[sid] = token_data["user_id"]
 
 
 @sio.event
