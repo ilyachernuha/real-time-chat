@@ -8,7 +8,6 @@ import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from typing import Annotated
 import schemas
 from database import init_db, get_db
 import crud
