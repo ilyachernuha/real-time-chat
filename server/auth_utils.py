@@ -12,15 +12,11 @@ import re
 import time
 import crud
 import db_models
+from exceptions import AccessTokenValidationError, FieldSubmitError
 
 
 ph = PasswordHasher()
 secret_key = secrets.token_hex(256)
-
-
-class AccessTokenValidationError(Exception):
-    def __init__(self, message):
-        super().__init__(message)
 
 
 def generate_access_token(user_id_str: str, session_id_str: str):
@@ -62,29 +58,32 @@ def get_and_validate_session_from_refresh_token(db: Session, token: str):
 
 def validate_name(name: str):
     if not (1 <= len(name) <= 16):
-        raise HTTPException(status_code=400, detail="Name must be 1 to 16 characters long")
+        raise FieldSubmitError(status_code=400, detail="Name must be 1 to 16 characters long", field="name")
 
     if name.isspace():
-        raise HTTPException(status_code=400, detail="Name cannot consist of whitespace only")
+        raise FieldSubmitError(status_code=400, detail="Name cannot consist of whitespace only", field="name")
 
     if re.match(r"[\x00-\x1F\x7F]", name):
-        raise HTTPException(status_code=400, detail="Name cannot contain control or non-displayable characters")
+        raise FieldSubmitError(status_code=400, detail="Name cannot contain control or non-displayable characters",
+                               field="name")
 
 
 def validate_username(username: str):
     if not (2 <= len(username) <= 24):
-        raise HTTPException(status_code=400, detail="Username must be 2 to 24 characters long")
+        raise FieldSubmitError(status_code=400, detail="Username must be 2 to 24 characters long", field="username")
 
     if not re.match(r"^[a-zA-Z0-9]+$", username):
-        raise HTTPException(status_code=400, detail="Username can have only English letters and numbers")
+        raise FieldSubmitError(status_code=400, detail="Username can have only English letters and numbers",
+                               field="username")
 
 
 def validate_password(password: str):
     if not (8 <= len(password) <= 32):
-        raise HTTPException(status_code=400, detail="Password must be 8 to 32 characters long")
+        raise FieldSubmitError(status_code=400, detail="Password must be 8 to 32 characters long", field="password")
 
     if not re.match(r"^[!-~]+$", password):
-        raise HTTPException(status_code=400, detail="Password can have only ASCII symbols excluding whitespace")
+        raise FieldSubmitError(status_code=400, detail="Password can have only ASCII symbols excluding whitespace",
+                               field="password")
 
 
 def verify_password(hashed_password, password):
@@ -126,14 +125,14 @@ def get_user_by_basic_auth(db: Session, credentials: HTTPBasicCredentials):
 
 def check_if_username_is_available(db: Session, username: str):
     if crud.get_user_by_username(db, username):
-        raise HTTPException(status_code=400, detail="This username is taken")
+        raise FieldSubmitError(status_code=400, detail="This username is taken", field="username")
 
 
 def check_if_email_is_available(db: Session, email: str):
     if crud.get_user_by_email(db, email):
-        raise HTTPException(status_code=400, detail="Account with this email already exists")
+        raise FieldSubmitError(status_code=400, detail="Account with this email already exists", field="email")
     if crud.get_pending_rollback_change_email_application_by_email(db, email):
-        raise HTTPException(status_code=400, detail="This email is temporarily reserved")
+        raise FieldSubmitError(status_code=400, detail="This email is temporarily reserved", field="email")
 
 
 def check_register_application_status(status: db_models.RegisterApplication.Status):

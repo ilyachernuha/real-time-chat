@@ -16,6 +16,7 @@ import email_utils
 import auth_utils
 import html_generator
 from sio import sio
+from exceptions import AccessTokenValidationError, FieldSubmitError
 
 
 init_db()
@@ -41,8 +42,19 @@ def init_scheduler():
     scheduler.start()
 
 
-@app.exception_handler(auth_utils.AccessTokenValidationError)
-async def access_token_validation_error_handler(request: Request, exc: auth_utils.AccessTokenValidationError):
+@app.exception_handler(FieldSubmitError)
+async def field_submit_error_handler(request: Request, exc: FieldSubmitError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "field": exc.field
+        }
+    )
+
+
+@app.exception_handler(AccessTokenValidationError)
+async def access_token_validation_error_handler(request: Request, exc: AccessTokenValidationError):
     return JSONResponse(
         status_code=401,
         content={"detail": str(exc)}
