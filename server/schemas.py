@@ -47,6 +47,10 @@ class UpdatePassword(BaseModel):
     # Basic auth must be included in HTTP header
 
 
+class CloseSession(BaseModel):
+    session_id: UUID4
+
+
 class ResetPassword(BaseModel):
     email: EmailStr
 

@@ -264,5 +264,35 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
     return {"status": "success"}
 
 
+@app.get("/active_sessions")
+async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                              db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    sessions = crud.get_sessions_by_user_id(db, user_id)
+    session_list = []
+    for session in sessions:
+        session_details = {
+            "session_id": str(session.session_id),
+            "device_info": session.device_info,
+            "latest_activity": session.latest_activity.isoformat()
+        }
+        session_list.append(session_details)
+    return {"sessions": session_list}
+
+
+@app.post("/close_session")
+async def close_session(body: schemas.CloseSession,
+                        credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                        db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    session = crud.get_session_by_id(db, body.session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not fount")
+    if user_id != session.user_id:
+        raise HTTPException(status_code=403, detail="Session is not yours")
+    crud.delete_session(db, body.session_id)
+    return {"status": "success"}
+
+
 app.mount("/public", StaticFiles(directory="public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))
