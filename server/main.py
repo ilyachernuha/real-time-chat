@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Request
+from fastapi import FastAPI, Depends, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import HTMLResponse, JSONResponse
@@ -120,12 +120,12 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
 
 
 @app.post("/login")
-async def login(body: schemas.Login, credentials: HTTPBasicCredentials = Depends(security_basic),
+async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasicCredentials = Depends(security_basic),
                 db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
     refresh_token = auth_utils.generate_refresh_token()
     session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
-                                  device_info=body.device_info)
+                                  device_info=body.device_info if body else "Unknown")
     user_id_str = str(user.user_id)
     session_id_str = str(session.session_id)
     access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
