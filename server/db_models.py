@@ -61,6 +61,7 @@ class RegisterApplication(Base):
     confirmation_code = Column(String(4), nullable=False, default=lambda: f"{secrets.randbelow(10000):04d}")
     failed_attempts = Column(Integer, default=0)
     status = Column(SQLAlchemyEnum(Status, name="register_application_status"), default=Status.pending)
+    device_info = Column(String)
 
 
 class ResetPasswordApplication(Base):

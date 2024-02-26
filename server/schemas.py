@@ -13,8 +13,13 @@ class RegistrationConfirmation(BaseModel):
     confirmation_code: str
 
 
+class Login(BaseModel):
+    device_info: str = "Unknown"
+
+
 class GuestLogin(BaseModel):
     name: str
+    device_info: str = "Unknown"
 
 
 class TokenRefresh(BaseModel):
