@@ -73,10 +73,10 @@ def update_password(db: Session, user_id: uuid.UUID, new_password_hash: str):
 # REGISTER APPLICATIONS
 
 
-def create_register_application(db: Session, username: str, email: str, hashed_password: str):
+def create_register_application(db: Session, username: str, email: str, hashed_password: str, device_info: str):
     application_id = uuid.uuid4()
     application = db_models.RegisterApplication(application_id=application_id, username=username, email=email,
-                                                hashed_password=hashed_password)
+                                                hashed_password=hashed_password, device_info=device_info)
 
     db.add(application)
     db.commit()

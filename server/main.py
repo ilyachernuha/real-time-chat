@@ -82,8 +82,8 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
 
     auth_utils.check_if_username_is_available(db, body.username)
     auth_utils.check_if_email_is_available(db, body.email)
-    application = crud.create_register_application(db=db, username=body.username,
-                                                   email=body.email, hashed_password=hashed_password)
+    application = crud.create_register_application(db=db, username=body.username, email=body.email,
+                                                   hashed_password=hashed_password, device_info=body.device_info)
     application_id = str(application.application_id)
     email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
                                                device_info=body.device_info)
@@ -107,7 +107,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
                             name=application.username, email=application.email)
     refresh_token = auth_utils.generate_refresh_token()
     session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
-                                  device_info="unknown")
+                                  device_info=application.device_info)
     user_id_str = str(user.user_id)
     session_id_str = str(session.session_id)
     access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
@@ -120,11 +120,12 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
 
 
 @app.post("/login")
-async def login(credentials: HTTPBasicCredentials = Depends(security_basic), db: Session = Depends(get_db)):
+async def login(body: schemas.Login, credentials: HTTPBasicCredentials = Depends(security_basic),
+                db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
     refresh_token = auth_utils.generate_refresh_token()
     session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
-                                  device_info="unknown")
+                                  device_info=body.device_info)
     user_id_str = str(user.user_id)
     session_id_str = str(session.session_id)
     access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
@@ -142,7 +143,7 @@ async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
     user = crud.create_guest_user(db, body.name)
     refresh_token = auth_utils.generate_refresh_token()
     session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
-                                  device_info="unknown")
+                                  device_info=body.device_info)
     user_id_str = str(user.user_id)
     session_id_str = str(session.session_id)
     access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
