@@ -1,33 +1,28 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from fastapi.responses import HTMLResponse
+from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 import socketio
-from pydantic import ValidationError
-from jinja2 import Environment, FileSystemLoader
-import time
 import uuid
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-import os
-from dotenv import load_dotenv
 import schemas
-from database import init_db, get_db, db_session
+from database import init_db, get_db
 import crud
 import bg_tasks
 import email_utils
 import auth_utils
+import html_generator
+from sio import sio
+from exceptions import AccessTokenValidationError, FieldSubmitError
 
 
-load_dotenv()
 init_db()
 app = FastAPI()
-security = HTTPBasic()
-sio = socketio.AsyncServer(async_mode="asgi")
-sid_user_data = dict()
-template_env = Environment(loader=FileSystemLoader("html_templates"))
+security_basic = HTTPBasic()
+security_bearer = HTTPBearer()
 
 
 app.add_middleware(
@@ -47,287 +42,270 @@ def init_scheduler():
     scheduler.start()
 
 
+@app.exception_handler(FieldSubmitError)
+async def field_submit_error_handler(request: Request, exc: FieldSubmitError):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "detail": exc.detail,
+            "field": exc.field
+        }
+    )
+
+
+@app.exception_handler(AccessTokenValidationError)
+async def access_token_validation_error_handler(request: Request, exc: AccessTokenValidationError):
+    return JSONResponse(
+        status_code=401,
+        content={"detail": str(exc)}
+    )
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Unexpected database error"}
+    )
+
+
 @app.get("/ping")
 async def ping():
     return "pong"
 
-app.mount("/public", StaticFiles(directory="public"), name="public")
 
 @app.post("/create_account")
 async def register(body: schemas.Registration, db: Session = Depends(get_db)):
     auth_utils.validate_username(body.username)
     auth_utils.validate_password(body.password)
     hashed_password = auth_utils.ph.hash(body.password)
-    try:
-        auth_utils.check_if_username_is_available(db, body.username)
-        auth_utils.check_if_email_is_available(db, body.email)
-        application = crud.create_register_application(db=db, username=body.username,
-                                                       email=body.email, hashed_password=hashed_password)
-        application_id = str(application.application_id)
-        email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
-                                                   device_info=body.device_info)
-        return {"status": "Email confirmation required", "application_id": application_id}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+
+    auth_utils.check_if_username_is_available(db, body.username)
+    auth_utils.check_if_email_is_available(db, body.email)
+    application = crud.create_register_application(db=db, username=body.username, email=body.email,
+                                                   hashed_password=hashed_password, device_info=body.device_info)
+    application_id = str(application.application_id)
+    email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
+                                               device_info=body.device_info)
+    return {"status": "Email confirmation required", "application_id": application_id}
 
 
 @app.post("/finish_registration")
 async def finish_registration(body: schemas.RegistrationConfirmation, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_register_application_by_id(db, body.application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Register application not found")
-        auth_utils.check_register_application_status(application.status)
-        if application.confirmation_code != body.confirmation_code:
-            crud.increase_failed_registration_attempts(db, body.application_id)
-            raise HTTPException(status_code=400, detail="Incorrect confirmation code")
+    application = crud.get_register_application_by_id(db, body.application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Register application not found")
+    auth_utils.check_register_application_status(application.status)
+    if application.confirmation_code != body.confirmation_code:
+        crud.increase_failed_registration_attempts(db, body.application_id)
+        raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
-        auth_utils.check_if_username_is_available(db, application.username)
-        auth_utils.check_if_email_is_available(db, application.email)
-        crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
-        user_id = str(crud.create_user(db=db, username=application.username,
-                                       hashed_password=application.hashed_password, name=application.username,
-                                       email=application.email))
-        token = auth_utils.generate_token(user_id)
-        return {"user_id": user_id, "token": token}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    auth_utils.check_if_username_is_available(db, application.username)
+    auth_utils.check_if_email_is_available(db, application.email)
+    crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
+    user = crud.create_user(db=db, username=application.username, hashed_password=application.hashed_password,
+                            name=application.username, email=application.email)
+    refresh_token = auth_utils.generate_refresh_token()
+    session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                  device_info=application.device_info)
+    user_id_str = str(user.user_id)
+    session_id_str = str(session.session_id)
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }
 
 
 @app.post("/login")
-async def login(credentials: HTTPBasicCredentials = Depends(security), db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        user_id_str = str(user.user_id)
-        token = auth_utils.generate_token(user_id_str)
-        return {"user_id": user_id_str, "token": token}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasicCredentials = Depends(security_basic),
+                db: Session = Depends(get_db)):
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    refresh_token = auth_utils.generate_refresh_token()
+    session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                  device_info=body.device_info if body else "Unknown")
+    user_id_str = str(user.user_id)
+    session_id_str = str(session.session_id)
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }
 
 
 @app.post("/guest_login")
 async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
     auth_utils.validate_name(body.name)
-    try:
-        user_id_str = str(crud.create_guest_user(db, body.name))
-        token = auth_utils.generate_token(user_id_str)
-        return {"user_id": user_id_str, "token": token}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = crud.create_guest_user(db, body.name)
+    refresh_token = auth_utils.generate_refresh_token()
+    session = crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
+                                  device_info=body.device_info)
+    user_id_str = str(user.user_id)
+    session_id_str = str(session.session_id)
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }
 
 
-@app.put("/change_name")
-async def change_name(body: schemas.UpdateName, user_id: str = Depends(auth_utils.validate_token_in_header),
+@app.post("/token_refresh")
+async def token_refresh(body: schemas.TokenRefresh, db: Session = Depends(get_db)):
+    session = auth_utils.get_and_validate_session_from_refresh_token(db, body.refresh_token)
+    user_id_str = str(session.user.user_id)
+    session_id_str = str(session.session_id)
+    new_refresh_token = auth_utils.generate_refresh_token()
+    crud.update_session_refresh_token_hash_and_update_expire_time(db, session.session_id,
+                                                                  auth_utils.hash_refresh_token(new_refresh_token))
+    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
+    return {"access_token": access_token, "new_refresh_token": new_refresh_token}
+
+
+@app.patch("/change_name")
+async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     auth_utils.validate_name(body.new_name)
-    try:
-        user = crud.update_user_name(db, uuid.UUID(user_id), body.new_name)
-        return {"status": "success", "new_name": user.name}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = crud.update_user_name(db, user_id, body.new_name)
+    return {"status": "success", "new_name": user.name}
 
 
-@app.put("/change_username")
-async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security),
+@app.patch("/change_username")
+async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        auth_utils.validate_username(body.new_username)
-        auth_utils.check_if_username_is_available(db, body.new_username)
-        crud.update_username(db, user.user_id, body.new_username)
-        return {"status": "success", "new_username": user.account_data.username}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    auth_utils.validate_username(body.new_username)
+    auth_utils.check_if_username_is_available(db, body.new_username)
+    crud.update_username(db, user.user_id, body.new_username)
+    return {"status": "success", "new_username": user.account_data.username}
 
 
 @app.post("/change_email")
-async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security),
+async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security_basic),
                        db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        auth_utils.check_if_email_is_available(db, body.new_email)
-        application = crud.create_change_email_application(db, user.user_id, body.new_email)
-        email_utils.send_change_email_confirmation(body.new_email, application.confirmation_code,
-                                                   user.account_data.username)
-        application_id_str = str(application.application_id)
-        return {"status": "Email confirmation required", "application_id": application_id_str}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    auth_utils.check_if_email_is_available(db, body.new_email)
+    application = crud.create_change_email_application(db, user.user_id, body.new_email)
+    email_utils.send_change_email_confirmation(body.new_email, application.confirmation_code,
+                                               user.account_data.username)
+    application_id_str = str(application.application_id)
+    return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
 @app.post("/finish_change_email")
 async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_change_email_application_by_id(db, body.application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_change_email_application_status(application.status)
-        if application.confirmation_code != body.confirmation_code:
-            crud.increase_failed_change_email_attempts(db, application.application_id)
-            raise HTTPException(status_code=400, detail="Incorrect confirmation code")
+    application = crud.get_change_email_application_by_id(db, body.application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_change_email_application_status(application.status)
+    if application.confirmation_code != body.confirmation_code:
+        crud.increase_failed_change_email_attempts(db, application.application_id)
+        raise HTTPException(status_code=400, detail="Incorrect confirmation code")
 
-        auth_utils.check_if_email_is_available(db, application.new_email)
-        user = crud.update_email(db, application.user_id, application.new_email)
-        application = crud.make_change_email_application_confirmed(db, application.application_id)
-        email_utils.send_email_change_rollback(application.old_email,
-                                               str(application.application_id), user.account_data.username)
-        return {"status": "Email changed", "new_email": user.account_data.email}
-
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    auth_utils.check_if_email_is_available(db, application.new_email)
+    user = crud.update_email(db, application.user_id, application.new_email)
+    application = crud.make_change_email_application_confirmed(db, application.application_id)
+    email_utils.send_email_change_rollback(application.old_email,
+                                           str(application.application_id), user.account_data.username)
+    return {"status": "Email changed", "new_email": user.account_data.email}
 
 
 @app.get("/rollback_email_change/{application_id}")
 async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_change_email_application_by_id(db, application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_change_email_rollback_status(application.status)
+    application = crud.get_change_email_application_by_id(db, application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_change_email_rollback_status(application.status)
 
-        crud.update_email(db, application.user_id, application.old_email)
-        crud.make_change_email_application_rolled_back(db, application_id)
-        return {"status": "Email change rolled back"}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    crud.update_email(db, application.user_id, application.old_email)
+    crud.make_change_email_application_rolled_back(db, application_id)
+    return {"status": "Email change rolled back"}
 
 
-@app.put("/change_password")
-async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security),
+@app.patch("/change_password")
+async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
-    try:
-        user = auth_utils.get_user_by_basic_auth(db, credentials)
-        auth_utils.validate_password(body.new_password)
-        new_password_hash = auth_utils.ph.hash(body.new_password)
-        crud.update_password(db, user.user_id, new_password_hash)
-        return {"status": "success"}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    user = auth_utils.get_user_by_basic_auth(db, credentials)
+    auth_utils.validate_password(body.new_password)
+    new_password_hash = auth_utils.ph.hash(body.new_password)
+    crud.update_password(db, user.user_id, new_password_hash)
+    crud.delete_sessions_by_user_id_except_one(db, user.user_id, body.session_id)
+    return {"status": "success"}
 
 
 @app.post("/reset_password")
 async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_db)):
-    try:
-        user = crud.get_user_by_email(db, body.email)
-        if user is None:
-            raise HTTPException(status_code=404, detail="Account with this email does not exist")
-        if user.is_guest:
-            raise HTTPException(status_code=400, detail="This is a guest user")
-        application = crud.create_reset_password_application(db, user.account_data.user_id)
-        email_utils.send_reset_password_email(receiver=body.email, application_id=str(application.application_id))
+    user = crud.get_user_by_email(db, body.email)
+    if user is None:
+        raise HTTPException(status_code=404, detail="Account with this email does not exist")
+    if user.is_guest:
+        raise HTTPException(status_code=400, detail="This is a guest user")
+    application = crud.create_reset_password_application(db, user.account_data.user_id)
+    email_utils.send_reset_password_email(receiver=body.email, application_id=str(application.application_id))
 
-        return {"status": "email sent"}
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    return {"status": "email sent"}
 
 
 @app.get("/reset_password_page/{application_id}")
 async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_reset_password_application(db, application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_reset_password_application_status(application.status)
-
-        url = os.getenv("BASE_URL") + "/finish_reset_password"
-        response = template_env.get_template("reset_password_page.html").render(url=url, application_id=application_id)
-        return HTMLResponse(response)
-
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    application = crud.get_reset_password_application(db, application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_reset_password_application_status(application.status)
+    return HTMLResponse(html_generator.generate_reset_password_page(str(application_id)))
 
 
-@app.put("/finish_reset_password")
+@app.post("/finish_reset_password")
 async def finish_reset_password(body: schemas.FinishResetPassword, db: Session = Depends(get_db)):
-    try:
-        application = crud.get_reset_password_application(db, body.application_id)
-        if application is None:
-            raise HTTPException(status_code=404, detail="Application not found")
-        auth_utils.check_reset_password_application_status(application.status)
+    application = crud.get_reset_password_application(db, body.application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_reset_password_application_status(application.status)
 
-        auth_utils.validate_password(body.new_password)
-        new_password_hash = auth_utils.ph.hash(body.new_password)
-        crud.update_password(db, application.user_id, new_password_hash)
-        crud.make_reset_password_application_used(db, application.application_id)
+    auth_utils.validate_password(body.new_password)
+    new_password_hash = auth_utils.ph.hash(body.new_password)
+    crud.update_password(db, application.user_id, new_password_hash)
+    crud.make_reset_password_application_used(db, application.application_id)
+    crud.delete_sessions_by_user_id(db, application.user_id)
 
-        return {"status": "success"}
-
-    except SQLAlchemyError:
-        raise HTTPException(status_code=500, detail="Unexpected database error")
+    return {"status": "success"}
 
 
-@sio.event
-async def connect(sid, environ, auth):
-    token = auth.get("token")
-    if token is None:
-        return False
-    user_id = auth_utils.validate_token(token)
-    if user_id is None:
-        return False
-    sid_user_data[sid] = user_id
+@app.get("/active_sessions")
+async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                              db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    sessions = crud.get_sessions_by_user_id(db, user_id)
+    session_list = []
+    for session in sessions:
+        session_details = {
+            "session_id": str(session.session_id),
+            "device_info": session.device_info,
+            "latest_activity": session.latest_activity.isoformat()
+        }
+        session_list.append(session_details)
+    return {"sessions": session_list}
 
 
-@sio.event
-async def disconnect(sid):
-    sid_user_data.pop(sid, None)
+@app.post("/close_session")
+async def close_session(body: schemas.CloseSession,
+                        credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                        db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    session = crud.get_session_by_id(db, body.session_id)
+    if session is None:
+        raise HTTPException(status_code=404, detail="Session not fount")
+    if user_id != session.user_id:
+        raise HTTPException(status_code=403, detail="Session is not yours")
+    crud.delete_session(db, body.session_id)
+    return {"status": "success"}
 
 
-@sio.event
-async def message(sid, data):
-    with db_session() as db:
-        try:
-            validated_data = schemas.Message(**data)
-            user_id = sid_user_data[sid]
-            name = crud.get_user_by_id(db, user_id).name
-            await sio.emit("message", {
-                "user": {
-                    "id": user_id,
-                    "name": name
-                },
-                "text": validated_data.text,
-                "room": validated_data.room,
-                "timestamp": int(time.time() * 1000)
-            })
-        except ValidationError:
-            pass
-
-
-@sio.event
-async def start_typing(sid, data):
-    with db_session() as db:
-        try:
-            room = schemas.Typing(**data).room
-            user_id = sid_user_data[sid]
-            name = crud.get_user_by_id(db, user_id).name
-            await sio.emit("start_typing", {
-                "user": {
-                    "id": user_id,
-                    "name": name
-                },
-                "room": room
-            })
-        except ValidationError:
-            pass
-
-
-@sio.event
-async def stop_typing(sid, data):
-    with db_session() as db:
-        try:
-            room = schemas.Typing(**data).room
-            user_id = sid_user_data[sid]
-            name = crud.get_user_by_id(db, user_id).name
-            await sio.emit("stop_typing", {
-                "user": {
-                    "id": user_id,
-                    "name": name
-                },
-                "room": room
-            })
-        except ValidationError:
-            pass
-
-
+app.mount("/public", StaticFiles(directory="public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))

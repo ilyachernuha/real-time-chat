@@ -13,8 +13,17 @@ class RegistrationConfirmation(BaseModel):
     confirmation_code: str
 
 
+class Login(BaseModel):
+    device_info: str = "Unknown"
+
+
 class GuestLogin(BaseModel):
     name: str
+    device_info: str = "Unknown"
+
+
+class TokenRefresh(BaseModel):
+    refresh_token: str
 
 
 class UpdateName(BaseModel):
@@ -39,7 +48,12 @@ class UpdateEmailConfirmation(BaseModel):
 
 class UpdatePassword(BaseModel):
     new_password: str
+    session_id: UUID4
     # Basic auth must be included in HTTP header
+
+
+class CloseSession(BaseModel):
+    session_id: UUID4
 
 
 class ResetPassword(BaseModel):

@@ -5,6 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from fastapi import HTTPException
 import os
 from dotenv import load_dotenv
+import html_generator
 
 
 load_dotenv()
@@ -36,23 +37,20 @@ def send_email(receiver: str, subject: str, text: str):
 
 
 def send_registration_confirmation(receiver: str, code: str, device_info: str):
-    message_text = template_env.get_template("confirmation_email.html").render(code=code, device=device_info)
+    message_text = html_generator.generate_register_confirmation_email(code=code, device_info=device_info)
     send_email(receiver=receiver, subject="Email confirmation", text=message_text)
 
 
 def send_reset_password_email(receiver: str, application_id: str):
-    reset_link = base_url + "/reset_password_page/" + application_id
-    message_text = template_env.get_template("reset_password_email.html").render(reset_link=reset_link)
+    message_text = html_generator.generate_reset_password_email(application_id)
     send_email(receiver=receiver, subject="Reset password", text=message_text)
 
 
 def send_change_email_confirmation(receiver: str, code: str, username: str):
-    message_text = template_env.get_template("reset_email_confirmation.html").render(code=code, username=username)
+    message_text = html_generator.generate_change_email_confirmation(code=code, username=username)
     send_email(receiver=receiver, subject="Email confirmation", text=message_text)
 
 
 def send_email_change_rollback(receiver: str, application_id: str, username: str):
-    rollback_link = base_url + "/rollback_email_change/" + application_id
-    message_text = template_env.get_template("email_rollback.html").render(rollback_link=rollback_link,
-                                                                           username=username)
+    message_text = html_generator.generate_change_email_rollback(application_id=application_id, username=username)
     send_email(receiver=receiver, subject="Email change notification", text=message_text)

@@ -1,70 +1,93 @@
-from fastapi.security import HTTPBasic, HTTPBasicCredentials, OAuth2PasswordBearer
-from fastapi import Depends, HTTPException
+from fastapi.security import HTTPBasicCredentials
+from fastapi import HTTPException
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, ValidationError
 import jwt
 import secrets
+import uuid
+import hashlib
 import re
+import time
+import os
+from dotenv import load_dotenv
 import crud
 import db_models
+from exceptions import AccessTokenValidationError, FieldSubmitError
 
 
-security = HTTPBasic()
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+load_dotenv()
+
 ph = PasswordHasher()
-secret_key = secrets.token_hex(256)
+secret_key = os.getenv("SECRET_KEY")
 
 
-def generate_token(user_id):
-    token = jwt.encode({'user': user_id}, secret_key, algorithm='HS256')
+def generate_access_token(user_id_str: str, session_id_str: str):
+    token = jwt.encode({
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "exp": int(time.time()) + 900
+    }, secret_key, algorithm="HS256")
     return token
 
 
-def validate_token(token: str):
+def extract_access_token_data(token: str):
     try:
-        payload = jwt.decode(token, secret_key, algorithms=['HS256'])
-        user_id = payload['user']
-        return user_id
+        return jwt.decode(token, secret_key, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
-        return None
+        raise AccessTokenValidationError("Token expired")
     except jwt.InvalidTokenError:
-        return None
+        raise AccessTokenValidationError("Invalid token")
 
 
-def validate_token_in_header(token: str = Depends(oauth2_scheme)):
-    user_id = validate_token(token)
-    if user_id is None:
-        raise HTTPException(status_code=400, detail="Invalid token")
-    return user_id
+def extract_user_id_from_access_token(token: str):
+    return uuid.UUID(extract_access_token_data(token)["user_id"])
+
+
+def generate_refresh_token():
+    return secrets.token_urlsafe(64)
+
+
+def hash_refresh_token(token: str):
+    return hashlib.sha512(token.encode()).hexdigest()
+
+
+def get_and_validate_session_from_refresh_token(db: Session, token: str):
+    session = crud.get_session_by_refresh_token_hash(db, hash_refresh_token(token))
+    if session is None:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    return session
 
 
 def validate_name(name: str):
     if not (1 <= len(name) <= 16):
-        raise HTTPException(status_code=400, detail="Name must be 1 to 16 characters long")
+        raise FieldSubmitError(status_code=400, detail="Name must be 1 to 16 characters long", field="name")
 
     if name.isspace():
-        raise HTTPException(status_code=400, detail="Name cannot consist of whitespace only")
+        raise FieldSubmitError(status_code=400, detail="Name cannot consist of whitespace only", field="name")
 
     if re.match(r"[\x00-\x1F\x7F]", name):
-        raise HTTPException(status_code=400, detail="Name cannot contain control or non-displayable characters")
+        raise FieldSubmitError(status_code=400, detail="Name cannot contain control or non-displayable characters",
+                               field="name")
 
 
 def validate_username(username: str):
     if not (2 <= len(username) <= 24):
-        raise HTTPException(status_code=400, detail="Username must be 2 to 24 characters long")
+        raise FieldSubmitError(status_code=400, detail="Username must be 2 to 24 characters long", field="username")
 
     if not re.match(r"^[a-zA-Z0-9]+$", username):
-        raise HTTPException(status_code=400, detail="Username can have only English letters and numbers")
+        raise FieldSubmitError(status_code=400, detail="Username can have only English letters and numbers",
+                               field="username")
 
 
 def validate_password(password: str):
     if not (8 <= len(password) <= 32):
-        raise HTTPException(status_code=400, detail="Password must be 8 to 32 characters long")
+        raise FieldSubmitError(status_code=400, detail="Password must be 8 to 32 characters long", field="password")
 
     if not re.match(r"^[!-~]+$", password):
-        raise HTTPException(status_code=400, detail="Password can have only ASCII symbols excluding whitespace")
+        raise FieldSubmitError(status_code=400, detail="Password can have only ASCII symbols excluding whitespace",
+                               field="password")
 
 
 def verify_password(hashed_password, password):
@@ -106,14 +129,14 @@ def get_user_by_basic_auth(db: Session, credentials: HTTPBasicCredentials):
 
 def check_if_username_is_available(db: Session, username: str):
     if crud.get_user_by_username(db, username):
-        raise HTTPException(status_code=400, detail="This username is taken")
+        raise FieldSubmitError(status_code=400, detail="This username is taken", field="username")
 
 
 def check_if_email_is_available(db: Session, email: str):
     if crud.get_user_by_email(db, email):
-        raise HTTPException(status_code=400, detail="Account with this email already exists")
+        raise FieldSubmitError(status_code=400, detail="Account with this email already exists", field="email")
     if crud.get_pending_rollback_change_email_application_by_email(db, email):
-        raise HTTPException(status_code=400, detail="This email is temporarily reserved")
+        raise FieldSubmitError(status_code=400, detail="This email is temporarily reserved", field="email")
 
 
 def check_register_application_status(status: db_models.RegisterApplication.Status):
