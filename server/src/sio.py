@@ -8,7 +8,6 @@ import crud
 import schemas
 from pydantic import ValidationError
 
-
 sio = socketio.AsyncServer(async_mode="asgi")
 sid_user_data = dict()
 
