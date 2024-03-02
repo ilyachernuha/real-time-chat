@@ -417,4 +417,4 @@ Here's an example of server response:
 }
 ```
 
-**Note:** because access tokens are stateless, they will be valid until expired when session is closed. Refresh token of the closes session will become invalid immediately.
+**Note:** because access tokens are stateless, they will be valid until expired when session is closed. Refresh token of the closed session will become invalid immediately.
