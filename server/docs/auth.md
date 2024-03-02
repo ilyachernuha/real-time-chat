@@ -22,16 +22,20 @@ Whisper uses a combination of stateless access token and stateful refresh token.
 
 To update access token client sends `POST` request to `"/token_refresh"` with JSON body that contains:
 
-`{`
-    `"refresh_token": "vnJkffMnp0bo4UaaBU3g372VwAd3II5BeJo3BP9Od6t4ox2zhQjzw0b4-_l76pQ2g_2z1FpFXodneU4DB9mlkA"`
-`}`
+```
+{
+    "refresh_token": "vnJkffMnp0bo4UaaBU3g372VwAd3II5BeJo3BP9Od6t4ox2zhQjzw0b4-_l76pQ2g_2z1FpFXodneU4DB9mlkA"`
+}
+```
 
 Server responds with a new token pair:
 
-`{`
-    `"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTZmYzdjZDYtOGQ5My00OWY4LWFmOWQtNWFiZjA0OTE1MTRiIiwic2Vzc2lvbl9pZCI6IjM2ODhjZTM4LWIyYjMtNDBjNS05NzQyLTA4OTNhOGE5OTE0MCIsImV4cCI6MTcwOTMzODAyMH0.eY4dXH7tG53mU7YP2m2dfGV0a-bcSkWYY5B7L7Oj2Bw",`
-    `"new_refresh_token": "PYMYaTNzbY86JrWchg-dfvWFaBSthYzXi7uw2lW24Z2fqBAwwCSh4CSHmZ5920w5-O53tPyeGYwUxGg_AIHK_g"`
-`}`
+```
+{
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTZmYzdjZDYtOGQ5My00OWY4LWFmOWQtNWFiZjA0OTE1MTRiIiwic2Vzc2lvbl9pZCI6IjM2ODhjZTM4LWIyYjMtNDBjNS05NzQyLTA4OTNhOGE5OTE0MCIsImV4cCI6MTcwOTMzODAyMH0.eY4dXH7tG53mU7YP2m2dfGV0a-bcSkWYY5B7L7Oj2Bw",
+    "new_refresh_token": "PYMYaTNzbY86JrWchg-dfvWFaBSthYzXi7uw2lW24Z2fqBAwwCSh4CSHmZ5920w5-O53tPyeGYwUxGg_AIHK_g"
+}
+```
 
 Previously generated access token will remain valid until it expires even if a new was generated. After refresh token was rotated its previous versions will no longer be valid.
 
@@ -42,12 +46,14 @@ The process of creating account involves a few steps:
 
 Client sends `POST` request to `"/create_account"` with the following JSON body structure:
 
-`{`
-    `"username": "user1",`
-    `"email": "user1@example.com",`
-    `"password": "asdfasdf",`
-    `"device_info": "test"`
-`}`
+```
+{
+    "username": "user1",
+    "email": "user1@example.com",
+    "password": "asdfasdf",
+    "device_info": "test"
+}
+```
 
 `"device_info"` attribute is optional and has a default value `"Unknown"`
 
@@ -65,10 +71,12 @@ Status can have the following values:
 Server sends application id in a response to client's request and a confirmation code to the specified email.
 Here's an example of server response:
 
-`{`
-    `"status": "Email confirmation required",`
-    `"application_id": "d7d766df-72f6-4de1-9fd0-c8afca6daff7"`
-`}`
+```
+{
+    "status": "Email confirmation required",
+    "application_id": "d7d766df-72f6-4de1-9fd0-c8afca6daff7"
+}
+```
 
 **Note:** Register confirmations are stored separately from users. All data in a register application is non-unique except id. This allows several applications to have the same email or username.
 
@@ -76,10 +84,12 @@ Here's an example of server response:
 
 Client sends a `POST` request to `"/finish_registration"` with the following JSON body structure:
 
-`{`
-    `"application_id": "d7d766df-72f6-4de1-9fd0-c8afca6daff7",`
-    `"confirmation_code": "1234"`
-`}`
+```
+{
+    "application_id": "d7d766df-72f6-4de1-9fd0-c8afca6daff7",
+    "confirmation_code": "1234"
+}
+```
 
 **Note:** Each application has its own confirmation code. If there are several concurrent applications with the same email, client must provide application id and confirmation code that match. This ensures users cannot accidentally confirm applications they haven't sent. To help users identify the correct confirmation code, `"device_info"` from initial client request is included in the confirmation email.
 
@@ -94,12 +104,14 @@ If all checks are passed, it makes application status `confirmed` and the status
 
 Here's an example of server response:
 
-`{`
-    `"user_id": "e6fc7cd6-8d93-49f8-af9d-5abf0491514b",`
-    `"session_id": "60dbfe54-4473-462f-8536-a7ac18b957c7",`
-    `"refresh_token": "85h1EBlz9yOnpM43EvicVWidmfFtJO1viUx6qQsYgC-sN79fecXS35pAOK6qcj0GoUY3QihOqVEpkumHHiqiQw",`
-    `"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTZmYzdjZDYtOGQ5My00OWY4LWFmOWQtNWFiZjA0OTE1MTRiIiwic2Vzc2lvbl9pZCI6IjYwZGJmZTU0LTQ0NzMtNDYyZi04NTM2LWE3YWMxOGI5NTdjNyIsImV4cCI6MTcwOTMzNzQ5M30.0iGH7m_WAWdWqZbGOI2a7p07wPU2FxPxBmG76f6jGZI"`
-`}`
+```
+{
+    "user_id": "e6fc7cd6-8d93-49f8-af9d-5abf0491514b",
+    "session_id": "60dbfe54-4473-462f-8536-a7ac18b957c7",
+    "refresh_token": "85h1EBlz9yOnpM43EvicVWidmfFtJO1viUx6qQsYgC-sN79fecXS35pAOK6qcj0GoUY3QihOqVEpkumHHiqiQw",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTZmYzdjZDYtOGQ5My00OWY4LWFmOWQtNWFiZjA0OTE1MTRiIiwic2Vzc2lvbl9pZCI6IjYwZGJmZTU0LTQ0NzMtNDYyZi04NTM2LWE3YWMxOGI5NTdjNyIsImV4cCI6MTcwOTMzNzQ5M30.0iGH7m_WAWdWqZbGOI2a7p07wPU2FxPxBmG76f6jGZI"
+}
+```
 
 The `name` attribute of created user is same as `username` but it can be changed later (see CHANGING NAME).
 
@@ -107,9 +119,11 @@ The `name` attribute of created user is same as `username` but it can be changed
 
 Logging in to existing account requires sending a `POST` request to `"/login"` that includes HTTP Basic Authorization header and optionally a JSON body that contains:
 
-`{`
-    `"device_info": "test"`
-`}`
+```
+{
+    "device_info": "test"
+}
+```
 
 `"device_info"` is used by the server for session creation. If request contains no body or the body is an empty JSON default value `"Unknown"` will be used.
 
@@ -117,32 +131,39 @@ Client can submit both username + password and email + password as credentials.
 
 Here's an example of server response:
 
-`{`
-    `"user_id": "e6fc7cd6-8d93-49f8-af9d-5abf0491514b",`
-    `"session_id": "3688ce38-b2b3-40c5-9742-0893a8a99140",`
-    `"refresh_token": "vnJkffMnp0bo4UaaBU3g372VwAd3II5BeJo3BP9Od6t4ox2zhQjzw0b4-_l76pQ2g_2z1FpFXodneU4DB9mlkA",`
-    `"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTZmYzdjZDYtOGQ5My00OWY4LWFmOWQtNWFiZjA0OTE1MTRiIiwic2Vzc2lvbl9pZCI6IjM2ODhjZTM4LWIyYjMtNDBjNS05NzQyLTA4OTNhOGE5OTE0MCIsImV4cCI6MTcwOTMzNzU1Nn0.g7fqDJzGB7oHtx6RWBDzQiy4UdU8bjGPVoVUa4URCe0"`
-`}`
+
+```
+{
+    "user_id": "e6fc7cd6-8d93-49f8-af9d-5abf0491514b",
+    "session_id": "3688ce38-b2b3-40c5-9742-0893a8a99140",
+    "refresh_token": "vnJkffMnp0bo4UaaBU3g372VwAd3II5BeJo3BP9Od6t4ox2zhQjzw0b4-_l76pQ2g_2z1FpFXodneU4DB9mlkA",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZTZmYzdjZDYtOGQ5My00OWY4LWFmOWQtNWFiZjA0OTE1MTRiIiwic2Vzc2lvbl9pZCI6IjM2ODhjZTM4LWIyYjMtNDBjNS05NzQyLTA4OTNhOGE5OTE0MCIsImV4cCI6MTcwOTMzNzU1Nn0.g7fqDJzGB7oHtx6RWBDzQiy4UdU8bjGPVoVUa4URCe0"
+}
+```
 
 # LOGGING IN AS GUEST
 
 Logging in as guest requires sending a `POST` request to `"/guest_login"` with the following JSON body structure:
 
-`{`
-    `"name": "guest1",`
-    `"device_info": "test"`
-`}`
+```
+{
+    "name": "guest1",
+    "device_info": "test"
+}
+```
 
 `"device_info"` attribute is optional and has a default value `"Unknown"`.
 
 Here's an example of server response:
 
-`{`
-    `"user_id": "fbf9918d-6889-4909-a6ae-1eb7f4123372",`
-    `"session_id": "e3109003-66a3-420c-aece-bee85da27f8d",`
-    `"refresh_token": "LRbNwos_PgpzpHxS6JOyoX-AwLdIi_M9r7tp5kZWIuQclo6ojR60Q3URMA7amSqH43qZFMwFseUe9BzhB9sy2w",`
-    `"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZmJmOTkxOGQtNjg4OS00OTA5LWE2YWUtMWViN2Y0MTIzMzcyIiwic2Vzc2lvbl9pZCI6ImUzMTA5MDAzLTY2YTMtNDIwYy1hZWNlLWJlZTg1ZGEyN2Y4ZCIsImV4cCI6MTcwOTMzNzU5OH0.ZgbtGaaez75BvUO2KCSZ7BI7IECornnZuEG9AJGCUp8"`
-`}`
+```
+{
+    "user_id": "fbf9918d-6889-4909-a6ae-1eb7f4123372",
+    "session_id": "e3109003-66a3-420c-aece-bee85da27f8d",
+    "refresh_token": "LRbNwos_PgpzpHxS6JOyoX-AwLdIi_M9r7tp5kZWIuQclo6ojR60Q3URMA7amSqH43qZFMwFseUe9BzhB9sy2w",
+    "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiZmJmOTkxOGQtNjg4OS00OTA5LWE2YWUtMWViN2Y0MTIzMzcyIiwic2Vzc2lvbl9pZCI6ImUzMTA5MDAzLTY2YTMtNDIwYy1hZWNlLWJlZTg1ZGEyN2Y4ZCIsImV4cCI6MTcwOTMzNzU5OH0.ZgbtGaaez75BvUO2KCSZ7BI7IECornnZuEG9AJGCUp8"
+}
+```
 
 # RESETTING PASSWORD
 
@@ -152,9 +173,11 @@ Registered users can reset their password. This process can be broken down into 
 
 Client send `POST` request to `"/reset_password"`  with the following JSON body structure:
 
-`{`
-    `"email": "user1@example.com"`
-`}`
+```
+{
+    "email": "user1@example.com"
+}
+```
 
 ## 2. Creation of reset password application
 
@@ -164,9 +187,11 @@ Server sends an email to the specified address that contains reset password link
 
 Response to client's initial request is generic and doesn't contains any important data:
 
-`{`
-    `"status": "email sent"`
-`}`
+```
+{
+    "status": "email sent"
+}
+```
 
 ## 3. Submitting new password
 
@@ -174,10 +199,12 @@ User opens reset password link provided in the email and gets an HTML page that 
 
 To submit new password client sends `POST` request to `"/finish_reset_password"` with the following JSON body structure:
 
-`{`
-    `"application_id": "407a55d8-c354-4271-99db-b95ef8748bd6",`
-    `"new_password": "qwerty123"`
-`}`
+```
+{
+    "application_id": "407a55d8-c354-4271-99db-b95ef8748bd6",
+    "new_password": "qwerty123"
+}
+```
 
 **Note:** HTML page is not strictly necessary. Reset password link can be opened in application (preferred way), also it is possible to extract application id from the link and send `POST` request to `"/finish_reset_password"` manually (using any API testing tool).
 
@@ -185,9 +212,11 @@ To submit new password client sends `POST` request to `"/finish_reset_password"`
 
 Server checks if application is not already used or expired and if so updated user's password. It sends a generic response that contains:
 
-`{`
-    `"status": "success"`
-`}`
+```
+{
+    "status": "success"
+}
+```
 
 All sessions associated with the user account will be closed.
 
@@ -205,31 +234,39 @@ There are 2 separate endpoints for changing username and password:
 
 To update username client sends `PUT` request to `"/change_username"` with HTTP Basic Authorization header and the following JSON body structure:
 
-`{`
-    `"new_username": "qwerty"`
-`}`
+```
+{
+    "new_username": "qwerty"
+}
+```
 
 Here's an example of server response:
 
-`{`
-    `"status": "success",`
-    `"new_username": "qwerty"`
-`}`
+```
+{
+    "status": "success",
+    "new_username": "qwerty"
+}
+```
 
 To update password client sends `PUT` request to `"/change_password"` with HTTP Basic Authorization header and the following JSON body structure:
 
-`{`
-    `"new_password": "qwerty123",`
-    `"session_id": "78efff87-c8c4-4836-80db-39660b4809dd"`
-`}`
+```
+{
+    "new_password": "qwerty123",
+    "session_id": "78efff87-c8c4-4836-80db-39660b4809dd"
+}
+```
 
 `session_id` is used to identify the current session. Server will close all other sessions.
 
 Here's an example of server response:
 
-`{`
-    `"status": "success"`
-`}`
+```
+{
+    "status": "success"
+}
+```
 # CHANGING EMAIL
 
 Changing email is more complex as it requires users to confirm new email. Similarly to changing credentials users have to submit their password first. The process of changing email requires a few steps:
@@ -238,9 +275,11 @@ Changing email is more complex as it requires users to confirm new email. Simila
 
 Client sends `POST` request to `"/change_email"` with HTTP Basic Authorization header and the following JSON body structure:
 
-`{`
-    `"new_email": "new_email@example.com"`
-`}`
+```
+{
+    "new_email": "new_email@example.com"
+}
+```
 
 ## 2. Creation of change email application
 
@@ -258,10 +297,12 @@ For more information about email rollback see ROLLING BACK EMAIL.
 Server sends application id in a response to client's request and a confirmation code to the specified email.
 Here's an example of server response:
 
-`{`
-    `"status": "Email confirmation required",`
-    `"application_id": "1f0f4cf8-7ce1-499f-af9b-f21e50c14d5f"`
-`}`
+```
+{
+    "status": "Email confirmation required",
+    "application_id": "1f0f4cf8-7ce1-499f-af9b-f21e50c14d5f"
+}
+```
 
 **Note:** each user can have multiple change email applications.
 
@@ -269,10 +310,12 @@ Here's an example of server response:
 
 Client sends a `POST` request to `"/finish_change_email"` with the following JSON body structure:
 
-`{`
-    `"application_id": "1f0f4cf8-7ce1-499f-af9b-f21e50c14d5f"`,`
-    `"confirmation_code": "1234"`
-`}`
+```
+{
+    "application_id": "1f0f4cf8-7ce1-499f-af9b-f21e50c14d5f",
+    "confirmation_code": "1234"
+}
+```
 
 Similarly for register applications confirmation code has to match specific application.
 
@@ -307,16 +350,20 @@ Changing name is available for both registered users and guests. It requires inc
 
 To change name client sends `PUT` request to `"/change_name"` with HTTP Bearer Authorization header and the following JSON body structure:
 
-`{`
-    `"new_name": "qwerty"`
-`}`
+```
+{
+    "new_name": "qwerty"
+}
+```
 
 Here's an example of server response:
 
-`{`
-    `"status": "success",`
-    `"new_name": "asd"`
-`}`
+```
+{
+    "status": "success",
+    "new_name": "asd"
+}
+```
 
 # SESSION MANAGEMENT
 
@@ -328,25 +375,27 @@ To get the list of current sessions client sends `GET` request to `"/active_sess
 
 Here's an example of server response:
 
-`{`
-    `"sessions": [`
-        `{`
-            `"session_id": "60dbfe54-4473-462f-8536-a7ac18b957c7",`
-            `"device_info": "test",`
-            `"latest_activity": "2024-03-01T23:43:13.473090+00:00"`
-        `},`
-        `{`
-            `"session_id": "3688ce38-b2b3-40c5-9742-0893a8a99140",`
-            `"device_info": "test",`
-            `"latest_activity": "2024-03-01T23:52:00.567339+00:00"`
-        `},`
-        `{`
-            `"session_id": "61bd9e76-b6a7-4017-b944-4e7e01220a8b",`
-            `"device_info": "Unknown",`
-            `"latest_activity": "2024-03-02T14:21:15.059552+00:00"`
-        `}`
-    `]`
-`}`
+```
+{
+    "sessions": [
+        {
+            "session_id": "60dbfe54-4473-462f-8536-a7ac18b957c7",
+            "device_info": "test",
+            "latest_activity": "2024-03-01T23:43:13.473090+00:00"
+        },
+        {
+            "session_id": "3688ce38-b2b3-40c5-9742-0893a8a99140",
+            "device_info": "test",
+            "latest_activity": "2024-03-01T23:52:00.567339+00:00"
+        },
+        {
+            "session_id": "61bd9e76-b6a7-4017-b944-4e7e01220a8b",
+            "device_info": "Unknown",
+            "latest_activity": "2024-03-02T14:21:15.059552+00:00"
+        }
+    ]
+}
+```
 
 **Note:** `latest_activity` is defined by the latest token refresh and is not real-time.
 
@@ -354,14 +403,18 @@ Here's an example of server response:
 
 To close a session client sends POST request to "/close_session" that includes HTTP Bearer Authorization header with access token and the following JSON body structure:
 
-`{`
-    `"session_id": "60dbfe54-4473-462f-8536-a7ac18b957c7"`
-`}`
+```
+{
+    "session_id": "60dbfe54-4473-462f-8536-a7ac18b957c7"
+}
+```
 
 Here's an example of server response:
 
-`{`
-    `"status": "success"`
-`}`
-`
+```
+{
+    "status": "success"
+}
+```
+
 **Note:** because access tokens are stateless, they will be valid until expired when session is closed. Refresh token of the closes session will become invalid immediately.
