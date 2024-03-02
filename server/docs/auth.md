@@ -361,7 +361,7 @@ Here's an example of server response:
 ```
 {
     "status": "success",
-    "new_name": "asd"
+    "new_name": "qwerty"
 }
 ```
 
