@@ -165,6 +165,74 @@ Here's an example of server response:
 }
 ```
 
+# UPGRADING ACCOUNT
+
+Guests can upgrade their accounts to registered users. This allows them to keep their id, name, rooms, messages etc.
+
+The process of upgrading account is similar to creating new registered account and can be split into the following steps.
+
+## 1. Initial client request
+
+Client sends `POST` request to `"/upgrade_account"` with access token included in HTTP Bearer Authorization header and the following JSON body structure:
+
+```
+{
+    "username": "user2",
+    "email": "user2@example.com",
+    "password": "asdfasdf"
+}
+```
+
+## 2. Creation of upgrade account application
+
+Server checks if username and email are available and creates an upgrade account application that includes unique id, data submitted in a request, data extracted from the token (user id and device info of the session) timestamp, confirmation code and status (used internally by the server).
+
+Status can have the following values:
+- `pending` (assigned at creation)
+- `confirmed` (assigned when user successfully confirms email)
+- `failed` (assigned after 3 failed confirmation attempts)
+- `expired` (assigned after 15 minutes since creation if status is pending)
+
+Server sends application id in a response to client's request and a confirmation code to the specified email.
+Here's an example of server response:
+
+```
+{
+    "status": "Email confirmation required",
+    "application_id": "8983b174-520a-4f5a-9a62-79d5f7056b77"
+}
+```
+
+## 3. Email confirmation
+
+Client sends a `POST` request to `"/finish_upgrade_account"` with access token included in HTTP Bearer Authorization header and the following JSON body structure:
+
+```
+{
+    "application_id": "8983b174-520a-4f5a-9a62-79d5f7056b77",
+    "confirmation_code": "1234"
+}
+```
+
+Similarly for register applications confirmation code has to match specific application.
+
+## 4. Applying changes to user account
+
+Server checks if:
+- application status is `pending`
+- application id and confirmation code match
+- username and email are still available
+
+If all checks are passed, it makes application `confirmed` changes user account type and uses necessary attributes stored in upgrade account application.
+
+User's id, session, refresh token and access token will remain unchanged and there is no need to send additional data to the client. That's why server responds with a generic confirmation:
+
+```
+{
+    "status": "success"
+}
+```
+
 # RESETTING PASSWORD
 
 Registered users can reset their password. This process can be broken down into a few steps:

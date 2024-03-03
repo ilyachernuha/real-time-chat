@@ -84,10 +84,10 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
     auth_utils.check_if_email_is_available(db, body.email)
     application = crud.create_register_application(db=db, username=body.username, email=body.email,
                                                    hashed_password=hashed_password, device_info=body.device_info)
-    application_id = str(application.application_id)
+    application_id_str = str(application.application_id)
     email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
                                                device_info=body.device_info)
-    return {"status": "Email confirmation required", "application_id": application_id}
+    return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
 @app.post("/finish_registration")
@@ -274,6 +274,53 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
     crud.make_reset_password_application_used(db, application.application_id)
     crud.delete_sessions_by_user_id(db, application.user_id)
 
+    return {"status": "success"}
+
+
+@app.post("/upgrade_account")
+async def upgrade_account(body: schemas.UpgradeAccount,
+                          credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                          db: Session = Depends(get_db)):
+    token_data = auth_utils.extract_access_token_data(credentials.credentials)
+    user_id = uuid.UUID(token_data["user_id"])
+    session_id = uuid.UUID(token_data["session_id"])
+
+    auth_utils.validate_username(body.username)
+    auth_utils.validate_password(body.password)
+    hashed_password = auth_utils.ph.hash(body.password)
+
+    auth_utils.check_if_username_is_available(db, body.username)
+    auth_utils.check_if_email_is_available(db, body.email)
+    auth_utils.check_if_user_is_guest(db, user_id)
+    application = crud.create_upgrade_account_application(db=db, user_id=user_id, username=body.username,
+                                                          email=body.email, hashed_password=hashed_password)
+    application_id_str = str(application.application_id)
+
+    device_info = crud.get_session_by_id(db, session_id).device_info
+    email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
+                                               device_info=device_info)
+    return {"status": "Email confirmation required", "application_id": application_id_str}
+
+
+@app.post("/finish_upgrade_account")
+async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
+                                 credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                                 db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    application = crud.get_upgrade_account_application_by_id(db, body.application_id)
+    if application is None:
+        raise HTTPException(status_code=404, detail="Register application not found")
+    auth_utils.check_upgrade_account_application_status(application.status)
+    if application.confirmation_code != body.confirmation_code:
+        crud.increase_failed_upgrade_account_attempts(db, body.application_id)
+        raise HTTPException(status_code=400, detail="Incorrect confirmation code")
+
+    auth_utils.check_if_username_is_available(db, application.username)
+    auth_utils.check_if_email_is_available(db, application.email)
+    auth_utils.check_if_user_is_guest(db, user_id)
+    crud.make_upgrade_account_confirmed(db, application.application_id)
+    crud.upgrade_user_account(db=db, user_id=user_id, username=application.username,
+                              hashed_password=application.hashed_password, email=application.email)
     return {"status": "success"}
 
 

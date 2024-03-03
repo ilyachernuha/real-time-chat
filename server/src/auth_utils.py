@@ -127,6 +127,12 @@ def get_user_by_basic_auth(db: Session, credentials: HTTPBasicCredentials):
     return user
 
 
+def check_if_user_is_guest(db: Session, user_id: uuid.UUID):
+    user = crud.get_user_by_id(db, user_id)
+    if not user.is_guest:
+        raise HTTPException(status_code=409, detail="This account is not guest")
+
+
 def check_if_username_is_available(db: Session, username: str):
     if crud.get_user_by_username(db, username):
         raise FieldSubmitError(status_code=400, detail="This username is taken", field="username")
@@ -171,3 +177,12 @@ def check_reset_password_application_status(status: db_models.ResetPasswordAppli
         raise HTTPException(status_code=400, detail="This application is already used")
     if status == db_models.ResetPasswordApplication.Status.expired:
         raise HTTPException(status_code=400, detail="This application is expired")
+
+
+def check_upgrade_account_application_status(status: db_models.UpgradeAccountApplication.Status):
+    if status == db_models.UpgradeAccountApplication.Status.expired:
+        raise HTTPException(status_code=403, detail="Register application expired")
+    if status == db_models.UpgradeAccountApplication.Status.failed:
+        raise HTTPException(status_code=400, detail="Too many failed attempts")
+    if status != db_models.UpgradeAccountApplication.Status.pending:
+        raise HTTPException(status_code=403, detail="This email is already in use")

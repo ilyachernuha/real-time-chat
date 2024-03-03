@@ -70,6 +70,16 @@ def update_password(db: Session, user_id: uuid.UUID, new_password_hash: str):
     return user
 
 
+def upgrade_user_account(db: Session, user_id: uuid.UUID, username: str, hashed_password: str, email: str):
+    user = get_user_by_id(db, user_id)
+    user.is_guest = False
+    account_data = db_models.AccountData(user_id=user_id, username=username,
+                                         hashed_password=hashed_password, email=email)
+    user.account_data = account_data
+    db.commit()
+    return user
+
+
 # REGISTER APPLICATIONS
 
 
@@ -237,6 +247,53 @@ def expire_change_email_rollback(db: Session, expire_time: timedelta):
               db_models.ChangeEmailApplication.RollbackStatus.pending).
         where(datetime.now(timezone.utc) > db_models.ChangeEmailApplication.timestamp + expire_time).
         values(rollback_status=db_models.ChangeEmailApplication.RollbackStatus.expired)
+    )
+
+    db.execute(stmt)
+    db.commit()
+
+
+# UPGRADE ACCOUNT APPLICATIONS
+
+
+def create_upgrade_account_application(db: Session, user_id: uuid.UUID,
+                                       username: str, email: str, hashed_password: str):
+    application_id = uuid.uuid4()
+    application = db_models.UpgradeAccountApplication(application_id=application_id, user_id=user_id, username=username,
+                                                      email=email, hashed_password=hashed_password)
+
+    db.add(application)
+    db.commit()
+    return application
+
+
+def get_upgrade_account_application_by_id(db: Session, application_id: uuid.UUID):
+    return db.query(db_models.UpgradeAccountApplication).filter(db_models.UpgradeAccountApplication.application_id
+                                                                == application_id).first()
+
+
+def make_upgrade_account_confirmed(db: Session, application_id: uuid.UUID):
+    application = get_upgrade_account_application_by_id(db, application_id)
+    application.status = db_models.UpgradeAccountApplication.Status.confirmed
+    db.commit()
+    return application
+
+
+def increase_failed_upgrade_account_attempts(db: Session, application_id: uuid.UUID):
+    application = get_upgrade_account_application_by_id(db, application_id)
+    application.failed_attempts += 1
+    if application.failed_attempts >= 3:
+        application.status = db_models.UpgradeAccountApplication.Status.failed
+    db.commit()
+    return application
+
+
+def expire_upgrade_account_applications(db: Session, expire_time: timedelta):
+    stmt = (
+        update(db_models.UpgradeAccountApplication).
+        where(db_models.UpgradeAccountApplication.status == db_models.UpgradeAccountApplication.Status.pending).
+        where(datetime.now(timezone.utc) > db_models.UpgradeAccountApplication.timestamp + expire_time).
+        values(status=db_models.UpgradeAccountApplication.Status.expired)
     )
 
     db.execute(stmt)
