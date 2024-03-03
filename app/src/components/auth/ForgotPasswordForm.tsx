@@ -34,6 +34,9 @@ const ForgotPasswordForm = ({ onReset }: ForgotPasswordFormProps) => {
             error={touched.email && errors.email}
             autoCapitalize="none"
             textContentType="emailAddress"
+            returnKeyType="done"
+            blurOnSubmit={false}
+            onSubmitEditing={() => handleSubmit()}
           />
           <Button onPress={() => handleSubmit()} title="Reset" disabled={isSubmitting} />
         </View>

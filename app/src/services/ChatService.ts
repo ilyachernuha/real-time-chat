@@ -3,6 +3,7 @@ import { ChatMessage, ChatMessageReceive } from "../types";
 import API from "@/constants/API";
 
 class ChatService {
+  
   private socket: Socket;
 
   constructor() {

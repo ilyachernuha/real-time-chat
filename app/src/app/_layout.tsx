@@ -3,10 +3,11 @@ import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useColorScheme } from "@/components/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import Colors from "@/constants/Colors";
+import ChatHeader from "@/components/ChatHeader";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -55,20 +56,35 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
-  const backgroundColor = Colors[colorScheme ?? "light"].background;
-
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack
-        screenOptions={{
-          statusBarColor: backgroundColor,
-          navigationBarColor: backgroundColor,
-          contentStyle: { backgroundColor },
-          animation: "fade",
-        }}
-      >
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack screenOptions={{ animation: "fade" }}>
+        <Stack.Screen
+          name="(auth)"
+          options={{
+            headerShown: false,
+            statusBarColor: Colors[colorScheme ?? "light"].background,
+            navigationBarColor: Colors[colorScheme ?? "light"].background,
+            contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
+          }}
+        />
+        <Stack.Screen
+          name="(tabs)"
+          options={{
+            headerShown: false,
+            statusBarColor: Colors[colorScheme ?? "light"].mainDarkGrey,
+            navigationBarColor: Colors[colorScheme ?? "light"].mainDarkGrey,
+            contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey },
+          }}
+        />
+        <Stack.Screen
+          name="chat/[id]"
+          options={{
+            statusBarColor: Colors[colorScheme ?? "light"].mainDarkGrey,
+            navigationBarColor: Colors[colorScheme ?? "light"].background,
+            contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
+          }}
+        />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>

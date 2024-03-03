@@ -1,14 +1,16 @@
 import CodeInput from "@/components/CodeInput";
-import Logo from "@/components/Logo";
+import Logo from "@/components/auth/Logo";
 import { Bold, Regular14 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { useAuth } from "@/hooks/useAuth";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 
 export default function Confirm() {
   const { confirm } = useAuth();
+
+  const { email } = useLocalSearchParams();
 
   const [error, setError] = useState(false);
 
@@ -33,7 +35,7 @@ export default function Confirm() {
           darkColor={Colors.dark.secondaryLightGrey}
           lightColor={Colors.dark.secondaryLightGrey}
         >
-          We have sent you an email! Enter the confirmation code to continue registration!
+          We have sent an email to {email}! Enter the confirmation code to continue registration!
         </Regular14>
         <CodeInput onComplete={handleConfirm} error={error} setError={setError} />
       </View>

@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { Bold, Regular12 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
-import Logo from "@/components/Logo";
+import Logo from "@/components/auth/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import { FormikHelpers } from "formik";
 import { isAxiosError } from "axios";
@@ -17,11 +17,11 @@ export default function Guest() {
     { setSubmitting, setErrors }: FormikHelpers<GuestLoginFormValues>
   ) => {
     try {
-      await guestLogin(values.username);
+      await guestLogin(values.name);
       router.replace("/");
     } catch (error) {
       if (isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
-        setErrors({ username: error.response.data.detail });
+        setErrors({ name: error.response.data.detail });
       } else {
         Alert.alert("Unexpected Error", "An unexpected error occurred. Please try again later.");
       }
@@ -40,7 +40,7 @@ export default function Guest() {
           darkColor={Colors.dark.secondaryLightGrey}
           lightColor={Colors.dark.secondaryLightGrey}
         >
-          Please provide a username
+          Please provide your name
         </Regular12>
       </View>
       <GuestLoginForm onGuestLogin={handleGuestLogin} />
