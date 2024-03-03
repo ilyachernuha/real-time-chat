@@ -4,7 +4,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { FlatList, Image, ListRenderItem, Pressable, StyleSheet, Touchable, TouchableOpacity } from "react-native";
 import icon from "../../../assets/images/icon.png";
 import { Light, Regular12, Regular14 } from "@/components/StyledText";
-import { Link } from "expo-router";
+import { Link, Tabs } from "expo-router";
+import ChannelsHeader from "@/components/ChannelsHeader";
 
 interface Chat {
   id: string;

@@ -1,56 +1,37 @@
-export interface LoginRequest {
-  username: string;
-  password: string;
-}
-
-export type LoginResponse = {
-  user_id: string;
-  token: string;
-};
-
-export interface RegisterRequest {
+export type RegisterCredentials = {
   username: string;
   email: string;
   password: string;
-}
+};
 
 export type RegisterResponse = {
   status: string;
   application_id: string;
 };
 
-export interface ConfirmRequest {
+export type RegisterConfirmation = {
   application_id: string;
   confirmation_code: string;
-}
+};
 
-export type ConfirmResponse = {
+export type LoginResponse = {
   user_id: string;
-  token: string;
+  session_id: string;
+  refresh_token: string;
+  access_token: string;
 };
 
-export interface GuestLoginRequest {
-  name: string;
-}
-
-export type GuestLoginResponse = {
-  user_id: string;
-  token: string;
+export type RefreshTokenResponse = {
+  access_token: string;
+  new_refresh_token: string;
 };
 
-export interface ForgotPasswordRequest {
-  email: string;
-}
-
-export type ForgotPasswordResponse = {
-  status: string;
-};
-
-export interface ResetPasswordRequest {
+export type ResetPasswordRequest = {
   application_id: string;
   new_password: string;
-}
+};
 
-export type ResetPasswordResponse = {
-  status: "success";
+export type ChangeNameResponse = {
+  status: string;
+  new_name: string;
 };

@@ -2,7 +2,7 @@ import { Link, router } from "expo-router";
 import { Bold, Regular12 } from "@/components/StyledText";
 import Colors from "@/constants/Colors";
 import { SafeAreaView, View } from "@/components/Themed";
-import Logo from "@/components/Logo";
+import Logo from "@/components/auth/Logo";
 import { useAuth } from "@/hooks/useAuth";
 import RegistrationForm, { RegistrationFormValues } from "@/components/auth/RegistrationForm";
 import { FormikHelpers } from "formik";

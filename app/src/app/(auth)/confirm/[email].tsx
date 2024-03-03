@@ -1,5 +1,5 @@
 import CodeInput from "@/components/CodeInput";
-import Logo from "@/components/Logo";
+import Logo from "@/components/auth/Logo";
 import { Bold, Regular14 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
