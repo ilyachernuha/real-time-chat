@@ -15,6 +15,7 @@ class RegistrationConfirmation(BaseModel):
 
 class Login(BaseModel):
     device_info: str = "Unknown"
+    # Basic auth must be included in HTTP header
 
 
 class GuestLogin(BaseModel):
@@ -28,7 +29,7 @@ class TokenRefresh(BaseModel):
 
 class UpdateName(BaseModel):
     new_name: str
-    # Bearer token must be included in HTTP header
+    # Access token must be included in HTTP header
 
 
 class UpdateUsername(BaseModel):
@@ -52,12 +53,13 @@ class UpdatePassword(BaseModel):
     # Basic auth must be included in HTTP header
 
 
-class CloseSession(BaseModel):
-    session_id: UUID4
-
-
 class ResetPassword(BaseModel):
     email: EmailStr
+
+
+class CloseSession(BaseModel):
+    session_id: UUID4
+    # Access token must be included in HTTP header
 
 
 class FinishResetPassword(BaseModel):
