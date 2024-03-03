@@ -167,7 +167,7 @@ async def token_refresh(body: schemas.TokenRefresh, db: Session = Depends(get_db
     return {"access_token": access_token, "new_refresh_token": new_refresh_token}
 
 
-@app.patch("/change_name")
+@app.put("/change_name")
 async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -176,7 +176,7 @@ async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCr
     return {"status": "success", "new_name": user.name}
 
 
-@app.patch("/change_username")
+@app.put("/change_username")
 async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
@@ -228,7 +228,7 @@ async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends
     return {"status": "Email change rolled back"}
 
 
-@app.patch("/change_password")
+@app.put("/change_password")
 async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
