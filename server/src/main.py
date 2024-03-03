@@ -307,5 +307,5 @@ async def close_session(body: schemas.CloseSession,
     return {"status": "success"}
 
 
-app.mount("/public", StaticFiles(directory="public"))
+app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))
