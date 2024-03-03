@@ -57,14 +57,27 @@ class ResetPassword(BaseModel):
     email: EmailStr
 
 
-class CloseSession(BaseModel):
-    session_id: UUID4
-    # Access token must be included in HTTP header
-
-
 class FinishResetPassword(BaseModel):
     application_id: UUID4
     new_password: str
+
+
+class UpgradeAccount(BaseModel):
+    username: str
+    email: EmailStr
+    password: str
+    # Access token must be included in HTTP header
+
+
+class UpgradeAccountConfirmation(BaseModel):
+    application_id: UUID4
+    confirmation_code: str
+    # Access token must be included in HTTP header
+
+
+class CloseSession(BaseModel):
+    session_id: UUID4
+    # Access token must be included in HTTP header
 
 
 class Message(BaseModel):

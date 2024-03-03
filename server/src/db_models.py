@@ -4,7 +4,7 @@ from sqlalchemy.orm import relationship, validates
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 from enum import Enum
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, timezone
 import secrets
 
 
@@ -104,6 +104,26 @@ class ChangeEmailApplication(Base):
     status = Column(SQLAlchemyEnum(Status, name="change_email_status"), default=Status.pending)
     rollback_status = Column(SQLAlchemyEnum(RollbackStatus, name="email_roll_back_status"),
                              default=RollbackStatus.unavailable)
+
+
+class UpgradeAccountApplication(Base):
+    __tablename__ = "upgrade_account_applications"
+
+    class Status(Enum):
+        pending = 1
+        confirmed = 2
+        failed = 3
+        expired = 4
+
+    application_id = Column(UUID, primary_key=True)
+    user_id = Column(UUID, nullable=False)
+    username = Column(String, nullable=False)
+    email = Column(String, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    confirmation_code = Column(String(4), nullable=False, default=lambda: f"{secrets.randbelow(10000):04d}")
+    failed_attempts = Column(Integer, default=0)
+    status = Column(SQLAlchemyEnum(Status, name="upgrade_account_status"), default=Status.pending)
 
 
 class Session(Base):
