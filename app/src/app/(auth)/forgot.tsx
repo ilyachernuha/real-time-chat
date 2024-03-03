@@ -40,7 +40,7 @@ export default function ForgotPassword() {
           darkColor={Colors.dark.secondaryLightGrey}
           lightColor={Colors.dark.secondaryLightGrey}
         >
-          Do not excite! Enter your email and{"\n"}we will reset password!
+          Do not worry! Enter your email and{"\n"}we will reset the password!
         </Regular12>
       </View>
       <ForgotPasswordForm onReset={handleForgot} />

@@ -40,7 +40,7 @@ export default function Guest() {
           darkColor={Colors.dark.secondaryLightGrey}
           lightColor={Colors.dark.secondaryLightGrey}
         >
-          Please provide a username
+          Please provide your name
         </Regular12>
       </View>
       <GuestLoginForm onGuestLogin={handleGuestLogin} />

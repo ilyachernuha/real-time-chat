@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Formik, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { View } from "../Themed";
 import { Button } from "../Buttons";
 import InputField from "../InputFields";
+import { TextInput } from "react-native";
 
 export interface ResetPasswordFormValues {
   password: string;
@@ -27,6 +28,7 @@ interface ResetPasswordFormProps {
 
 const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
   const [hidePassword, setHidePassword] = useState(true);
+  const passwordConfirmRef = useRef<TextInput>(null);
   return (
     <Formik<ResetPasswordFormValues>
       initialValues={{ password: "", passwordConfirm: "" }}
@@ -47,6 +49,9 @@ const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
               secureTextEntry={hidePassword}
               autoCapitalize="none"
               textContentType="password"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => passwordConfirmRef.current?.focus()}
             />
             <InputField
               onChangeText={(text) => handleChange("passwordConfirm")(text.replace(/[^!-~]/g, ""))}
@@ -59,6 +64,10 @@ const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
               secureTextEntry={hidePassword}
               autoCapitalize="none"
               textContentType="password"
+              ref={passwordConfirmRef}
+              returnKeyType="done"
+              blurOnSubmit={false}
+              onSubmitEditing={() => handleSubmit()}
             />
           </View>
           <Button onPress={() => handleSubmit()} title="Change password" disabled={isSubmitting} />

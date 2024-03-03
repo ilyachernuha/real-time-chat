@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Formik, FormikErrors, FormikHelpers, FormikTouched } from "formik";
 import * as Yup from "yup";
 import { View } from "../Themed";
@@ -8,6 +8,7 @@ import { Link } from "expo-router";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
 import InputField from "../InputFields";
+import { TextInput } from "react-native";
 
 export interface LoginFormValues {
   username: string;
@@ -29,25 +30,16 @@ interface LoginFormProps {
   ) => void;
 }
 
-const LoginForm = ({ onLogin, onGuestLogin }: LoginFormProps) => {
+const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [hidePassword, setHidePassword] = useState(true);
+  const passwordRef = useRef<TextInput>(null);
   return (
     <Formik<LoginFormValues>
       initialValues={{ username: "", password: "" }}
       onSubmit={onLogin}
       validationSchema={validationSchema}
     >
-      {({
-        handleChange,
-        handleBlur,
-        handleSubmit,
-        values,
-        touched,
-        errors,
-        isSubmitting,
-        setSubmitting,
-        ...formikHelpers
-      }) => (
+      {({ handleChange, handleBlur, handleSubmit, values, touched, errors, isSubmitting, setSubmitting }) => (
         <View>
           <View>
             <InputField
@@ -58,6 +50,9 @@ const LoginForm = ({ onLogin, onGuestLogin }: LoginFormProps) => {
               error={touched.username && errors.username}
               autoCapitalize="none"
               textContentType="username"
+              returnKeyType="next"
+              blurOnSubmit={false}
+              onSubmitEditing={() => passwordRef.current?.focus()}
             />
             <InputField
               onChangeText={(text) => handleChange("password")(text.replace(/[^!-~]/g, ""))}
@@ -70,6 +65,10 @@ const LoginForm = ({ onLogin, onGuestLogin }: LoginFormProps) => {
               secureTextEntry={hidePassword}
               autoCapitalize="none"
               textContentType="password"
+              ref={passwordRef}
+              returnKeyType="done"
+              blurOnSubmit={false}
+              onSubmitEditing={() => handleSubmit()}
             />
           </View>
           <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>

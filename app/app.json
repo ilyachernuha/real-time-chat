@@ -31,8 +31,8 @@
           "autoVerify": true,
           "data": [
             {
-              "scheme": "http",
-              "host": "18.153.207.77"
+              "scheme": "https",
+              "host": "happytown.store"
             }
           ],
           "category": ["BROWSABLE", "DEFAULT"]
@@ -69,13 +69,7 @@
         }
       ],
       "expo-router",
-      "expo-secure-store",
-      [
-        "expo-build-properties",
-        {
-          "android": { "usesCleartextTraffic": true }
-        }
-      ]
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true

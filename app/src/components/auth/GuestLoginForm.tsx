@@ -35,6 +35,9 @@ const GuestLoginForm = ({ onGuestLogin }: GuestLoginFormProps) => {
             error={touched.name && errors.name}
             autoCapitalize="none"
             textContentType="name"
+            returnKeyType="done"
+            blurOnSubmit={false}
+            onSubmitEditing={() => handleSubmit()}
           />
           <Button onPress={() => handleSubmit()} title="Log In as a Guest" disabled={isSubmitting} />
         </View>

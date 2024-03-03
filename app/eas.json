@@ -12,7 +12,7 @@
       "distribution": "internal",
       "channel": "preview",
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://18.153.207.77"
+        "EXPO_PUBLIC_API_URL": "https://happytown.store"
       }
     },
     "production": {
