@@ -8,6 +8,7 @@ def expire_applications_task():
         crud.expire_register_applications(db, timedelta(minutes=15))
         crud.expire_reset_password_applications(db, timedelta(minutes=15))
         crud.expire_change_email_applications(db, timedelta(minutes=15))
+        crud.expire_upgrade_account_applications(db, timedelta(minutes=15))
 
 
 def expire_email_rollback_task():
