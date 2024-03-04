@@ -107,8 +107,14 @@ class TokenUpdate(BaseModel):
     new_refresh_token: str
 
 
+class Session(BaseModel):
+    session_id: UUID4
+    device_info: str
+    latest_activity: str
+
+
 class ActiveSessions(BaseModel):
-    sessions: list
+    sessions: list[Session]
 
 
 class NaneUpdate(BaseModel):
