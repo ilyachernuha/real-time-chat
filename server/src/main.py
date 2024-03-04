@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 import socketio
 import uuid
@@ -69,7 +69,7 @@ async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
     )
 
 
-@app.get("/ping")
+@app.get("/ping", response_class=PlainTextResponse)
 async def ping():
     return "pong"
 
