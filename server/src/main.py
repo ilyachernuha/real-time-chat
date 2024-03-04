@@ -281,9 +281,7 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
 async def upgrade_account(body: schemas.UpgradeAccount,
                           credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                           db: Session = Depends(get_db)):
-    token_data = auth_utils.extract_access_token_data(credentials.credentials)
-    user_id = uuid.UUID(token_data["user_id"])
-    session_id = uuid.UUID(token_data["session_id"])
+    user_id, session_id = auth_utils.extract_access_token_data(credentials.credentials)
 
     auth_utils.validate_username(body.username)
     auth_utils.validate_password(body.password)

@@ -32,7 +32,7 @@ def generate_access_token(user_id_str: str, session_id_str: str):
     return token
 
 
-def extract_access_token_data(token: str):
+def validate_access_token(token: str):
     try:
         return jwt.decode(token, secret_key, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
@@ -42,7 +42,14 @@ def extract_access_token_data(token: str):
 
 
 def extract_user_id_from_access_token(token: str):
-    return uuid.UUID(extract_access_token_data(token)["user_id"])
+    return uuid.UUID(validate_access_token(token)["user_id"])
+
+
+def extract_access_token_data(token: str):
+    payload = validate_access_token(token)
+    user_id = uuid.UUID(payload["user_id"])
+    session_id = uuid.UUID(payload["session_id"])
+    return user_id, session_id
 
 
 def generate_refresh_token():
