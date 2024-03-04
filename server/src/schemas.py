@@ -1,6 +1,9 @@
 from pydantic import BaseModel, EmailStr, UUID4
 
 
+# REQUEST SCHEMAS
+
+
 class Registration(BaseModel):
     username: str
     email: EmailStr
@@ -78,6 +81,52 @@ class UpgradeAccountConfirmation(BaseModel):
 class CloseSession(BaseModel):
     session_id: UUID4
     # Access token must be included in HTTP header
+
+
+# RESPONSE SCHEMAS
+
+
+class GenericConfirmation(BaseModel):
+    status: str
+
+
+class ApplicationCreated(BaseModel):
+    status: str
+    application_id: UUID4
+
+
+class SuccessfulLogin(BaseModel):
+    user_id: UUID4
+    session_id: UUID4
+    refresh_token: str
+    access_token: str
+
+
+class TokenUpdate(BaseModel):
+    access_token: str
+    new_refresh_token: str
+
+
+class ActiveSessions(BaseModel):
+    sessions: list
+
+
+class NaneUpdate(BaseModel):
+    status: str
+    new_name: str
+
+
+class UsernameUpdate(BaseModel):
+    status: str
+    new_username: str
+
+
+class EmailUpdate(BaseModel):
+    status: str
+    new_email: str
+
+
+# SIO EVENT SCHEMAS
 
 
 class Message(BaseModel):
