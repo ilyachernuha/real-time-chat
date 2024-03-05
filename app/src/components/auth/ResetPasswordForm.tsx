@@ -14,8 +14,8 @@ export interface ResetPasswordFormValues {
 const validationSchema = Yup.object({
   password: Yup.string()
     .matches(/^[!-~]+$/, "Spaces and non-English letters are not allowed")
-    .min(8, "Password must be 8 to 32 characters long")
-    .max(32, "Password must be 8 to 32 characters long")
+    .min(8, "Password must be at least 8 characters long")
+    .max(32, "Password must be no more than 32 characters long")
     .required("Password is required"),
   passwordConfirm: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
@@ -39,7 +39,7 @@ const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
         <View style={{ gap: 24 }}>
           <View>
             <InputField
-              onChangeText={(text) => handleChange("password")(text.replace(/[^!-~]/g, ""))}
+              onChangeText={handleChange("password")}
               onBlur={handleBlur("password")}
               placeholder="Enter your password"
               value={values.password}
@@ -52,9 +52,10 @@ const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => passwordConfirmRef.current?.focus()}
+              autoComplete="new-password"
             />
             <InputField
-              onChangeText={(text) => handleChange("passwordConfirm")(text.replace(/[^!-~]/g, ""))}
+              onChangeText={handleChange("passwordConfirm")}
               onBlur={handleBlur("passwordConfirm")}
               placeholder="Confirm your password"
               value={values.passwordConfirm}
@@ -68,6 +69,7 @@ const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
               returnKeyType="done"
               blurOnSubmit={false}
               onSubmitEditing={() => handleSubmit()}
+              autoComplete="new-password"
             />
           </View>
           <Button onPress={() => handleSubmit()} title="Change password" disabled={isSubmitting} />

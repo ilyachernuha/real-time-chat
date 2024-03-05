@@ -17,11 +17,13 @@ const validationSchema = Yup.object({
   email: Yup.string().email("Email must be a valid email").required("Email is required"),
   username: Yup.string()
     .matches(/^[a-zA-Z0-9]+$/, "Only English letters and numbers are allowed")
+    .min(2, "Username must be at least 2 characters long")
+    .max(24, "Username must be no more than 24 characters long")
     .required("Username is required"),
   password: Yup.string()
     .matches(/^[!-~]+$/, "Spaces and non-English letters are not allowed")
-    .min(8, "Password must be 8 to 32 characters long")
-    .max(32, "Password must be 8 to 32 characters long")
+    .min(8, "Password must be at least 8 characters long")
+    .max(32, "Password must be no more than 32 characters long")
     .required("Password is required"),
   passwordConfirm: Yup.string()
     .oneOf([Yup.ref("password")], "Passwords must match")
@@ -49,7 +51,7 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
         <View style={{ gap: 24 }}>
           <View>
             <InputField
-              onChangeText={(text) => handleChange("email")(text.replace(/[^a-zA-Z0-9.@\-_+]/g, ""))}
+              onChangeText={handleChange("email")}
               onBlur={handleBlur("email")}
               placeholder="Enter you email"
               value={values.email}
@@ -59,9 +61,10 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => usernameRef.current?.focus()}
+              autoComplete="email"
             />
             <InputField
-              onChangeText={(text) => handleChange("username")(text.replace(/[^a-zA-Z0-9]/g, ""))}
+              onChangeText={handleChange("username")}
               onBlur={handleBlur("username")}
               placeholder="Enter you username"
               value={values.username}
@@ -72,9 +75,10 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => passwordRef.current?.focus()}
+              autoComplete="username"
             />
             <InputField
-              onChangeText={(text) => handleChange("password")(text.replace(/[^!-~]/g, ""))}
+              onChangeText={handleChange("password")}
               onBlur={handleBlur("password")}
               placeholder="Enter your password"
               value={values.password}
@@ -88,9 +92,10 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => passwordConfirmRef.current?.focus()}
+              autoComplete="password"
             />
             <InputField
-              onChangeText={(text) => handleChange("passwordConfirm")(text.replace(/[^!-~]/g, ""))}
+              onChangeText={handleChange("passwordConfirm")}
               onBlur={handleBlur("passwordConfirm")}
               placeholder="Confirm your password"
               value={values.passwordConfirm}
@@ -104,6 +109,7 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               returnKeyType="done"
               blurOnSubmit={false}
               onSubmitEditing={() => handleSubmit()}
+              autoComplete="password"
             />
           </View>
           <Button onPress={() => handleSubmit()} title="Create an account" disabled={isSubmitting} />

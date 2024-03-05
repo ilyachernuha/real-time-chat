@@ -27,7 +27,7 @@ const ForgotPasswordForm = ({ onReset }: ForgotPasswordFormProps) => {
       {({ handleChange, handleBlur, handleSubmit, values, touched, errors, isSubmitting }) => (
         <View style={{ gap: 24 }}>
           <InputField
-            onChangeText={(text) => handleChange("email")(text.replace(/[^a-zA-Z0-9.@\-_+]/g, ""))}
+            onChangeText={handleChange("email")}
             onBlur={handleBlur("email")}
             placeholder="Enter you email"
             value={values.email}
@@ -37,6 +37,7 @@ const ForgotPasswordForm = ({ onReset }: ForgotPasswordFormProps) => {
             returnKeyType="done"
             blurOnSubmit={false}
             onSubmitEditing={() => handleSubmit()}
+            autoComplete="email"
           />
           <Button onPress={() => handleSubmit()} title="Reset" disabled={isSubmitting} />
         </View>

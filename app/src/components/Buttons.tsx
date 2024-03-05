@@ -4,7 +4,7 @@ import React, { ComponentProps } from "react";
 import { TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
 
 interface ButtonProps {
-  onPress: ComponentProps<typeof TouchableOpacity>["onPress"];
+  onPress?: ComponentProps<typeof TouchableOpacity>["onPress"];
   title: string;
   disabled?: boolean;
   style?: ViewStyle | ViewStyle[];

@@ -1,4 +1,5 @@
 import Logo from "@/components/auth/Logo";
+import { Button } from "@/components/Buttons";
 import { Bold, Regular12 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
@@ -9,7 +10,7 @@ export default function EmailSent() {
   const { email } = useLocalSearchParams<{ email: string }>();
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 48 }}>
+    <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 48 }}>
       <Logo />
       <View style={{ marginTop: 24, marginBottom: 32, alignItems: "center" }}>
         <Bold style={{ textAlign: "center" }}>Follow the instructions</Bold>
@@ -25,6 +26,10 @@ export default function EmailSent() {
           Change email
         </Link>
       </View>
+      <View style={{ flex: 1 }}></View>
+      <Link href="/login" asChild>
+        <Button title="Log In" />
+      </Link>
     </SafeAreaView>
   );
 }
