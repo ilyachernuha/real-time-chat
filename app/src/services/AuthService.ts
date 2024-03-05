@@ -7,10 +7,11 @@ import {
   RegisterResponse,
   ResetPasswordRequest,
 } from "./types";
+import deviceInfo from "@/utils/deviceInfo";
 
 export default {
   register: async (credentials: RegisterCredentials) => {
-    const { data } = await api.post<RegisterResponse>("/create_account", credentials);
+    const { data } = await api.post<RegisterResponse>("/create_account", { ...credentials, device_info: deviceInfo });
     return data;
   },
   confirmRegistration: async (confirmation: RegisterConfirmation) => {
@@ -18,12 +19,12 @@ export default {
     return data;
   },
   login: async (auth: AxiosBasicCredentials) => {
-    const { data } = await api.post<LoginResponse>("/login", {}, { auth });
+    const { data } = await api.post<LoginResponse>("/login", { device_info: deviceInfo }, { auth });
     return data;
   },
 
   guestLogin: async (name: string) => {
-    const { data } = await api.post<LoginResponse>("/guest_login", { name });
+    const { data } = await api.post<LoginResponse>("/guest_login", { name, device_info: deviceInfo });
     return data;
   },
 

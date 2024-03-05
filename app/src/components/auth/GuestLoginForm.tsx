@@ -30,7 +30,7 @@ const GuestLoginForm = ({ onGuestLogin }: GuestLoginFormProps) => {
           <InputField
             onChangeText={handleChange("name")}
             onBlur={handleBlur("name")}
-            placeholder="Enter you username"
+            placeholder="Enter your name"
             value={values.name}
             error={touched.name && errors.name}
             autoCapitalize="none"
