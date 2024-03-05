@@ -15,9 +15,25 @@ export interface LoginFormValues {
   password: string;
 }
 
+const usernameValidator = Yup.string()
+  .matches(/^[a-zA-Z0-9]+$/, "Only English letters and numbers are allowed")
+  .min(2, "Username must be at least 2 characters long")
+  .max(24, "Username must be no more than 24 characters long");
+
+const emailValidator = Yup.string().email("Email must be a valid email");
+
 const validationSchema = Yup.object({
-  username: Yup.string().required("Username is required"),
-  password: Yup.string().required("Password is required"),
+  username: Yup.string()
+    .required("Username or email is required")
+    .test("is-username-or-email", "Must be a valid username or email", async (value) => {
+      const results = await Promise.all([usernameValidator.isValid(value), emailValidator.isValid(value)]);
+      return results.some((result) => result === true);
+    }),
+  password: Yup.string()
+    .matches(/^[!-~]+$/, "Spaces and non-English letters are not allowed")
+    .min(8, "Password must be at least 8 characters long")
+    .max(32, "Password must be no more than 32 characters long")
+    .required("Password is required"),
 });
 
 interface LoginFormProps {
@@ -43,19 +59,20 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
         <View>
           <View>
             <InputField
-              onChangeText={(text) => handleChange("username")(text.replace(/[^a-zA-Z0-9]/g, ""))}
+              onChangeText={handleChange("username")}
               onBlur={handleBlur("username")}
-              placeholder="Enter you username"
+              placeholder="Enter you username or email"
               value={values.username}
               error={touched.username && errors.username}
               autoCapitalize="none"
-              textContentType="username"
+              textContentType="emailAddress"
               returnKeyType="next"
               blurOnSubmit={false}
               onSubmitEditing={() => passwordRef.current?.focus()}
+              autoComplete="email"
             />
             <InputField
-              onChangeText={(text) => handleChange("password")(text.replace(/[^!-~]/g, ""))}
+              onChangeText={handleChange("password")}
               onBlur={handleBlur("password")}
               placeholder="Enter your password"
               value={values.password}
@@ -69,6 +86,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               returnKeyType="done"
               blurOnSubmit={false}
               onSubmitEditing={() => handleSubmit()}
+              autoComplete="password"
             />
           </View>
           <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>

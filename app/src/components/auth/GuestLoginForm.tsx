@@ -11,7 +11,14 @@ export interface GuestLoginFormValues {
 }
 
 const validationSchema = Yup.object({
-  name: Yup.string().required("Name is required"),
+  name: Yup.string()
+    .required("Name is required")
+    .matches(/^[^\x00-\x1F\x7F]*$/, "Name cannot contain control or non-displayable characters")
+    .min(1, "Name must be at least 1 character long")
+    .max(16, "Name must be no more than 16 characters long")
+    .test("not-only-whitespace", "Name cannot be empty or whitespace only", (value) => {
+      return value?.trim().length > 0; // Ensures the trimmed value is not an empty string
+    }),
 });
 
 interface GuestLoginFormProps {
@@ -38,6 +45,7 @@ const GuestLoginForm = ({ onGuestLogin }: GuestLoginFormProps) => {
             returnKeyType="done"
             blurOnSubmit={false}
             onSubmitEditing={() => handleSubmit()}
+            autoComplete="name"
           />
           <Button onPress={() => handleSubmit()} title="Log In as a Guest" disabled={isSubmitting} />
         </View>
