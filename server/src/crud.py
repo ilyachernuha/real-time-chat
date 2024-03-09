@@ -470,6 +470,12 @@ def update_user_admin_status_in_room(db: Session, room_id: uuid.UUID, user_id: u
     return room
 
 
+def delete_room(db: Session, room_id: uuid.UUID):
+    room = get_room_by_id(db, room_id)
+    db.delete(room)
+    db.commit()
+
+
 # TAGS
 
 
@@ -505,3 +511,9 @@ def dissociate_tag_with_theme(db: Session, tag_name: str, theme: RoomTheme):
     db.delete(association)
     db.commit()
     # return ???
+
+
+def delete_tag(db: Session, tag_name: str):
+    tag = get_tag_by_name(db, tag_name)
+    db.delete(tag)
+    db.commit()
