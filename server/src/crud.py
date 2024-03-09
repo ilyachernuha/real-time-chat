@@ -419,9 +419,11 @@ def remove_tags_from_room(db: Session, room_id: uuid.UUID, tags: list[db_models.
     room = get_room_by_id(db, room_id)
     for tag in tags:
         tag_name: str = tag.tag
-        association = (db.query(db_models.RoomTagAssociation).filter(db_models.RoomTagAssociation.room_id == room_id,
-                                                                     db_models.RoomTagAssociation.tag_name == tag_name)
-                       .first())
+        association = (
+            db.query(db_models.RoomTagAssociation)
+            .filter(db_models.RoomTagAssociation.room_id == room_id, db_models.RoomTagAssociation.tag_name == tag_name)
+            .first()
+        )
         db.delete(association)
     db.commit()
     return room
@@ -446,9 +448,11 @@ def add_user_to_room(db: Session, room_id: uuid.UUID, user: db_models.User, make
 
 def remove_user_from_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID):
     room = get_room_by_id(db, room_id)
-    association = (db.query(db_models.UserRoomAssociation).filter(db_models.UserRoomAssociation.user_id == user_id,
-                                                                  db_models.UserRoomAssociation.room_id == room_id)
-                   .first())
+    association = (
+        db.query(db_models.UserRoomAssociation)
+        .filter(db_models.UserRoomAssociation.user_id == user_id, db_models.UserRoomAssociation.room_id == room_id)
+        .first()
+    )
     db.delete(association)
     db.commit()
     return room
@@ -456,9 +460,11 @@ def remove_user_from_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID):
 
 def update_user_admin_status_in_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID, new_admin_status: bool):
     room = get_room_by_id(db, room_id)
-    association = (db.query(db_models.UserRoomAssociation).filter(db_models.UserRoomAssociation.user_id == user_id,
-                                                                  db_models.UserRoomAssociation.room_id == room_id)
-                   .first())
+    association = (
+        db.query(db_models.UserRoomAssociation)
+        .filter(db_models.UserRoomAssociation.user_id == user_id, db_models.UserRoomAssociation.room_id == room_id)
+        .first()
+    )
     association.is_admin = new_admin_status
     db.commit()
     return room
