@@ -169,8 +169,8 @@ class Tag(Base):
     __tablename__ = "tags"
 
     tag = Column(String, primary_key=True)
-    rooms = relationship("RoomTagAssociation", back_populates="tag")
-    theme = relationship("TagThemeAssociation", back_populates="tag")
+    rooms = relationship("RoomTagAssociation", back_populates="tag", cascade="all, delete-orphan")
+    theme = relationship("TagThemeAssociation", back_populates="tag", cascade="all, delete-orphan")
 
 
 class RoomTagAssociation(Base):
