@@ -3,6 +3,8 @@ from sqlalchemy import update, delete
 import uuid
 from datetime import datetime, timezone, timedelta
 import db_models
+from room_themes import RoomTheme
+from room_languages import RoomLanguage
 
 
 # USERS
@@ -359,3 +361,141 @@ def delete_sessions_by_user_id_except_one(db: Session, user_id: uuid.UUID, sessi
 
     db.execute(stmt)
     db.commit()
+
+
+# ROOMS
+
+
+def create_room(db: Session, owner: db_models.User, title: str, description: str | None, theme: RoomTheme,
+                languages: list[RoomLanguage], tags: list[db_models.Tag]):
+    room_id = uuid.uuid4()
+    room = db_models.Room(room_id=room_id, owner_id=owner.user_id, title=title, description=description, theme=theme,
+                          languages=languages)
+    db.add(room)
+    for tag in tags:
+        association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, room=room, tag=tag)
+        db.add(association)
+    db.commit()
+    return room
+
+
+def get_room_by_id(db: Session, room_id: uuid.UUID):
+    return db.query(db_models.Room).filter(db_models.Room.room_id == room_id).first()
+
+
+def update_room_title(db: Session, room_id: uuid.UUID, new_title: str):
+    room = get_room_by_id(db, room_id)
+    room.title = new_title
+    db.commit()
+    return room
+
+
+def update_room_description(db: Session, room_id: uuid.UUID, new_description: str):
+    room = get_room_by_id(db, room_id)
+    room.description = new_description
+    db.commit()
+    return room
+
+
+def update_room_theme(db: Session, room_id: uuid.UUID, new_theme: RoomTheme):
+    room = get_room_by_id(db, room_id)
+    room.theme = new_theme
+    db.commit()
+    return room
+    # tag associations with new theme must be handles separately
+    # potential removal of tag association with old theme must be handles separately
+
+
+def add_tags_to_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag]):
+    room = get_room_by_id(db, room_id)
+    for tag in tags:
+        association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, room=room, tag=tag)
+        db.add(association)
+    db.commit()
+    return room
+
+
+def remove_tags_from_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag]):
+    room = get_room_by_id(db, room_id)
+    for tag in tags:
+        tag_name: str = tag.tag
+        association = (db.query(db_models.RoomTagAssociation).filter(db_models.RoomTagAssociation.room_id == room_id,
+                                                                     db_models.RoomTagAssociation.tag_name == tag_name)
+                       .first())
+        db.delete(association)
+    db.commit()
+    return room
+    # potential removal of tag theme association must be handles separately
+
+
+def update_room_languages(db: Session, room_id: uuid.UUID, languages: list[RoomLanguage]):
+    room = get_room_by_id(db, room_id)
+    room.languages = languages
+    db.commit()
+    return room
+
+
+def add_user_to_room(db: Session, room_id: uuid.UUID, user: db_models.User, make_admin: bool = False):
+    room = get_room_by_id(db, room_id)
+    association = db_models.UserRoomAssociation(user_id=user.user_id, room_id=room_id, is_admin=make_admin,
+                                                user=user, room=room)
+    db.add(association)
+    db.commit()
+    return room
+
+
+def remove_user_from_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID):
+    room = get_room_by_id(db, room_id)
+    association = (db.query(db_models.UserRoomAssociation).filter(db_models.UserRoomAssociation.user_id == user_id,
+                                                                  db_models.UserRoomAssociation.room_id == room_id)
+                   .first())
+    db.delete(association)
+    db.commit()
+    return room
+
+
+def update_user_admin_status_in_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID, new_admin_status: bool):
+    room = get_room_by_id(db, room_id)
+    association = (db.query(db_models.UserRoomAssociation).filter(db_models.UserRoomAssociation.user_id == user_id,
+                                                                  db_models.UserRoomAssociation.room_id == room_id)
+                   .first())
+    association.is_admin = new_admin_status
+    db.commit()
+    return room
+
+
+# TAGS
+
+
+def create_tag(db: Session, tag_name: str):
+    tag = db_models.Tag(tag=tag_name)
+    db.add(tag)
+    db.commit()
+    return tag
+
+
+def get_tag_by_name(db: Session, tag_name: str):
+    return db.query(db_models.Tag).filter(db_models.Tag.tag == tag_name).first()
+
+
+def get_or_create_tag(db: Session, tag_name: str):
+    tag = get_tag_by_name(db, tag_name)
+    if tag is None:
+        tag = create_tag(db, tag_name)
+    return tag
+
+
+def associate_tag_with_theme(db: Session, tag_name: str, theme: RoomTheme):
+    tag = get_or_create_tag(db, tag_name)
+    association = db_models.RoomTagAssociation(tag_name=tag_name, theme=theme, tag=tag)
+    db.add(association)
+    db.commit()
+    return association  # idk what to return here
+
+
+def dissociate_tag_with_theme(db: Session, tag_name: str, theme: RoomTheme):
+    association = db.query(db_models.TagThemeAssociation).filter(db_models.TagThemeAssociation.tag_name == tag_name,
+                                                                 db_models.TagThemeAssociation.theme == theme).first()
+    db.delete(association)
+    db.commit()
+    # return ???

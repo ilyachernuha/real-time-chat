@@ -187,5 +187,4 @@ class TagThemeAssociation(Base):
 
     tag_name = Column(String, ForeignKey("tags.tag"), primary_key=True)
     theme = Column(SQLAlchemyEnum(RoomTheme, name="room_theme"), primary_key=True)
-    room_count = Column(Integer, nullable=False)
     tag = relationship("Tag", back_populates="themes")
