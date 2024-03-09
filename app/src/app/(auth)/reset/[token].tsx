@@ -1,5 +1,5 @@
 import Logo from "@/components/auth/Logo";
-import { Bold, Regular12 } from "@/components/StyledText";
+import StyledText from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { router, useLocalSearchParams } from "expo-router";
@@ -13,7 +13,7 @@ export default function Reset() {
   const { token } = useLocalSearchParams<{ token: string }>();
   const { resetPassword } = useAuth();
 
-  const handleReset = async (
+  const onReset = async (
     values: ResetPasswordFormValues,
     { setErrors, setSubmitting }: FormikHelpers<ResetPasswordFormValues>
   ) => {
@@ -37,16 +37,19 @@ export default function Reset() {
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 48 }}>
       <Logo />
       <View style={{ marginTop: 24, marginBottom: 32 }}>
-        <Bold style={{ textAlign: "center" }}>Reset password!</Bold>
-        <Regular12
+        <StyledText font="bold" style={{ textAlign: "center" }}>
+          Reset password!
+        </StyledText>
+        <StyledText
+          font="12"
           style={{ textAlign: "center", paddingTop: 15 }}
           darkColor={Colors.dark.secondaryLightGrey}
           lightColor={Colors.dark.secondaryLightGrey}
         >
           Enter a new password to restore access
-        </Regular12>
+        </StyledText>
       </View>
-      <ResetPasswordForm onReset={handleReset} />
+      <ResetPasswordForm onReset={onReset} />
     </SafeAreaView>
   );
 }

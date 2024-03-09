@@ -1,31 +1,10 @@
-import { Text, TextProps } from "./Themed";
-import Fonts from "@/constants/Fonts";
+import { Text as ThemedText, TextProps } from "./Themed";
+import Fonts, { Font } from "@/constants/Fonts";
 
-export function RegularText(props: TextProps) {
-  return (
-    <Text
-      {...props}
-      style={[props.style, { fontFamily: "e-Ukraine Regular" }]}
-    />
-  );
+interface Props extends TextProps {
+  font?: Font;
 }
 
-export function Regular14(props: TextProps) {
-  return <Text {...props} style={[props.style, Fonts.regular14]} />;
-}
+const StyledText = ({ font, style, ...props }: Props) => <ThemedText style={[font && Fonts[font], style]} {...props} />;
 
-export function Regular12(props: TextProps) {
-  return <Text {...props} style={[props.style, Fonts.regular12]} />;
-}
-
-export function Regular10(props: TextProps) {
-  return <Text {...props} style={[props.style, Fonts.regular10]} />;
-}
-
-export function Light(props: TextProps) {
-  return <Text {...props} style={[props.style, Fonts.light]} />;
-}
-
-export function Bold(props: TextProps) {
-  return <Text {...props} style={[props.style, Fonts.bold]} />;
-}
+export default StyledText;

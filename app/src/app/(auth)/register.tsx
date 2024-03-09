@@ -1,5 +1,4 @@
-import { Link, router } from "expo-router";
-import { Bold, Regular12 } from "@/components/StyledText";
+import { router } from "expo-router";
 import Colors from "@/constants/Colors";
 import { SafeAreaView, View } from "@/components/Themed";
 import Logo from "@/components/auth/Logo";
@@ -7,35 +6,17 @@ import { useAuth } from "@/hooks/useAuth";
 import RegistrationForm, { RegistrationFormValues } from "@/components/auth/RegistrationForm";
 import { FormikHelpers } from "formik";
 import { isAxiosError } from "axios";
-import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
-import Fonts from "@/constants/Fonts";
-import { useEffect, useRef } from "react";
+import { Alert } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
+import Link from "@/components/Link";
+import StyledText from "@/components/StyledText";
 
 export default function Register() {
-  const scrollViewRef = useRef<ScrollView>(null);
-
   const { signUp } = useAuth();
 
-  useEffect(() => {
-    const keyboardDidShowListener = Keyboard.addListener("keyboardDidShow", () => {
-      scrollViewRef.current?.scrollToEnd();
-    });
-
-    // Optional: If you also want to adjust when the keyboard hides
-    // const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
-    //   // Handle keyboard hide if necessary
-    // });
-
-    return () => {
-      keyboardDidShowListener.remove();
-      // Optional: Clean up the hide listener
-      // keyboardDidHideListener.remove();
-    };
-  }, []);
-
-  const handleRegister = async (
+  const onRegister = async (
     values: RegistrationFormValues,
-    { setErrors, setSubmitting }: FormikHelpers<RegistrationFormValues>
+    { setSubmitting }: FormikHelpers<RegistrationFormValues>
   ) => {
     try {
       await signUp(values);
@@ -43,10 +24,8 @@ export default function Register() {
     } catch (error) {
       if (isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
         Alert.alert("Validation Error", error.response.data.detail);
-        // setErrors(error.response.data.errors);
       } else {
         Alert.alert("Unexpected Error", "An unexpected error occurred. Please try again later.");
-        // setStatus({ error: "An unexpected error occurred. Please try again." });
       }
     } finally {
       setSubmitting(false);
@@ -55,32 +34,32 @@ export default function Register() {
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"}>
-        <ScrollView ref={scrollViewRef} keyboardShouldPersistTaps="handled">
-          <View style={{ paddingVertical: 48, paddingHorizontal: 24 }}>
-            <Logo />
-            <View style={{ marginBottom: 32 }}>
-              <Bold style={{ textAlign: "center" }}>Create an account</Bold>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "center" }}>
-                <Regular12
-                  style={[{ textAlign: "center", right: -5.5 }]}
-                  darkColor={Colors.dark.secondaryLightGrey}
-                  lightColor={Colors.dark.secondaryLightGrey}
-                >
-                  I have an account!
-                </Regular12>
-                <Link
-                  href="/login"
-                  style={[{ color: Colors.dark.mainPurple, padding: 15, left: -5.5 }, Fonts.regular12]}
-                >
-                  Sign In!
-                </Link>
-              </View>
+      <KeyboardAwareScrollView
+        enableOnAndroid
+        contentContainerStyle={{ paddingHorizontal: 24, gap: 32 }}
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={48}
+      >
+        <View style={{ gap: 24, alignItems: "center", marginTop: 48 }}>
+          <Logo />
+          <View style={{ gap: 2, alignItems: "center" }}>
+            <StyledText font="bold">Create an account</StyledText>
+            <View style={{ flexDirection: "row", gap: 4, alignItems: "center", justifyContent: "center" }}>
+              <StyledText
+                font="12"
+                darkColor={Colors.dark.secondaryLightGrey}
+                lightColor={Colors.dark.secondaryLightGrey}
+              >
+                I have an account!
+              </StyledText>
+              <Link href="/login" style={{ paddingVertical: 15 }}>
+                Sign In!
+              </Link>
             </View>
-            <RegistrationForm onRegister={handleRegister} />
           </View>
-        </ScrollView>
-      </KeyboardAvoidingView>
+        </View>
+        <RegistrationForm onRegister={onRegister} />
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

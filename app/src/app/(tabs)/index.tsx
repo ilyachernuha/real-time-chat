@@ -1,11 +1,10 @@
 import { View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { MaterialIcons } from "@expo/vector-icons";
-import { FlatList, Image, ListRenderItem, Pressable, StyleSheet, Touchable, TouchableOpacity } from "react-native";
+import { FlatList, Image, ListRenderItem, StyleSheet, TouchableOpacity } from "react-native";
 import icon from "../../../assets/images/icon.png";
-import { Light, Regular12, Regular14 } from "@/components/StyledText";
-import { Link, Tabs } from "expo-router";
-import ChannelsHeader from "@/components/ChannelsHeader";
+import { Link } from "expo-router";
+import StyledText from "@/components/StyledText";
 
 interface Chat {
   id: string;
@@ -41,18 +40,22 @@ const renderItem: ListRenderItem<Chat> = ({ item }) => (
         <View style={{ flexDirection: "row", justifyContent: "space-between", flex: 1 }}>
           <View style={{ gap: 4 }}>
             <View style={{ flexDirection: "row", gap: 8 }}>
-              <Regular14>{item.title}</Regular14>
+              <StyledText font="14">{item.title}</StyledText>
               <MaterialIcons name="notifications-off" size={16} color={Colors.dark.secondaryLightGrey} />
             </View>
-            <Light darkColor={Colors.dark.secondaryLightGrey} lightColor={Colors.light.secondaryLightGrey}>
+            <StyledText
+              font="light"
+              darkColor={Colors.dark.secondaryLightGrey}
+              lightColor={Colors.light.secondaryLightGrey}
+            >
               {item.message}
-            </Light>
+            </StyledText>
           </View>
 
           <View style={{ alignItems: "flex-end", gap: 8 }}>
-            <Regular12>{item.time}</Regular12>
+            <StyledText font="12">{item.time}</StyledText>
             <View style={{ backgroundColor: Colors.dark.mainPurple, padding: 4, borderRadius: 12 }}>
-              <Light>{item.messagesCount}</Light>
+              <StyledText font="light">{item.messagesCount}</StyledText>
             </View>
           </View>
         </View>

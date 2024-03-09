@@ -46,6 +46,7 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
       initialValues={{ email: "", username: "", password: "", passwordConfirm: "" }}
       onSubmit={onRegister}
       validationSchema={validationSchema}
+      validateOnBlur={false}
     >
       {({ handleChange, handleBlur, handleSubmit, values, touched, errors, isSubmitting }) => (
         <View style={{ gap: 24 }}>

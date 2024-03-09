@@ -1,11 +1,10 @@
 import React, { forwardRef } from "react";
 import { TextInput, StyleSheet, View, TextInputProps, Pressable } from "react-native";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
-import { Light } from "./StyledText";
 import VisibilityOff from "./icons/VisibilityOff";
 import Visibility from "./icons/Visibility";
+import StyledText from "./StyledText";
 
 interface InputFieldProps extends TextInputProps {
   error?: boolean | string;
@@ -30,10 +29,17 @@ const InputField = forwardRef<TextInput, InputFieldProps>(
           ]}
         >
           <TextInput
+            cursorColor={Colors.dark.text}
             ref={ref}
             style={[
-              { flex: 1, color: error ? Colors.dark.mainErrorRed : Colors.dark.text, height: "100%", paddingLeft: 16 },
-              Fonts.regular14,
+              {
+                flex: 1,
+                color: error ? Colors.dark.mainErrorRed : Colors.dark.text,
+                height: "100%",
+                paddingLeft: 16,
+                paddingRight: isPassword ? 0 : 16,
+              },
+              Fonts[14],
             ]}
             placeholderTextColor={Colors.dark.secondaryLightGrey}
             {...props}
@@ -49,7 +55,9 @@ const InputField = forwardRef<TextInput, InputFieldProps>(
             </Pressable>
           )}
         </View>
-        <Light style={styles.error}>{error}</Light>
+        <StyledText font="light" style={styles.error}>
+          {error}
+        </StyledText>
       </View>
     );
   }
