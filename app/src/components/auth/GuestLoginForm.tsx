@@ -3,7 +3,6 @@ import { Formik, FormikHelpers } from "formik";
 import * as Yup from "yup";
 import { View } from "../Themed";
 import { Button } from "../Buttons";
-
 import InputField from "../InputFields";
 
 export interface GuestLoginFormValues {
@@ -31,6 +30,8 @@ const GuestLoginForm = ({ onGuestLogin }: GuestLoginFormProps) => {
       initialValues={{ name: "" }}
       onSubmit={onGuestLogin}
       validationSchema={validationSchema}
+      validateOnBlur={false}
+      validateOnChange={false}
     >
       {({ handleChange, handleBlur, handleSubmit, values, touched, errors, isSubmitting }) => (
         <View style={{ gap: 24 }}>

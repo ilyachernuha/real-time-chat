@@ -1,14 +1,12 @@
-import React, { useRef, useState } from "react";
-import { Formik, FormikErrors, FormikHelpers, FormikTouched } from "formik";
+import React, { useCallback, useRef, useState } from "react";
+import { Formik, FormikHelpers, useFormikContext } from "formik";
 import * as Yup from "yup";
 import { View } from "../Themed";
-import { Button, SecondaryButton } from "../Buttons";
-import { DividerWithText } from "../Dividers";
-import { Link } from "expo-router";
-import Colors from "@/constants/Colors";
-import Fonts from "@/constants/Fonts";
+import { Button } from "../Buttons";
 import InputField from "../InputFields";
 import { TextInput } from "react-native";
+import Link from "../Link";
+import { useFocusEffect } from "expo-router";
 
 export interface LoginFormValues {
   username: string;
@@ -16,9 +14,9 @@ export interface LoginFormValues {
 }
 
 const usernameValidator = Yup.string()
-  .matches(/^[a-zA-Z0-9]+$/, "Only English letters and numbers are allowed")
-  .min(2, "Username must be at least 2 characters long")
-  .max(24, "Username must be no more than 24 characters long");
+  .matches(/^[a-zA-Z0-9]+$/)
+  .min(2)
+  .max(24);
 
 const emailValidator = Yup.string().email("Email must be a valid email");
 
@@ -30,32 +28,40 @@ const validationSchema = Yup.object({
       return results.some((result) => result === true);
     }),
   password: Yup.string()
-    .matches(/^[!-~]+$/, "Spaces and non-English letters are not allowed")
-    .min(8, "Password must be at least 8 characters long")
-    .max(32, "Password must be no more than 32 characters long")
+    .matches(/^[!-~]+$/, "Must be a valid password")
+    .min(8, "Must be a valid password")
+    .max(32, "Must be a valid password")
     .required("Password is required"),
 });
 
 interface LoginFormProps {
   onLogin: (values: LoginFormValues, formikHelpers: FormikHelpers<LoginFormValues>) => void;
-  onGuestLogin: (
-    values: LoginFormValues,
-    formikHelpers: FormikHelpers<LoginFormValues>,
-    errors: FormikErrors<LoginFormValues>,
-    touched: FormikTouched<LoginFormValues>
-  ) => void;
 }
+
+const FormReset = () => {
+  const { resetForm } = useFormikContext();
+
+  useFocusEffect(
+    useCallback(() => {
+      resetForm();
+    }, [resetForm])
+  );
+
+  return <></>;
+};
 
 const LoginForm = ({ onLogin }: LoginFormProps) => {
   const [hidePassword, setHidePassword] = useState(true);
   const passwordRef = useRef<TextInput>(null);
+
   return (
     <Formik<LoginFormValues>
       initialValues={{ username: "", password: "" }}
       onSubmit={onLogin}
       validationSchema={validationSchema}
+      validateOnBlur={false}
     >
-      {({ handleChange, handleBlur, handleSubmit, values, touched, errors, isSubmitting, setSubmitting }) => (
+      {({ handleChange, handleBlur, handleSubmit, values, touched, errors, isSubmitting }) => (
         <View>
           <View>
             <InputField
@@ -92,20 +98,17 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
           <View style={{ flexDirection: "row", justifyContent: "flex-end" }}>
             <Link
               href="/forgot"
-              style={[
-                {
-                  color: Colors.dark.mainPurple,
-                  paddingHorizontal: 4,
-                  paddingVertical: 15,
-                  top: -24,
-                },
-                Fonts.regular12,
-              ]}
+              style={{
+                paddingHorizontal: 4,
+                paddingVertical: 15,
+                top: -24,
+              }}
             >
               Forgot password?
             </Link>
           </View>
           <Button onPress={() => handleSubmit()} title="Sign In" disabled={isSubmitting} />
+          <FormReset />
         </View>
       )}
     </Formik>

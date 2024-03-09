@@ -7,7 +7,6 @@ import React, { useEffect } from "react";
 import { useColorScheme } from "@/components/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import Colors from "@/constants/Colors";
-import ChatHeader from "@/components/ChatHeader";
 
 export {
   // Catch any errors thrown by the Layout component.

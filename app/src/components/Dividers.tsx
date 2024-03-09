@@ -1,19 +1,21 @@
 import Colors from "@/constants/Colors";
 import React from "react";
 import { StyleSheet } from "react-native";
-import { View, Text } from "./Themed";
-import { Regular12 } from "./StyledText";
+import { View } from "./Themed";
+import StyledText from "./StyledText";
 
-type DividerWithTextProps = {
+type Props = {
   text: string;
 };
 
-export const DividerWithText: React.FC<DividerWithTextProps> = ({ text }) => {
+export const DividerWithText = ({ text }: Props) => {
   return (
     <View style={styles.container}>
       <View style={styles.line} />
       <View>
-        <Regular12 style={styles.text}>{text}</Regular12>
+        <StyledText font="12" style={styles.text}>
+          {text}
+        </StyledText>
       </View>
       <View style={styles.line} />
     </View>

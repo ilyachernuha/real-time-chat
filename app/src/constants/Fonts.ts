@@ -1,23 +1,25 @@
 import { TextStyle } from "react-native";
 
+export type Font = "14" | "12" | "10" | "bold" | "light";
+
 type Fonts = {
-  [font: string]: TextStyle;
+  [F in Font]: TextStyle;
 };
 
-export default {
-  regular14: {
+const Fonts: Fonts = {
+  14: {
     fontFamily: "e-Ukraine Regular",
     fontSize: 14,
     lineHeight: 1.3 * 14,
     letterSpacing: 0.015 * 14,
   },
-  regular12: {
+  12: {
     fontFamily: "e-Ukraine Head Regular",
     fontSize: 12,
     lineHeight: 1.2 * 12,
     letterSpacing: 0.5,
   },
-  regular10: {
+  10: {
     fontFamily: "e-Ukraine Head Regular",
     fontSize: 10,
     lineHeight: 12,
@@ -35,4 +37,6 @@ export default {
     lineHeight: 12,
     letterSpacing: 1,
   },
-} as Fonts;
+};
+
+export default Fonts;

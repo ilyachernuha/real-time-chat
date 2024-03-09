@@ -14,15 +14,17 @@ const validationSchema = Yup.object({
 });
 
 interface ForgotPasswordFormProps {
-  onReset: (values: ForgotPasswordFormValues, formikHelpers: FormikHelpers<ForgotPasswordFormValues>) => void;
+  onForgot: (values: ForgotPasswordFormValues, formikHelpers: FormikHelpers<ForgotPasswordFormValues>) => void;
 }
 
-const ForgotPasswordForm = ({ onReset }: ForgotPasswordFormProps) => {
+const ForgotPasswordForm = ({ onForgot }: ForgotPasswordFormProps) => {
   return (
     <Formik<ForgotPasswordFormValues>
       initialValues={{ email: "" }}
-      onSubmit={onReset}
+      onSubmit={onForgot}
       validationSchema={validationSchema}
+      validateOnBlur={false}
+      validateOnChange={false}
     >
       {({ handleChange, handleBlur, handleSubmit, values, touched, errors, isSubmitting }) => (
         <View style={{ gap: 24 }}>

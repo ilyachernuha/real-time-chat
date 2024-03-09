@@ -1,5 +1,4 @@
 import { router } from "expo-router";
-import { Bold, Regular12 } from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import Logo from "@/components/auth/Logo";
@@ -8,6 +7,8 @@ import { FormikHelpers } from "formik";
 import { isAxiosError } from "axios";
 import { Alert } from "react-native";
 import GuestLoginForm, { GuestLoginFormValues } from "@/components/auth/GuestLoginForm";
+import StyledText from "@/components/StyledText";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 
 export default function Guest() {
   const { guestLogin } = useAuth();
@@ -31,19 +32,29 @@ export default function Guest() {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 48 }}>
-      <Logo />
-      <View style={{ marginTop: 24, marginBottom: 32 }}>
-        <Bold style={{ textAlign: "center" }}>Login as a guest!</Bold>
-        <Regular12
-          style={[{ textAlign: "center", padding: 15 }]}
-          darkColor={Colors.dark.secondaryLightGrey}
-          lightColor={Colors.dark.secondaryLightGrey}
-        >
-          Please provide your name
-        </Regular12>
-      </View>
-      <GuestLoginForm onGuestLogin={handleGuestLogin} />
+    <SafeAreaView style={{ flex: 1 }}>
+      <KeyboardAwareScrollView
+        enableOnAndroid
+        contentContainerStyle={{ paddingHorizontal: 24, gap: 32 }}
+        keyboardShouldPersistTaps="handled"
+        extraScrollHeight={48}
+      >
+        <View style={{ gap: 24, alignItems: "center", marginTop: 48 }}>
+          <Logo />
+          <View style={{ gap: 2, alignItems: "center" }}>
+            <StyledText font="bold">Login as a guest!</StyledText>
+            <StyledText
+              font="12"
+              style={{ paddingVertical: 15 }}
+              darkColor={Colors.dark.secondaryLightGrey}
+              lightColor={Colors.dark.secondaryLightGrey}
+            >
+              Please provide your name
+            </StyledText>
+          </View>
+        </View>
+        <GuestLoginForm onGuestLogin={handleGuestLogin} />
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

@@ -1,22 +1,22 @@
 import Colors from "@/constants/Colors";
-import { Regular14 } from "./StyledText";
 import { SafeAreaView } from "./Themed";
 import { StyleSheet, TextInput, View } from "react-native";
 import Fonts from "@/constants/Fonts";
 import { Ionicons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
+import StyledText from "./StyledText";
 
 const ChannelsHeader = () => {
   return (
     <SafeAreaView style={styles.container}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
         <Ionicons name="filter-sharp" size={24} color={Colors.dark.mainPurple} style={{ padding: 10 }} />
-        <Regular14>Channels</Regular14>
+        <StyledText font="14">Channels</StyledText>
         <MaterialIcons name="add-circle-outline" size={24} color={Colors.dark.mainPurple} style={{ padding: 10 }} />
       </View>
       <View style={styles.input}>
         <TextInput
-          style={[{ flex: 1, color: Colors.dark.text }, Fonts.regular14]}
+          style={[{ flex: 1, color: Colors.dark.text }, Fonts[14]]}
           placeholderTextColor={Colors.dark.secondaryLightGrey}
           placeholder="Search"
           cursorColor={Colors.dark.text}

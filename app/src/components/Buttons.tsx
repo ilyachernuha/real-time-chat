@@ -20,7 +20,7 @@ export const Button: React.FC<ButtonProps> = ({ onPress, title, disabled, style 
     onPress={onPress}
     disabled={disabled}
   >
-    <Text style={[{ color: disabled ? Colors.dark.mainDarkGrey : Colors.dark.text }, styles.text, Fonts.regular14]}>
+    <Text style={[{ color: disabled ? Colors.dark.mainDarkGrey : Colors.dark.text }, styles.text, Fonts[14]]}>
       {title}
     </Text>
   </TouchableOpacity>
@@ -32,7 +32,7 @@ export const SecondaryButton: React.FC<ButtonProps> = ({ onPress, title, disable
     onPress={onPress}
     disabled={disabled}
   >
-    <Text style={[{ color: Colors.dark.mainPurple }, styles.text, Fonts.regular14]}>{title}</Text>
+    <Text style={[{ color: Colors.dark.mainPurple }, styles.text, Fonts[14]]}>{title}</Text>
   </TouchableOpacity>
 );
 

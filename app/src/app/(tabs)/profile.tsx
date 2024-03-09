@@ -5,7 +5,6 @@ import { useAuth } from "@/hooks/useAuth";
 import * as Yup from "yup";
 import { Formik, FormikHelpers } from "formik";
 import InputField from "@/components/InputFields";
-import UserService from "@/services/UserService";
 import { isAxiosError } from "axios";
 
 export interface ChangeNameFormValues {

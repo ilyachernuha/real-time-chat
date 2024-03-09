@@ -1,10 +1,8 @@
 import React from "react";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Redirect, Tabs } from "expo-router";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
-import { Bold } from "@/components/StyledText";
 import { SafeAreaView } from "@/components/Themed";
 import { useAuth } from "@/hooks/useAuth";
 import ChannelsHeader from "@/components/ChannelsHeader";
@@ -13,11 +11,7 @@ import Fonts from "@/constants/Fonts";
 import QuestionAnswer from "@/components/icons/QuestionAnswer";
 import Notification from "@/components/icons/Notification";
 import Person from "@/components/icons/Person";
-
-// You can explore the built-in icon families and icons on the web at https://icons.expo.fyi/
-function TabBarIcon(props: { name: React.ComponentProps<typeof FontAwesome>["name"]; color: string }) {
-  return <FontAwesome size={24} style={{ marginBottom: 4 }} {...props} />;
-}
+import StyledText from "@/components/StyledText";
 
 export default function TabLayout() {
   const { refreshToken, isLoading } = useAuth();
@@ -27,7 +21,9 @@ export default function TabLayout() {
   if (isLoading) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
-        <Bold style={{ textAlign: "center" }}>Loading...</Bold>
+        <StyledText font="bold" style={{ textAlign: "center" }}>
+          Loading...
+        </StyledText>
       </SafeAreaView>
     );
   }
@@ -56,7 +52,7 @@ export default function TabLayout() {
           marginVertical: 8,
           height: 60,
         },
-        tabBarLabelStyle: Fonts.regular10,
+        tabBarLabelStyle: Fonts[10],
       }}
     >
       <Tabs.Screen
