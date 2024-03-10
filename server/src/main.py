@@ -62,12 +62,12 @@ async def access_token_validation_error_handler(request: Request, exc: AccessTok
     )
 
 
-# @app.exception_handler(SQLAlchemyError)
-# async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
-#     return JSONResponse(
-#         status_code=500,
-#         content={"detail": "Unexpected database error"}
-#     )
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Unexpected database error"}
+    )
 
 
 @app.get("/ping", response_class=PlainTextResponse)
