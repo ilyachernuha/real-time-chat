@@ -14,6 +14,7 @@ import crud
 import bg_tasks
 import email_utils
 import auth_utils
+import room_utils
 import html_generator
 from sio import sio
 from exceptions import AccessTokenValidationError, FieldSubmitError
@@ -61,12 +62,12 @@ async def access_token_validation_error_handler(request: Request, exc: AccessTok
     )
 
 
-@app.exception_handler(SQLAlchemyError)
-async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
-    return JSONResponse(
-        status_code=500,
-        content={"detail": "Unexpected database error"}
-    )
+# @app.exception_handler(SQLAlchemyError)
+# async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
+#     return JSONResponse(
+#         status_code=500,
+#         content={"detail": "Unexpected database error"}
+#     )
 
 
 @app.get("/ping", response_class=PlainTextResponse)
@@ -350,6 +351,20 @@ async def close_session(body: schemas.CloseSession,
         raise HTTPException(status_code=403, detail="Session is not yours")
     crud.delete_session(db, body.session_id)
     return {"status": "success"}
+
+
+@app.post("/create_room")
+async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                      db: Session = Depends(get_db)):
+    user = auth_utils.get_user_by_access_token(db, credentials.credentials)
+    room_utils.check_if_creator_not_guest(user)
+    theme = room_utils.get_theme_from_string(body.theme)
+    languages = room_utils.get_language_list_from_codes(body.languages)
+    tags = room_utils.get_or_create_tags_from_string_list(db, body.tags)
+    room = crud.create_room(db=db, owner=user, title=body.title, description=body.description, theme=theme,
+                            languages=languages, tags=tags)
+    room_utils.associate_tags_with_theme(db, tags, theme)
+    return {"status": "success", "room_id": room.room_id}
 
 
 app.mount("/public", StaticFiles(directory="../public"))

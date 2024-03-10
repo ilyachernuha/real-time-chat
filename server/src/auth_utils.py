@@ -134,6 +134,11 @@ def get_user_by_basic_auth(db: Session, credentials: HTTPBasicCredentials):
     return user
 
 
+def get_user_by_access_token(db: Session, token: str):
+    user_id = extract_user_id_from_access_token(token)
+    return crud.get_user_by_id(db, user_id)
+
+
 def check_if_user_is_guest(db: Session, user_id: uuid.UUID):
     user = crud.get_user_by_id(db, user_id)
     if not user.is_guest:

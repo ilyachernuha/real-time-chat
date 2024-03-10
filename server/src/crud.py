@@ -499,7 +499,7 @@ def get_or_create_tag(db: Session, tag_name: str):
 
 def associate_tag_with_theme(db: Session, tag_name: str, theme: RoomTheme):
     tag = get_or_create_tag(db, tag_name)
-    association = db_models.RoomTagAssociation(tag_name=tag_name, theme=theme, tag=tag)
+    association = db_models.TagThemeAssociation(tag_name=tag_name, theme=theme, tag=tag)
     db.add(association)
     db.commit()
     return association  # idk what to return here

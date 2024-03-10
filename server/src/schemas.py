@@ -83,6 +83,15 @@ class CloseSession(BaseModel):
     # Access token must be included in HTTP header
 
 
+class RoomCreation(BaseModel):
+    title: str
+    description: str | None
+    theme: str
+    languages: list[str]
+    tags: list[str]
+    # Access token must be included in HTTP header
+
+
 # RESPONSE SCHEMAS
 
 
