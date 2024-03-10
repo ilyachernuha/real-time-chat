@@ -170,7 +170,7 @@ class Tag(Base):
 
     tag = Column(String, primary_key=True)
     rooms = relationship("RoomTagAssociation", back_populates="tag", cascade="all, delete-orphan")
-    theme = relationship("TagThemeAssociation", back_populates="tag", cascade="all, delete-orphan")
+    themes = relationship("TagThemeAssociation", back_populates="tag", cascade="all, delete-orphan")
 
 
 class RoomTagAssociation(Base):
