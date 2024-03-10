@@ -85,7 +85,7 @@ class CloseSession(BaseModel):
 
 class RoomCreation(BaseModel):
     title: str
-    description: str | None
+    description: str | None = None
     theme: str
     languages: list[str]
     tags: list[str]
