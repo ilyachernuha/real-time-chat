@@ -24,7 +24,9 @@ const config: ExpoConfig = {
     backgroundColor: "#030708",
     adaptiveIcon: {
       foregroundImage: "./assets/images/adaptive-icon.png",
-      backgroundColor: "#030708",
+      backgroundImage: "./assets/images/background-image.png",
+      monochromeImage: "./assets/images/monochrome-image.png",
+      backgroundColor: "#1F1F1F",
     },
     package: "com.teamchallenge.realtimechat",
     intentFilters: [
