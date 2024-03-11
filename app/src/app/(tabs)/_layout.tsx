@@ -8,10 +8,8 @@ import { useAuth } from "@/hooks/useAuth";
 import ChannelsHeader from "@/components/ChannelsHeader";
 import { MaterialIcons } from "@expo/vector-icons";
 import Fonts from "@/constants/Fonts";
-import QuestionAnswer from "@/components/icons/QuestionAnswer";
-import Notification from "@/components/icons/Notification";
-import Person from "@/components/icons/Person";
 import StyledText from "@/components/StyledText";
+import Icons from "@/components/Icons";
 
 export default function TabLayout() {
   const { refreshToken, isLoading } = useAuth();
@@ -59,7 +57,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: "Channels",
-          tabBarIcon: ({ color }) => <MaterialIcons name="grid-view" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Icons name="browse" size={24} color={color} />,
           header: () => <ChannelsHeader />,
         }}
       />
@@ -67,21 +65,21 @@ export default function TabLayout() {
         name="chat"
         options={{
           title: "Chat",
-          tabBarIcon: ({ color }) => <QuestionAnswer size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Icons name="chats" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="notifications"
         options={{
           title: "Notifications",
-          tabBarIcon: ({ color }) => <Notification size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Icons name="notifications" size={24} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <Person size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Icons name="person" size={24} color={color} />,
         }}
       />
     </Tabs>

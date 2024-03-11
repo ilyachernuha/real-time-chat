@@ -27,6 +27,7 @@ export default function RootLayout() {
     "e-Ukraine Head Bold": require("../../assets/fonts/e-Ukraine Head Bold.otf"),
     "e-Ukraine Head Light": require("../../assets/fonts/e-Ukraine Head Light.otf"),
     "e-Ukraine Head Regular": require("../../assets/fonts/e-Ukraine Head Regular.otf"),
+    "icons": require("../../assets/fonts/icons.ttf"),
     ...FontAwesome.font,
   });
 
