@@ -4,7 +4,7 @@ import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { useAuth } from "@/hooks/useAuth";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import StyledText from "@/components/StyledText";
 import { KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import Link from "@/components/Link";

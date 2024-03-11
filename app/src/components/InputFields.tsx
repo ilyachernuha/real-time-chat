@@ -2,9 +2,9 @@ import React, { forwardRef } from "react";
 import { TextInput, StyleSheet, View, TextInputProps, Pressable } from "react-native";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
-import VisibilityOff from "./icons/VisibilityOff";
-import Visibility from "./icons/Visibility";
 import StyledText from "./StyledText";
+import Icons from "./Icons";
+import { MaterialIcons } from "@expo/vector-icons";
 
 interface InputFieldProps extends TextInputProps {
   error?: boolean | string;
@@ -48,9 +48,9 @@ const InputField = forwardRef<TextInput, InputFieldProps>(
           {isPassword && (
             <Pressable style={{ padding: 10 }} onPress={toggleHidePassword}>
               {props.secureTextEntry ? (
-                <VisibilityOff size={24} color={Colors.dark.secondaryLightGrey} />
+                <Icons name="visibility-off" size={24} color={Colors.dark.secondaryLightGrey} />
               ) : (
-                <Visibility size={24} color={Colors.dark.secondaryLightGrey} />
+                <Icons name="visibility" size={24} color={Colors.dark.secondaryLightGrey} />
               )}
             </Pressable>
           )}

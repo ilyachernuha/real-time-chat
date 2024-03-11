@@ -1,15 +1,13 @@
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
 import React, { useState } from "react";
-import { Text, StyleSheet, View, Platform, GestureResponderEvent } from "react-native";
+import { Text, StyleSheet, View } from "react-native";
 import {
   CodeField as DefaultCodeField,
   Cursor,
   useBlurOnFulfill,
   useClearByFocusCell,
 } from "react-native-confirmation-code-field";
-import * as Clipboard from "expo-clipboard";
-import { Button } from "./Buttons";
 
 interface Props {
   onComplete: (confirmationCode: string) => void;
