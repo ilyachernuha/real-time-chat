@@ -36,16 +36,3 @@ def get_or_create_tags_from_string_list(db: Session, tags_str_list: list[str]):
         tag = crud.get_or_create_tag(db, tag_str)
         tags.append(tag)
     return tags
-
-
-def check_if_tag_is_associated_with_theme(tag: db_models.Tag, theme: RoomTheme):
-    for tag_theme in tag.themes:
-        if tag_theme.theme == theme:
-            return True
-    return False
-
-
-def associate_tags_with_theme(db: Session, tags: list[db_models.Tag], theme: RoomTheme):
-    for tag in tags:
-        if not check_if_tag_is_associated_with_theme(tag, theme):
-            crud.associate_tag_with_theme(db, tag.tag, theme)

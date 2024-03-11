@@ -373,7 +373,7 @@ def create_room(db: Session, owner: db_models.User, title: str, description: str
                           languages=languages)
     db.add(room)
     for tag in tags:
-        association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, room=room, tag=tag)
+        association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, theme=theme, room=room, tag=tag)
         db.add(association)
     db.commit()
     return room
@@ -400,10 +400,10 @@ def update_room_description(db: Session, room_id: uuid.UUID, new_description: st
 def update_room_theme(db: Session, room_id: uuid.UUID, new_theme: RoomTheme):
     room = get_room_by_id(db, room_id)
     room.theme = new_theme
+    for tag_association in room.tags:
+        tag_association.theme = new_theme
     db.commit()
     return room
-    # tag associations with new theme must be handles separately
-    # potential removal of tag association with old theme must be handles separately
 
 
 def add_tags_to_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag]):
@@ -427,7 +427,6 @@ def remove_tags_from_room(db: Session, room_id: uuid.UUID, tags: list[db_models.
         db.delete(association)
     db.commit()
     return room
-    # potential removal of tag theme association must be handles separately
 
 
 def update_room_languages(db: Session, room_id: uuid.UUID, languages: list[RoomLanguage]):
@@ -495,22 +494,6 @@ def get_or_create_tag(db: Session, tag_name: str):
     if tag is None:
         tag = create_tag(db, tag_name)
     return tag
-
-
-def associate_tag_with_theme(db: Session, tag_name: str, theme: RoomTheme):
-    tag = get_or_create_tag(db, tag_name)
-    association = db_models.TagThemeAssociation(tag_name=tag_name, theme=theme, tag=tag)
-    db.add(association)
-    db.commit()
-    return association  # idk what to return here
-
-
-def dissociate_tag_with_theme(db: Session, tag_name: str, theme: RoomTheme):
-    association = db.query(db_models.TagThemeAssociation).filter(db_models.TagThemeAssociation.tag_name == tag_name,
-                                                                 db_models.TagThemeAssociation.theme == theme).first()
-    db.delete(association)
-    db.commit()
-    # return ???
 
 
 def delete_tag(db: Session, tag_name: str):

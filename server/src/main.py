@@ -363,7 +363,6 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     tags = room_utils.get_or_create_tags_from_string_list(db, body.tags)
     room = crud.create_room(db=db, owner=user, title=body.title, description=body.description, theme=theme,
                             languages=languages, tags=tags)
-    room_utils.associate_tags_with_theme(db, tags, theme)
     return {"status": "success", "room_id": room.room_id}
 
 

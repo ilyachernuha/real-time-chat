@@ -169,8 +169,7 @@ class Tag(Base):
     __tablename__ = "tags"
 
     tag = Column(String, primary_key=True)
-    rooms = relationship("RoomTagAssociation", back_populates="tag", cascade="all, delete-orphan")
-    themes = relationship("TagThemeAssociation", back_populates="tag", cascade="all, delete-orphan")
+    rooms = relationship("RoomTagAssociation", back_populates="tag", cascade="all, delete-orphan")  # cascade ???
 
 
 class RoomTagAssociation(Base):
@@ -178,13 +177,6 @@ class RoomTagAssociation(Base):
 
     room_id = Column(UUID, ForeignKey("rooms.room_id"), primary_key=True)
     tag_name = Column(String, ForeignKey("tags.tag"), primary_key=True)
+    theme = Column(SQLAlchemyEnum(RoomTheme, name="room_theme"), nullable=False, index=True)
     room = relationship("Room", back_populates="tags")
     tag = relationship("Tag", back_populates="rooms")
-
-
-class TagThemeAssociation(Base):
-    __tablename__ = "tag_theme_association"
-
-    tag_name = Column(String, ForeignKey("tags.tag"), primary_key=True)
-    theme = Column(SQLAlchemyEnum(RoomTheme, name="room_theme"), primary_key=True)
-    tag = relationship("Tag", back_populates="themes")
