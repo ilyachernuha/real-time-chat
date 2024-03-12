@@ -406,12 +406,15 @@ def update_room_theme(db: Session, room_id: uuid.UUID, new_theme: RoomTheme):
     return room
 
 
+def get_room_tag_association(db: Session, room_id: uuid.UUID, tag_name: str):
+    return db.query(db_models.RoomTagAssociation).filter(db_models.RoomTagAssociation.room_id == room_id,
+                                                         db_models.RoomTagAssociation.tag_name == tag_name).first()
+
+
 def add_tags_to_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag]):
     room = get_room_by_id(db, room_id)
     for tag in tags:
-        tag_name: str = tag.tag
-        if not db.query(db_models.RoomTagAssociation).filter(db_models.RoomTagAssociation.room_id == room_id,
-                                                             db_models.RoomTagAssociation.tag_name == tag_name).first():
+        if not get_room_tag_association(db, room_id, tag.tag):
             association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, theme=room.theme,
                                                        room=room, tag=tag)
             db.add(association)
@@ -422,12 +425,7 @@ def add_tags_to_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag])
 def remove_tags_from_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag]):
     room = get_room_by_id(db, room_id)
     for tag in tags:
-        tag_name: str = tag.tag
-        association = (
-            db.query(db_models.RoomTagAssociation)
-            .filter(db_models.RoomTagAssociation.room_id == room_id, db_models.RoomTagAssociation.tag_name == tag_name)
-            .first()
-        )
+        association = get_room_tag_association(db, room_id, tag.tag)
         if association is not None:
             db.delete(association)
     db.commit()
