@@ -382,5 +382,19 @@ async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
     return {"status": "success"}
 
 
+@app.get("/room_info/{room_id}", response_model=schemas.RoomInfo)
+async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                        db: Session = Depends(get_db)):
+    auth_utils.validate_access_token(credentials.credentials)
+    room = crud.get_room_by_id(db, room_id)
+    return {
+        "title": room.title,
+        "description": room.description,
+        "theme": room.theme.value,
+        "languages": room_utils.convert_room_languages_to_str_list(room.languages),
+        "tags": room_utils.convert_room_tags_to_str_list(list(room.tags))
+    }
+
+
 app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))

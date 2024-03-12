@@ -99,6 +99,7 @@ class RoomUpdate(BaseModel):
     languages: set[str] | None = None
     tags_to_add: set[str] | None = None
     tags_to_remove: set[str] | None = None
+    # Access token must be included in HTTP header
 
 
 # RESPONSE SCHEMAS
@@ -153,6 +154,14 @@ class EmailUpdate(BaseModel):
 class RoomCreated(BaseModel):
     status: str
     room_id: UUID4
+
+
+class RoomInfo(BaseModel):
+    title: str
+    description: str | None
+    theme: str
+    languages: list[str]
+    tags: list[str]
 
 
 # SIO EVENT SCHEMAS

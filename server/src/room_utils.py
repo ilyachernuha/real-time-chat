@@ -113,3 +113,17 @@ def patch_room(db: Session, room: db_models.Room, update: RoomUpdate):
         crud.add_tags_to_room(db, room.room_id, get_or_create_tags_from_string_set(db, update.tags_to_add))
     if update.tags_to_remove is not None:
         crud.remove_tags_from_room(db, room.room_id, get_or_create_tags_from_string_set(db, update.tags_to_remove))
+
+
+def convert_room_languages_to_str_list(languages: list[RoomLanguage]):
+    language_str_list = []
+    for language in languages:
+        language_str_list.append(language.value)
+    return language_str_list
+
+
+def convert_room_tags_to_str_list(tags: list[db_models.Tag]):
+    tag_str_list = []
+    for tag in tags:
+        tag_str_list.append(tag.tag.tag)
+    return tag_str_list
