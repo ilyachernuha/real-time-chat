@@ -87,8 +87,8 @@ class RoomCreation(BaseModel):
     title: str
     description: str | None = None
     theme: str
-    languages: list[str]
-    tags: list[str]
+    languages: set[str]
+    tags: set[str]
     # Access token must be included in HTTP header
 
 
