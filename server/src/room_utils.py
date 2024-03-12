@@ -64,7 +64,6 @@ def get_language_list_from_codes(language_codes: set[str]):
 
 
 def get_or_create_tags_from_string_set(db: Session, tag_str_set: set[str]):
-    validate_tag_names(tag_str_set)
     tags = []
     for tag_str in tag_str_set:
         tag = crud.get_or_create_tag(db, tag_str)
