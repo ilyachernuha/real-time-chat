@@ -39,8 +39,8 @@ def validate_tag_name(tag_str: str):
         raise FieldSubmitError(status_code=400, detail="Tags can only contain alphanumeric characters", field="tags")
 
 
-def validate_tag_names(tag_str_list: list[str]):
-    for tag_str in tag_str_list:
+def validate_tag_names(tag_str_set: set[str]):
+    for tag_str in tag_str_set:
         validate_tag_name(tag_str)
 
 
@@ -58,14 +58,14 @@ def get_language_from_code(language_code: str):
         raise FieldSubmitError(status_code=400, detail=f"Invalid language code: {language_code}", field="languages")
 
 
-def get_language_list_from_codes(language_codes: list[str]):
+def get_language_list_from_codes(language_codes: set[str]):
     return [get_language_from_code(code) for code in language_codes]
 
 
-def get_or_create_tags_from_string_list(db: Session, tag_str_list: list[str]):
-    validate_tag_names(tag_str_list)
+def get_or_create_tags_from_string_set(db: Session, tag_str_set: set[str]):
+    validate_tag_names(tag_str_set)
     tags = []
-    for tag_str in tag_str_list:
+    for tag_str in tag_str_set:
         tag = crud.get_or_create_tag(db, tag_str)
         tags.append(tag)
     return tags
