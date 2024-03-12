@@ -390,7 +390,7 @@ def update_room_title(db: Session, room_id: uuid.UUID, new_title: str):
     return room
 
 
-def update_room_description(db: Session, room_id: uuid.UUID, new_description: str):
+def update_room_description(db: Session, room_id: uuid.UUID, new_description: str | None):
     room = get_room_by_id(db, room_id)
     room.description = new_description
     db.commit()
@@ -409,8 +409,12 @@ def update_room_theme(db: Session, room_id: uuid.UUID, new_theme: RoomTheme):
 def add_tags_to_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag]):
     room = get_room_by_id(db, room_id)
     for tag in tags:
-        association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, room=room, tag=tag)
-        db.add(association)
+        tag_name: str = tag.tag
+        if not db.query(db_models.RoomTagAssociation).filter(db_models.RoomTagAssociation.room_id == room_id,
+                                                             db_models.RoomTagAssociation.tag_name == tag_name).first():
+            association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, theme=room.theme,
+                                                       room=room, tag=tag)
+            db.add(association)
     db.commit()
     return room
 
@@ -424,7 +428,8 @@ def remove_tags_from_room(db: Session, room_id: uuid.UUID, tags: list[db_models.
             .filter(db_models.RoomTagAssociation.room_id == room_id, db_models.RoomTagAssociation.tag_name == tag_name)
             .first()
         )
-        db.delete(association)
+        if association is not None:
+            db.delete(association)
     db.commit()
     return room
 
@@ -445,13 +450,14 @@ def add_user_to_room(db: Session, room_id: uuid.UUID, user: db_models.User, make
     return room
 
 
+def get_user_room_association(db: Session, room_id: uuid.UUID, user_id: uuid.UUID):
+    return db.query(db_models.UserRoomAssociation).filter(db_models.UserRoomAssociation.user_id == user_id,
+                                                          db_models.UserRoomAssociation.room_id == room_id).first()
+
+
 def remove_user_from_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID):
     room = get_room_by_id(db, room_id)
-    association = (
-        db.query(db_models.UserRoomAssociation)
-        .filter(db_models.UserRoomAssociation.user_id == user_id, db_models.UserRoomAssociation.room_id == room_id)
-        .first()
-    )
+    association = get_user_room_association(db, room_id, user_id)
     db.delete(association)
     db.commit()
     return room
@@ -459,11 +465,7 @@ def remove_user_from_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID):
 
 def update_user_admin_status_in_room(db: Session, room_id: uuid.UUID, user_id: uuid.UUID, new_admin_status: bool):
     room = get_room_by_id(db, room_id)
-    association = (
-        db.query(db_models.UserRoomAssociation)
-        .filter(db_models.UserRoomAssociation.user_id == user_id, db_models.UserRoomAssociation.room_id == room_id)
-        .first()
-    )
+    association = get_user_room_association(db, room_id, user_id)
     association.is_admin = new_admin_status
     db.commit()
     return room

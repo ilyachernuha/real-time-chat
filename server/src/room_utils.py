@@ -6,6 +6,7 @@ import db_models
 from room_themes import RoomTheme
 from room_languages import RoomLanguage
 import re
+from schemas import RoomUpdate
 
 
 def check_if_creator_not_guest(user: db_models.User):
@@ -69,3 +70,42 @@ def get_or_create_tags_from_string_set(db: Session, tag_str_set: set[str]):
         tag = crud.get_or_create_tag(db, tag_str)
         tags.append(tag)
     return tags
+
+
+def check_if_user_can_update_room(db: Session, user: db_models.User, room: db_models.Room):
+    if user.user_id == room.owner.user_id:
+        return
+    user_room_association = crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user.user_id)
+    if user_room_association is None or not user_room_association.is_admin:
+        raise HTTPException(status_code=403, detail="You cannot update this room")
+
+
+def validate_room_update_data(update: RoomUpdate):
+    if update.title is not None:
+        validate_title(update.title)
+    if update.description is not None:
+        validate_description(update.description)
+    if update.theme is not None:
+        get_theme_from_string(update.theme)
+    if update.languages is not None:
+        get_language_list_from_codes(update.languages)
+    if update.tags_to_add is not None:
+        validate_tag_names(update.tags_to_add)
+    if update.tags_to_remove is not None:
+        validate_tag_names(update.tags_to_remove)
+
+
+def patch_room(db: Session, room: db_models.Room, update: RoomUpdate):
+    if update.title is not None:
+        crud.update_room_title(db, room.room_id, update.title)
+    if update.description is not None:
+        description = update.description if update.description != "" else None
+        crud.update_room_description(db, room.room_id, description)
+    if update.theme is not None:
+        crud.update_room_theme(db, room.room_id, get_theme_from_string(update.theme))
+    if update.languages is not None:
+        crud.update_room_languages(db, room.room_id, get_language_list_from_codes(update.languages))
+    if update.tags_to_add is not None:
+        crud.add_tags_to_room(db, room.room_id, get_or_create_tags_from_string_set(db, update.tags_to_add))
+    if update.tags_to_remove is not None:
+        crud.remove_tags_from_room(db, room.room_id, get_or_create_tags_from_string_set(db, update.tags_to_remove))

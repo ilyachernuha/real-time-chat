@@ -368,5 +368,19 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     return {"status": "success", "room_id": room.room_id}
 
 
+@app.patch("/update_room/{room_id}")
+async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
+                      credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                      db: Session = Depends(get_db)):
+    user = auth_utils.get_user_by_access_token(db, credentials.credentials)
+    room = crud.get_room_by_id(db, room_id)
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+    room_utils.check_if_user_can_update_room(db=db, user=user, room=room)
+    room_utils.validate_room_update_data(body)
+    room_utils.patch_room(db=db, room=room, update=body)
+    return {"status": "success"}
+
+
 app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))

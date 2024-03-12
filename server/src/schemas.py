@@ -92,6 +92,15 @@ class RoomCreation(BaseModel):
     # Access token must be included in HTTP header
 
 
+class RoomUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    theme: str | None = None
+    languages: set[str] | None = None
+    tags_to_add: set[str] | None = None
+    tags_to_remove: set[str] | None = None
+
+
 # RESPONSE SCHEMAS
 
 
