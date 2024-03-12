@@ -35,8 +35,8 @@ def validate_tag_name(tag_str: str):
     if not (1 <= len(tag_str) <= 16):
         raise FieldSubmitError(status_code=400, detail="Tag must be 1 to 16 characters long", field="tags")
 
-    if not re.match(r"^\S+$", tag_str):
-        raise FieldSubmitError(status_code=400, detail="Tags cannot contain whitespace", field="tags")
+    if not tag_str.isalnum():
+        raise FieldSubmitError(status_code=400, detail="Tags can only contain alphanumeric characters", field="tags")
 
 
 def validate_tag_names(tag_str_list: list[str]):
