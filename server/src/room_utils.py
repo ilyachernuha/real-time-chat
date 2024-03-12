@@ -9,6 +9,11 @@ import re
 from schemas import RoomUpdate
 
 
+def check_if_room_exists(room: db_models.Room):
+    if room is None:
+        raise HTTPException(status_code=404, detail="Room not found")
+
+
 def check_if_creator_not_guest(user: db_models.User):
     if user.is_guest:
         raise HTTPException(status_code=403, detail="Guest users can't create rooms")

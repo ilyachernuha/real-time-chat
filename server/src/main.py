@@ -375,8 +375,7 @@ async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
                       db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_access_token(db, credentials.credentials)
     room = crud.get_room_by_id(db, room_id)
-    if room is None:
-        raise HTTPException(status_code=404, detail="Room not found")
+    room_utils.check_if_room_exists(room)
     room_utils.check_if_user_can_update_room(db=db, user=user, room=room)
     room_utils.validate_room_update_data(body)
     room_utils.patch_room(db=db, room=room, update=body)
