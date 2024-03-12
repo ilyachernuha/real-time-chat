@@ -353,7 +353,7 @@ async def close_session(body: schemas.CloseSession,
     return {"status": "success"}
 
 
-@app.post("/create_room")
+@app.post("/create_room", response_model=schemas.RoomCreated)
 async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_access_token(db, credentials.credentials)
@@ -369,7 +369,7 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     return {"status": "success", "room_id": room.room_id}
 
 
-@app.patch("/update_room/{room_id}")
+@app.patch("/update_room/{room_id}", response_model=schemas.GenericConfirmation)
 async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):

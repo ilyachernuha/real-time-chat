@@ -150,6 +150,11 @@ class EmailUpdate(BaseModel):
     new_email: str
 
 
+class RoomCreated(BaseModel):
+    status: str
+    room_id: UUID4
+
+
 # SIO EVENT SCHEMAS
 
 
