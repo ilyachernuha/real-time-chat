@@ -169,7 +169,7 @@ class Tag(Base):
     __tablename__ = "tags"
 
     tag = Column(String, primary_key=True)
-    rooms = relationship("RoomTagAssociation", back_populates="tag", cascade="all, delete-orphan")  # cascade ???
+    rooms = relationship("RoomTagAssociation", back_populates="tag")
 
 
 class RoomTagAssociation(Base):
