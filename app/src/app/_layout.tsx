@@ -85,7 +85,8 @@ function RootLayoutNav() {
             contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
           }}
         />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
+        <Stack.Screen name="(modals)/create" options={{ presentation: "modal" }} />
+        <Stack.Screen name="(modals)/filter" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
   );

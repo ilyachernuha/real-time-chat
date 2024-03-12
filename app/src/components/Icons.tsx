@@ -48,7 +48,11 @@ interface IconProps extends TextProps {
 }
 
 const Icons = ({ size = 24, style, ...props }: IconProps) => {
-  return <IconSet size={size} style={[{ lineHeight: size * 1.1, width: size, height: size }, style]} {...props} />;
+  return (
+    <View style={style}>
+      <IconSet size={size} style={[{ lineHeight: size * 1.1, width: size, height: size }]} {...props} />
+    </View>
+  );
 };
 
 export default Icons;

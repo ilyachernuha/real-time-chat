@@ -12,7 +12,6 @@ import { SecondaryButton } from "@/components/Buttons";
 import StyledText from "@/components/StyledText";
 import Link from "@/components/Link";
 import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
-import Icons from "@/components/Icons";
 
 const Login = () => {
   const { signIn } = useAuth();
