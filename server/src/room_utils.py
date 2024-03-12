@@ -5,6 +5,43 @@ import crud
 import db_models
 from room_themes import RoomTheme
 from room_languages import RoomLanguage
+import re
+
+
+def check_if_creator_not_guest(user: db_models.User):
+    if user.is_guest:
+        raise HTTPException(status_code=403, detail="Guest users can't create rooms")
+
+
+def validate_title(title: str):
+    if not (1 <= len(title) <= 16):
+        raise FieldSubmitError(status_code=400, detail="Title must be 1 to 16 characters long", field="title")
+
+    if title.isspace():
+        raise FieldSubmitError(status_code=400, detail="Title cannot consist of whitespace only", field="title")
+
+    if re.match(r"[\x00-\x1F\x7F]", title):
+        raise FieldSubmitError(status_code=400, detail="Title cannot contain control or non-displayable characters",
+                               field="title")
+
+
+def validate_description(description: str | None):
+    if description is not None and len(description) > 200:
+        raise FieldSubmitError(status_code=400, detail="Description cannot be more than 200 characters long",
+                               field="description")
+
+
+def validate_tag_name(tag_str: str):
+    if not (1 <= len(tag_str) <= 16):
+        raise FieldSubmitError(status_code=400, detail="Tag must be 1 to 16 characters long", field="tags")
+
+    if not re.match(r"^\S+$", tag_str):
+        raise FieldSubmitError(status_code=400, detail="Tags cannot contain whitespace", field="tags")
+
+
+def validate_tag_names(tag_str_list: list[str]):
+    for tag_str in tag_str_list:
+        validate_tag_name(tag_str)
 
 
 def get_theme_from_string(theme_str: str):
@@ -25,14 +62,10 @@ def get_language_list_from_codes(language_codes: list[str]):
     return [get_language_from_code(code) for code in language_codes]
 
 
-def check_if_creator_not_guest(user: db_models.User):
-    if user.is_guest:
-        raise HTTPException(status_code=403, detail="Guest users can't create rooms")
-
-
-def get_or_create_tags_from_string_list(db: Session, tags_str_list: list[str]):
+def get_or_create_tags_from_string_list(db: Session, tag_str_list: list[str]):
+    validate_tag_names(tag_str_list)
     tags = []
-    for tag_str in tags_str_list:
+    for tag_str in tag_str_list:
         tag = crud.get_or_create_tag(db, tag_str)
         tags.append(tag)
     return tags

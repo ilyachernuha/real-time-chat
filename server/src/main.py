@@ -358,6 +358,8 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
                       db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_access_token(db, credentials.credentials)
     room_utils.check_if_creator_not_guest(user)
+    room_utils.validate_title(body.title)
+    room_utils.validate_description(body.description)
     theme = room_utils.get_theme_from_string(body.theme)
     languages = room_utils.get_language_list_from_codes(body.languages)
     tags = room_utils.get_or_create_tags_from_string_list(db, body.tags)
