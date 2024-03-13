@@ -396,5 +396,16 @@ async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCreden
     }
 
 
+@app.delete("/delete_room/{room_id}", response_model=schemas.GenericConfirmation)
+async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                      db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    room = crud.get_room_by_id(db, room_id)
+    if room.owner_id != user_id:
+        raise HTTPException(status_code=403, detail="Only owner allowed to perform this action")
+    crud.delete_room(db, room_id)
+    return {"status": "success"}
+
+
 app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))
