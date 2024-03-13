@@ -439,9 +439,9 @@ async def add_users_to_room(body: schemas.AddUsers,
     room_utils.check_if_room_exists(room)
     add_admins = any(user.make_admin for user in body.users)
     room_utils.check_if_user_can_add_users_to_room(db=db, user_id=user_id, room=room, add_admins=add_admins)
-    for user in body.users:
-        crud.add_user_to_room(db=db, room_id=room.room_id, user=crud.get_user_by_id(db, user.user_id),
-                              make_admin=user.make_admin)
+    add_data = room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users)
+    for user, make_admin in add_data:
+        crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
     return {"status": "success"}
 
 

@@ -7,7 +7,7 @@ import db_models
 from room_themes import RoomTheme
 from room_languages import RoomLanguage
 import re
-from schemas import RoomUpdate
+from schemas import RoomUpdate, UserToAdd
 
 
 def check_if_room_exists(room: db_models.Room):
@@ -160,3 +160,18 @@ def check_if_user_can_add_users_to_room(db: Session, user_id: uuid.UUID, room: d
         check_if_user_is_owner(user_id, room)
     else:
         check_if_user_is_owner_or_admin(db, user_id, room)
+
+
+def get_and_validate_list_of_users_to_add(db: Session, room: db_models.Room, add_list: list[UserToAdd]):
+    add_data = []
+    for user_data in add_list:
+        user_id = user_data.user_id
+        user = crud.get_user_by_id(db, user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+        if user_data.make_admin and user.is_guest:
+            raise HTTPException(status_code=403, detail="Guest users cannot be admins")
+        if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) or room.owner_id == user_id:
+            raise HTTPException(status_code=409, detail=f"User {user_id} already in room")
+        add_data.append((user, user_data.make_admin))
+    return add_data
