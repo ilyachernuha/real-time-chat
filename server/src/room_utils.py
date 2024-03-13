@@ -130,6 +130,11 @@ def convert_room_tags_to_str_list(tags: list[db_models.Tag]):
     return tag_str_list
 
 
+def check_if_user_is_owner(user_id: uuid.UUID, room: db_models.Room):
+    if room.owner_id != user_id:
+        raise HTTPException(status_code=403, detail="Only owner allowed to perform this action")
+
+
 def check_if_user_can_join_room(db: Session, user_id: uuid.UUID, room: db_models.Room):
     if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) or room.owner_id == user_id:
         raise HTTPException(status_code=409, detail="You already joined this room")

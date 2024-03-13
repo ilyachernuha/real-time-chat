@@ -401,8 +401,7 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
                       db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     room = crud.get_room_by_id(db, room_id)
-    if room.owner_id != user_id:
-        raise HTTPException(status_code=403, detail="Only owner allowed to perform this action")
+    room_utils.check_if_user_is_owner(user_id, room)
     crud.delete_room(db, room_id)
     return {"status": "success"}
 
