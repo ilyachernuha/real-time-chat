@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from exceptions import FieldSubmitError
+import uuid
 import crud
 import db_models
 from room_themes import RoomTheme
@@ -127,3 +128,17 @@ def convert_room_tags_to_str_list(tags: list[db_models.Tag]):
     for tag in tags:
         tag_str_list.append(tag.tag.tag)
     return tag_str_list
+
+
+def check_if_user_can_join_room(db: Session, user_id: uuid.UUID, room: db_models.Room):
+    if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) or room.owner_id == user_id:
+        raise HTTPException(status_code=409, detail="You already joined this room")
+    # implement closed room logic
+    # implement user banned logic
+
+
+def check_if_user_can_leave_room(db: Session, user_id: uuid.UUID, room: db_models.Room):
+    if room.owner_id == user_id:
+        raise HTTPException(status_code=403, detail="Owner cannot leave the room")
+    if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) is None:
+        raise HTTPException(status_code=409, detail="You are not a member of this room")

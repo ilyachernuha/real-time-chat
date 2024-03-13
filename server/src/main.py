@@ -407,5 +407,25 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     return {"status": "success"}
 
 
+@app.post("/join_room", response_model=schemas.GenericConfirmation)
+async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                    db: Session = Depends(get_db)):
+    user = auth_utils.get_user_by_access_token(db, credentials.credentials)
+    room = crud.get_room_by_id(db, body.room_id)
+    room_utils.check_if_user_can_join_room(db, user.user_id, room)
+    crud.add_user_to_room(db=db, room_id=room.room_id, user=user)
+    return {"status": "success"}
+
+
+@app.post("/leave_room", response_model=schemas.GenericConfirmation)
+async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                     db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    room = crud.get_room_by_id(db, body.room_id)
+    room_utils.check_if_user_can_leave_room(db, user_id, room)
+    crud.remove_user_from_room(db=db, room_id=room.room_id, user_id=user_id)
+    return {"status": "success"}
+
+
 app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))

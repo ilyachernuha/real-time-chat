@@ -102,6 +102,14 @@ class RoomUpdate(BaseModel):
     # Access token must be included in HTTP header
 
 
+class JoinRoom(BaseModel):
+    room_id: UUID4
+
+
+class LeaveRoom(BaseModel):
+    room_id: UUID4
+
+
 # RESPONSE SCHEMAS
 
 
