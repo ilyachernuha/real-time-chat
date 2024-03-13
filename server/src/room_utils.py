@@ -135,6 +135,12 @@ def check_if_user_is_owner(user_id: uuid.UUID, room: db_models.Room):
         raise HTTPException(status_code=403, detail="Only owner allowed to perform this action")
 
 
+def check_if_user_is_owner_or_admin(db: Session, user_id: uuid.UUID, room: db_models.Room):
+    association = crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user_id)
+    if not ((association and association.is_admin) or room.owner_id == user_id):
+        raise HTTPException(status_code=403, detail="Only admins can perform this action")
+
+
 def check_if_user_can_join_room(db: Session, user_id: uuid.UUID, room: db_models.Room):
     if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) or room.owner_id == user_id:
         raise HTTPException(status_code=409, detail="You already joined this room")
@@ -147,3 +153,10 @@ def check_if_user_can_leave_room(db: Session, user_id: uuid.UUID, room: db_model
         raise HTTPException(status_code=403, detail="Owner cannot leave the room")
     if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) is None:
         raise HTTPException(status_code=409, detail="You are not a member of this room")
+
+
+def check_if_user_can_add_users_to_room(db: Session, user_id: uuid.UUID, room: db_models.Room, add_admins: bool):
+    if add_admins:
+        check_if_user_is_owner(user_id, room)
+    else:
+        check_if_user_is_owner_or_admin(db, user_id, room)

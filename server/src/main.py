@@ -426,5 +426,19 @@ async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCred
     return {"status": "success"}
 
 
+@app.post("/add_users_to_room", response_model=schemas.GenericConfirmation)
+async def add_users_to_room(body: schemas.AddUsers,
+                            credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                            db: Session = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    room = crud.get_room_by_id(db, body.room_id)
+    add_admins = any(user.make_admin for user in body.users)
+    room_utils.check_if_user_can_add_users_to_room(db=db, user_id=user_id, room=room, add_admins=add_admins)
+    for user in body.users:
+        crud.add_user_to_room(db=db, room_id=room.room_id, user=crud.get_user_by_id(db, user.user_id),
+                              make_admin=user.make_admin)
+    return {"status": "success"}
+
+
 app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))

@@ -110,6 +110,16 @@ class LeaveRoom(BaseModel):
     room_id: UUID4
 
 
+class UserToAdd(BaseModel):
+    user_id: UUID4
+    make_admin: bool | None = None
+
+
+class AddUsers(BaseModel):
+    room_id: UUID4
+    users: list[UserToAdd]
+
+
 # RESPONSE SCHEMAS
 
 
