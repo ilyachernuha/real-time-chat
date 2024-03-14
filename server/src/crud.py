@@ -422,10 +422,10 @@ def add_tags_to_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag])
     return room
 
 
-def remove_tags_from_room(db: Session, room_id: uuid.UUID, tags: list[db_models.Tag]):
+def remove_tags_from_room(db: Session, room_id: uuid.UUID, tags: list[str]):
     room = get_room_by_id(db, room_id)
     for tag in tags:
-        association = get_room_tag_association(db, room_id, tag.tag)
+        association = get_room_tag_association(db, room_id, tag)
         if association is not None:
             db.delete(association)
     db.commit()
