@@ -70,11 +70,7 @@ def get_language_list_from_codes(language_codes: set[str]):
 
 
 def get_or_create_tags_from_string_set(db: Session, tag_str_set: set[str]):
-    tags = []
-    for tag_str in tag_str_set:
-        tag = crud.get_or_create_tag(db, tag_str)
-        tags.append(tag)
-    return tags
+    return [crud.get_or_create_tag(db, tag_str) for tag_str in tag_str_set]
 
 
 def check_if_user_can_update_room(db: Session, user: db_models.User, room: db_models.Room):
@@ -117,17 +113,11 @@ def patch_room(db: Session, room: db_models.Room, update: RoomUpdate):
 
 
 def convert_room_languages_to_str_list(languages: list[RoomLanguage]):
-    language_str_list = []
-    for language in languages:
-        language_str_list.append(language.value)
-    return language_str_list
+    return [language.value for language in languages]
 
 
 def convert_room_tags_to_str_list(tags: list[db_models.Tag]):
-    tag_str_list = []
-    for tag in tags:
-        tag_str_list.append(tag.tag.tag)
-    return tag_str_list
+    return [tag.tag.tag for tag in tags]
 
 
 def check_if_user_is_owner(user_id: uuid.UUID, room: db_models.Room):
