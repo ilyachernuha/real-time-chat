@@ -44,6 +44,18 @@ def get_user_by_email(db: Session, email: str):
     return db.query(db_models.User).join(db_models.AccountData).filter(db_models.AccountData.email == email).first()
 
 
+def search_users(db: Session, username: str, limit: int | None):
+    query = (
+        db.query(db_models.User)
+        .join(db_models.AccountData)
+        .filter(db_models.AccountData.username.ilike(f"%{username}%"))
+    )
+    if limit is None:
+        return query.all()
+    else:
+        return query.limit(limit)
+
+
 def update_user_name(db: Session, user_id: uuid.UUID, new_name: str):
     user = get_user_by_id(db, user_id)
     user.name = new_name
@@ -514,3 +526,11 @@ def delete_tag(db: Session, tag_name: str):
     tag = get_tag_by_name(db, tag_name)
     db.delete(tag)
     db.commit()
+
+
+def search_tag(db: Session, tag_name: str, limit: int | None):
+    query = db.query(db_models.Tag).filter(db_models.Tag.tag.ilike(f"%{tag_name}%"))
+    if limit is None:
+        return query.all()
+    else:
+        return query.limit(limit)

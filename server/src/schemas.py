@@ -129,6 +129,20 @@ class RoomList(BaseModel):
     rooms: list[RoomBasicInfo]
 
 
+class TagList(BaseModel):
+    tags: list[str]
+
+
+class UserData(BaseModel):
+    user_id: UUID4
+    username: str
+    name: str
+
+
+class UserList(BaseModel):
+    users: list[UserData]
+
+
 # RESPONSE SCHEMAS
 
 

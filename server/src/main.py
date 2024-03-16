@@ -473,5 +473,31 @@ async def my_rooms(credentials: HTTPAuthorizationCredentials = Depends(security_
     return {"rooms": rooms}
 
 
+@app.get("/find_tags", response_model=schemas.TagList)
+async def find_tags(search: str, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                    db: Session = Depends(get_db)):
+    auth_utils.validate_access_token(credentials.credentials)
+    room_utils.validate_tag_name(search)
+    tags = [tag.tag for tag in crud.search_tag(db=db, tag_name=search, limit=None)]
+    return {"tags": tags}
+
+
+@app.get("/find_users", response_model=schemas.UserList)
+async def find_users(search: str, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                     db: Session = Depends(get_db)):
+    auth_utils.validate_access_token(credentials.credentials)
+    auth_utils.validate_username(search)
+    users = crud.search_users(db=db, username=search, limit=None)
+    users_data = [
+        {
+            "user_id": user.user_id,
+            "username": user.account_data.username,
+            "name": user.name
+        }
+        for user in users
+    ]
+    return {"users": users_data}
+
+
 app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))
