@@ -466,5 +466,12 @@ async def find_rooms(search: str | None = None, themes: list[str] = Query(defaul
     return {"rooms": rooms_data}
 
 
+@app.get("/my_rooms", response_model=schemas.RoomList)
+async def my_rooms(credentials: HTTPAuthorizationCredentials = Depends(security_bearer), db: Session = Depends(get_db)):
+    user = auth_utils.get_user_by_access_token(db, credentials.credentials)
+    rooms = [{"room_id": room.room_id, "title": room.room.title} for room in user.rooms]
+    return {"rooms": rooms}
+
+
 app.mount("/public", StaticFiles(directory="../public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))
