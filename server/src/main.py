@@ -94,8 +94,7 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
 @app.post("/finish_registration", response_model=schemas.SuccessfulLogin, tags=["auth"])
 async def finish_registration(body: schemas.RegistrationConfirmation, db: Session = Depends(get_db)):
     application = crud.get_register_application_by_id(db, body.application_id)
-    if application is None:
-        raise HTTPException(status_code=404, detail="Register application not found")
+    auth_utils.check_if_application_exists(application)
     auth_utils.check_register_application_status(application.status)
     if application.confirmation_code != body.confirmation_code:
         crud.increase_failed_registration_attempts(db, body.application_id)
@@ -202,8 +201,7 @@ async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredenti
 @app.post("/finish_change_email", response_model=schemas.EmailUpdate, tags=["auth"])
 async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session = Depends(get_db)):
     application = crud.get_change_email_application_by_id(db, body.application_id)
-    if application is None:
-        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_if_application_exists(application)
     auth_utils.check_change_email_application_status(application.status)
     if application.confirmation_code != body.confirmation_code:
         crud.increase_failed_change_email_attempts(db, application.application_id)
@@ -220,8 +218,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
 @app.get("/rollback_email_change/{application_id}", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends(get_db)):
     application = crud.get_change_email_application_by_id(db, application_id)
-    if application is None:
-        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_if_application_exists(application)
     auth_utils.check_change_email_rollback_status(application.status)
 
     crud.update_email(db, application.user_id, application.old_email)
@@ -256,8 +253,7 @@ async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_
 @app.get("/reset_password_page/{application_id}", response_class=HTMLResponse, tags=["auth"])
 async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(get_db)):
     application = crud.get_reset_password_application(db, application_id)
-    if application is None:
-        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_if_application_exists(application)
     auth_utils.check_reset_password_application_status(application.status)
     return HTMLResponse(html_generator.generate_reset_password_page(str(application_id)))
 
@@ -265,8 +261,7 @@ async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(g
 @app.post("/finish_reset_password", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def finish_reset_password(body: schemas.FinishResetPassword, db: Session = Depends(get_db)):
     application = crud.get_reset_password_application(db, body.application_id)
-    if application is None:
-        raise HTTPException(status_code=404, detail="Application not found")
+    auth_utils.check_if_application_exists(application)
     auth_utils.check_reset_password_application_status(application.status)
 
     auth_utils.validate_password(body.new_password)
@@ -307,8 +302,7 @@ async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
                                  db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     application = crud.get_upgrade_account_application_by_id(db, body.application_id)
-    if application is None:
-        raise HTTPException(status_code=404, detail="Register application not found")
+    auth_utils.check_if_application_exists(application)
     auth_utils.check_upgrade_account_application_status(application.status)
     if application.confirmation_code != body.confirmation_code:
         crud.increase_failed_upgrade_account_attempts(db, body.application_id)

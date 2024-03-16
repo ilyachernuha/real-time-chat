@@ -150,6 +150,12 @@ def check_if_username_is_available(db: Session, username: str):
         raise FieldSubmitError(status_code=400, detail="This username is taken", field="username")
 
 
+def check_if_application_exists(application: db_models.RegisterApplication | db_models.ChangeEmailApplication |
+                                db_models.UpgradeAccountApplication | db_models.ResetPasswordApplication | None):
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+
 def check_if_email_is_available(db: Session, email: str):
     if crud.get_user_by_email(db, email):
         raise FieldSubmitError(status_code=400, detail="Account with this email already exists", field="email")
