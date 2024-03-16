@@ -383,6 +383,20 @@ def get_room_by_id(db: Session, room_id: uuid.UUID):
     return db.query(db_models.Room).filter(db_models.Room.room_id == room_id).first()
 
 
+def filter_rooms(db: Session, title: str | None, themes: list[RoomTheme] | None, languages: list[RoomLanguage] | None,
+                 tags: list[str] | None):
+    query = db.query(db_models.Room) if tags is None else db.query(db_models.Room).join(db_models.RoomTagAssociation)
+    if title is not None:
+        query = query.filter(db_models.Room.title.ilike(f"%{title}%"))
+    if themes is not None:
+        query = query.filter(db_models.Room.theme.in_(themes))
+    if languages is not None:
+        query = query.filter(db_models.Room.languages.op("&&")(languages))
+    if tags is not None:
+        query = query.filter(db_models.Room.tags.any(db_models.RoomTagAssociation.tag_name.in_(tags)))
+    return query.all()
+
+
 def update_room_title(db: Session, room_id: uuid.UUID, new_title: str):
     room = get_room_by_id(db, room_id)
     room.title = new_title

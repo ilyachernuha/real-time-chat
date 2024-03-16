@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, Body
+from fastapi import FastAPI, Depends, HTTPException, Request, Body, Query
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBasic, HTTPBasicCredentials, HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.responses import HTMLResponse, JSONResponse, PlainTextResponse
@@ -443,6 +443,26 @@ async def add_users_to_room(body: schemas.AddUsers,
     for user, make_admin in add_data:
         crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
     return {"status": "success"}
+
+
+@app.get("/find_rooms")  # add response model
+async def find_rooms(search: str | None = None, themes: list[str] = Query(default=None),
+                     tags: list[str] = Query(default=None), languages: list[str] = Query(default=None),
+                     credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                     db: Session = Depends(get_db)):
+    auth_utils.validate_access_token(credentials.credentials)
+    if search is None and themes is None and tags is None and languages is None:
+        raise HTTPException(status_code=400, detail="Empty search and filters not allowed")
+    if search is not None:
+        room_utils.validate_title(search)
+    if tags is not None:
+        room_utils.validate_tag_names(set(tags))
+    rooms = crud.filter_rooms(db=db, title=search,
+                              themes=[room_utils.get_theme_from_string(theme) for theme in themes] if themes else None,
+                              languages=room_utils.get_language_list_from_codes(set(languages)) if languages else None,
+                              tags=tags)
+    rooms_data = [{"room_id": room.room_id, "title": room.title} for room in rooms]
+    return {"rooms": rooms_data}
 
 
 app.mount("/public", StaticFiles(directory="../public"))
