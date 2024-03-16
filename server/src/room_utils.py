@@ -73,14 +73,6 @@ def get_or_create_tags_from_string_set(db: Session, tag_str_set: set[str]):
     return [crud.get_or_create_tag(db, tag_str) for tag_str in tag_str_set]
 
 
-def check_if_user_can_update_room(db: Session, user: db_models.User, room: db_models.Room):
-    if user.user_id == room.owner.user_id:
-        return
-    user_room_association = crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user.user_id)
-    if user_room_association is None or not user_room_association.is_admin:
-        raise HTTPException(status_code=403, detail="You cannot update this room")
-
-
 def validate_room_update_data(update: RoomUpdate):
     if update.title is not None:
         validate_title(update.title)
@@ -125,14 +117,14 @@ def check_if_user_is_owner(user_id: uuid.UUID, room: db_models.Room):
         raise HTTPException(status_code=403, detail="Only owner allowed to perform this action")
 
 
-def check_if_user_is_owner_or_admin(db: Session, user_id: uuid.UUID, room: db_models.Room):
-    association = crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user_id)
-    if not ((association and association.is_admin) or room.owner_id == user_id):
+def check_if_user_is_admin(db: Session, user_id: uuid.UUID, room: db_models.Room):
+    user_room_association = crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user_id)
+    if user_room_association is None or not user_room_association.is_admin:
         raise HTTPException(status_code=403, detail="Only admins can perform this action")
 
 
 def check_if_user_can_join_room(db: Session, user_id: uuid.UUID, room: db_models.Room):
-    if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) or room.owner_id == user_id:
+    if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
         raise HTTPException(status_code=409, detail="You already joined this room")
     # implement closed room logic
     # implement user banned logic
@@ -149,7 +141,7 @@ def check_if_user_can_add_users_to_room(db: Session, user_id: uuid.UUID, room: d
     if add_admins:
         check_if_user_is_owner(user_id, room)
     else:
-        check_if_user_is_owner_or_admin(db, user_id, room)
+        check_if_user_is_admin(db, user_id, room)
 
 
 def get_and_validate_list_of_users_to_add(db: Session, room: db_models.Room, add_list: list[UserToAdd]):
@@ -161,7 +153,7 @@ def get_and_validate_list_of_users_to_add(db: Session, room: db_models.Room, add
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
         if user_data.make_admin and user.is_guest:
             raise HTTPException(status_code=403, detail="Guest users cannot be admins")
-        if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) or room.owner_id == user_id:
+        if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
             raise HTTPException(status_code=409, detail=f"User {user_id} already in room")
         add_data.append((user, user_data.make_admin))
     return add_data

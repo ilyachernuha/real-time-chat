@@ -366,6 +366,7 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     tags = room_utils.get_or_create_tags_from_string_set(db, body.tags)
     room = crud.create_room(db=db, owner=user, title=body.title, description=body.description, theme=theme,
                             languages=languages, tags=tags)
+    crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=True)
     return {"status": "success", "room_id": room.room_id}
 
 
@@ -373,10 +374,10 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
 async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
-    user = auth_utils.get_user_by_access_token(db, credentials.credentials)
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     room = crud.get_room_by_id(db, room_id)
     room_utils.check_if_room_exists(room)
-    room_utils.check_if_user_can_update_room(db=db, user=user, room=room)
+    room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
     room_utils.validate_room_update_data(body)
     room_utils.patch_room(db=db, room=room, update=body)
     return {"status": "success"}
