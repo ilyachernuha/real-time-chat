@@ -445,7 +445,7 @@ async def add_users_to_room(body: schemas.AddUsers,
     return {"status": "success"}
 
 
-@app.get("/find_rooms")  # add response model
+@app.get("/find_rooms", response_model=schemas.RoomList)
 async def find_rooms(search: str | None = None, themes: list[str] = Query(default=None),
                      tags: list[str] = Query(default=None), languages: list[str] = Query(default=None),
                      credentials: HTTPAuthorizationCredentials = Depends(security_bearer),

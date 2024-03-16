@@ -120,6 +120,15 @@ class AddUsers(BaseModel):
     users: list[UserToAdd]
 
 
+class RoomBasicInfo(BaseModel):
+    room_id: UUID4
+    title: str
+
+
+class RoomList(BaseModel):
+    rooms: list[RoomBasicInfo]
+
+
 # RESPONSE SCHEMAS
 
 
