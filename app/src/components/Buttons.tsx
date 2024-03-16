@@ -1,47 +1,78 @@
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
-import React, { ComponentProps } from "react";
-import { TouchableOpacity, Text, StyleSheet, ViewStyle } from "react-native";
+import React from "react";
+import { StyleSheet, PressableProps, Pressable, View } from "react-native";
+import StyledText from "./StyledText";
 
-interface ButtonProps {
-  onPress?: ComponentProps<typeof TouchableOpacity>["onPress"];
+interface Props extends PressableProps {
   title: string;
-  disabled?: boolean;
-  style?: ViewStyle | ViewStyle[];
 }
 
-export const Button: React.FC<ButtonProps> = ({ onPress, title, disabled, style }) => (
-  <TouchableOpacity
-    style={[
-      { backgroundColor: disabled ? Colors.dark.secondaryLightGrey : Colors.dark.mainPurple },
-      styles.button,
-      style,
-    ]}
-    onPress={onPress}
-    disabled={disabled}
-  >
-    <Text style={[{ color: disabled ? Colors.dark.mainDarkGrey : Colors.dark.text }, styles.text, Fonts[14]]}>
-      {title}
-    </Text>
-  </TouchableOpacity>
+export const Button = ({ title, disabled, ...props }: Props) => (
+  <Pressable disabled={disabled} {...props}>
+    {({ pressed }) => {
+      return (
+        <View style={[styles.button, styles.main, pressed && styles.mainPressed, disabled && styles.mainDisabled]}>
+          <StyledText font="14" style={disabled && styles.mainDisabled}>
+            {title}
+          </StyledText>
+        </View>
+      );
+    }}
+  </Pressable>
 );
 
-export const SecondaryButton: React.FC<ButtonProps> = ({ onPress, title, disabled, style }) => (
-  <TouchableOpacity
-    style={[styles.button, { borderColor: Colors.dark.mainPurple, borderWidth: 1 }, style]}
-    onPress={onPress}
-    disabled={disabled}
-  >
-    <Text style={[{ color: Colors.dark.mainPurple }, styles.text, Fonts[14]]}>{title}</Text>
-  </TouchableOpacity>
+export const SecondaryButton = ({ title, disabled, ...props }: Props) => (
+  <Pressable disabled={disabled} {...props}>
+    {({ pressed }) => {
+      return (
+        <View
+          style={[
+            styles.button,
+            styles.secondary,
+            pressed && styles.secondaryPressed,
+            disabled && styles.secondaryDisabled,
+          ]}
+        >
+          <StyledText
+            font="14"
+            style={[styles.secondary, pressed && styles.secondaryPressed, disabled && styles.secondaryDisabled]}
+          >
+            {title}
+          </StyledText>
+        </View>
+      );
+    }}
+  </Pressable>
 );
 
 const styles = StyleSheet.create({
   button: {
-    paddingVertical: 13.5,
+    padding: 13,
     borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
   },
-  text: {
-    textAlign: "center",
+  main: {
+    backgroundColor: Colors.dark.mainPurple,
+  },
+  mainDisabled: {
+    backgroundColor: Colors.dark.secondaryLightGrey,
+    color: Colors.dark.mainDarkGrey,
+  },
+  mainPressed: {
+    backgroundColor: Colors.dark.secondaryBlue,
+  },
+  secondary: {
+    borderColor: Colors.dark.mainPurple,
+    color: Colors.dark.mainPurple,
+  },
+  secondaryDisabled: {
+    borderColor: Colors.dark.mainDarkGrey,
+    color: Colors.dark.mainDarkGrey,
+  },
+  secondaryPressed: {
+    borderColor: Colors.dark.secondaryBlue,
+    color: Colors.dark.secondaryBlue,
   },
 });

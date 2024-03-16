@@ -7,6 +7,8 @@ import React, { useEffect } from "react";
 import { useColorScheme } from "@/components/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import Colors from "@/constants/Colors";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -85,8 +87,6 @@ function RootLayoutNav() {
             contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
           }}
         />
-        <Stack.Screen name="(modals)/create" options={{ presentation: "modal" }} />
-        <Stack.Screen name="(modals)/filter" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
   );

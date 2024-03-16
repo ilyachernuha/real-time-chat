@@ -10,6 +10,8 @@ import { MaterialIcons } from "@expo/vector-icons";
 import Fonts from "@/constants/Fonts";
 import StyledText from "@/components/StyledText";
 import Icons from "@/components/Icons";
+import { BottomSheetModalProvider } from "@gorhom/bottom-sheet";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function TabLayout() {
   const { refreshToken, isLoading } = useAuth();
@@ -35,53 +37,57 @@ export default function TabLayout() {
   }
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarInactiveTintColor: Colors[colorScheme ?? "light"].secondaryLightGrey,
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].mainPurple,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
-        tabBarStyle: {
-          backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey,
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-          marginVertical: 8,
-          height: 60,
-        },
-        tabBarLabelStyle: Fonts[10],
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Channels",
-          tabBarIcon: ({ color }) => <Icons name="browse" size={24} color={color} />,
-          header: () => <ChannelsHeader />,
-        }}
-      />
-      <Tabs.Screen
-        name="chat"
-        options={{
-          title: "Chat",
-          tabBarIcon: ({ color }) => <Icons name="chats" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="notifications"
-        options={{
-          title: "Notifications",
-          tabBarIcon: ({ color }) => <Icons name="notifications" size={24} color={color} />,
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => <Icons name="person" size={24} color={color} />,
-        }}
-      />
-    </Tabs>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <Tabs
+          screenOptions={{
+            tabBarInactiveTintColor: Colors[colorScheme ?? "light"].secondaryLightGrey,
+            tabBarActiveTintColor: Colors[colorScheme ?? "light"].mainPurple,
+            // Disable the static render of the header on web
+            // to prevent a hydration error in React Navigation v6.
+            headerShown: useClientOnlyValue(false, true),
+            tabBarStyle: {
+              backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey,
+              borderTopWidth: 0,
+              elevation: 0,
+              shadowOpacity: 0,
+              marginVertical: 8,
+              height: 60,
+            },
+            tabBarLabelStyle: Fonts[10],
+          }}
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              title: "Channels",
+              tabBarIcon: ({ color }) => <Icons name="browse" size={24} color={color} />,
+              header: () => <ChannelsHeader />,
+            }}
+          />
+          <Tabs.Screen
+            name="chat"
+            options={{
+              title: "Chat",
+              tabBarIcon: ({ color }) => <Icons name="chats" size={24} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="notifications"
+            options={{
+              title: "Notifications",
+              tabBarIcon: ({ color }) => <Icons name="notifications" size={24} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="profile"
+            options={{
+              title: "Profile",
+              tabBarIcon: ({ color }) => <Icons name="person" size={24} color={color} />,
+            }}
+          />
+        </Tabs>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }

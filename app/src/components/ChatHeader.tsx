@@ -1,11 +1,10 @@
 import Colors from "@/constants/Colors";
-import { SafeAreaView } from "./Themed";
-import { StyleSheet, View, Image, Pressable } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
+import { View, Image, Pressable } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { Link, Stack } from "expo-router";
+import { Link } from "expo-router";
 import icon from "../../assets/images/icon.png";
 import StyledText from "./StyledText";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 interface Props {
   id: string;
@@ -13,7 +12,7 @@ interface Props {
 
 const ChatHeader = ({ id }: Props) => {
   return (
-    <SafeAreaView>
+    <SafeAreaView edges={["top", "right", "left"]}>
       <View style={{ backgroundColor: Colors.dark.mainDarkGrey, justifyContent: "center" }}>
         <View style={{ position: "absolute", width: "100%" }}>
           <StyledText font="14" style={{ textAlign: "center" }}>

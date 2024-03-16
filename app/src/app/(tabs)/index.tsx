@@ -1,10 +1,15 @@
 import { View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
 import { MaterialIcons } from "@expo/vector-icons";
-import { FlatList, Image, ListRenderItem, StyleSheet, TouchableOpacity } from "react-native";
+import { FlatList, Image, ListRenderItem, StyleSheet, TouchableOpacity, Text, Pressable } from "react-native";
 import icon from "../../../assets/images/icon.png";
-import { Link } from "expo-router";
+import { Link, Tabs } from "expo-router";
 import StyledText from "@/components/StyledText";
+import React, { useCallback, useRef } from "react";
+import Icons from "@/components/Icons";
+import ChannelsHeader from "@/components/ChannelsHeader";
+import { BottomSheetModal, useBottomSheetModal } from "@gorhom/bottom-sheet";
+import CustomBottomSheetModal from "@/components/modals/FilterModal";
 
 interface Chat {
   id: string;
@@ -65,9 +70,20 @@ const renderItem: ListRenderItem<Chat> = ({ item }) => (
 );
 
 const Chats = () => {
+  const bottomSheetRef = useRef<BottomSheetModal>(null);
+  const { dismiss } = useBottomSheetModal();
+
+  const handlePresentModalPress = () => bottomSheetRef.current?.present();
+
   return (
     <View style={styles.container}>
+      <Tabs.Screen
+        options={{
+          header: () => <ChannelsHeader onPressCreate={handlePresentModalPress} />,
+        }}
+      />
       <FlatList<Chat> renderItem={renderItem} data={data} keyExtractor={(item) => item.id} />
+      <CustomBottomSheetModal ref={bottomSheetRef} />
     </View>
   );
 };
