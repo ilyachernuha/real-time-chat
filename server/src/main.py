@@ -322,14 +322,14 @@ async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depend
                               db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     sessions = crud.get_sessions_by_user_id(db, user_id)
-    session_list = []
-    for session in sessions:
-        session_details = {
+    session_list = [
+        {
             "session_id": str(session.session_id),
             "device_info": session.device_info,
             "latest_activity": session.latest_activity.isoformat()
         }
-        session_list.append(session_details)
+        for session in sessions
+    ]
     return {"sessions": session_list}
 
 
