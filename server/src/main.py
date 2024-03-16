@@ -75,7 +75,7 @@ async def ping():
     return "pong"
 
 
-@app.post("/create_account", response_model=schemas.ApplicationCreated)
+@app.post("/create_account", response_model=schemas.ApplicationCreated, tags=["auth"])
 async def register(body: schemas.Registration, db: Session = Depends(get_db)):
     auth_utils.validate_username(body.username)
     auth_utils.validate_password(body.password)
@@ -91,7 +91,7 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
-@app.post("/finish_registration", response_model=schemas.SuccessfulLogin)
+@app.post("/finish_registration", response_model=schemas.SuccessfulLogin, tags=["auth"])
 async def finish_registration(body: schemas.RegistrationConfirmation, db: Session = Depends(get_db)):
     application = crud.get_register_application_by_id(db, body.application_id)
     if application is None:
@@ -120,7 +120,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: Sessio
     }
 
 
-@app.post("/login", response_model=schemas.SuccessfulLogin)
+@app.post("/login", response_model=schemas.SuccessfulLogin, tags=["auth"])
 async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasicCredentials = Depends(security_basic),
                 db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
@@ -138,7 +138,7 @@ async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasic
     }
 
 
-@app.post("/guest_login", response_model=schemas.SuccessfulLogin)
+@app.post("/guest_login", response_model=schemas.SuccessfulLogin, tags=["auth"])
 async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
     auth_utils.validate_name(body.name)
     user = crud.create_guest_user(db, body.name)
@@ -156,7 +156,7 @@ async def guest_login(body: schemas.GuestLogin, db: Session = Depends(get_db)):
     }
 
 
-@app.post("/token_refresh", response_model=schemas.TokenUpdate)
+@app.post("/token_refresh", response_model=schemas.TokenUpdate, tags=["auth"])
 async def token_refresh(body: schemas.TokenRefresh, db: Session = Depends(get_db)):
     session = auth_utils.get_and_validate_session_from_refresh_token(db, body.refresh_token)
     user_id_str = str(session.user.user_id)
@@ -168,7 +168,7 @@ async def token_refresh(body: schemas.TokenRefresh, db: Session = Depends(get_db
     return {"access_token": access_token, "new_refresh_token": new_refresh_token}
 
 
-@app.put("/change_name", response_model=schemas.UpdateName)
+@app.put("/change_name", response_model=schemas.UpdateName, tags=["auth"])
 async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -177,7 +177,7 @@ async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCr
     return {"status": "success", "new_name": user.name}
 
 
-@app.put("/change_username", response_model=schemas.UsernameUpdate)
+@app.put("/change_username", response_model=schemas.UsernameUpdate, tags=["auth"])
 async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
@@ -187,7 +187,7 @@ async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCr
     return {"status": "success", "new_username": user.account_data.username}
 
 
-@app.post("/change_email", response_model=schemas.ApplicationCreated)
+@app.post("/change_email", response_model=schemas.ApplicationCreated, tags=["auth"])
 async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security_basic),
                        db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
@@ -199,7 +199,7 @@ async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredenti
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
-@app.post("/finish_change_email", response_model=schemas.EmailUpdate)
+@app.post("/finish_change_email", response_model=schemas.EmailUpdate, tags=["auth"])
 async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session = Depends(get_db)):
     application = crud.get_change_email_application_by_id(db, body.application_id)
     if application is None:
@@ -217,7 +217,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
     return {"status": "Email changed", "new_email": user.account_data.email}
 
 
-@app.get("/rollback_email_change/{application_id}", response_model=schemas.GenericConfirmation)
+@app.get("/rollback_email_change/{application_id}", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends(get_db)):
     application = crud.get_change_email_application_by_id(db, application_id)
     if application is None:
@@ -229,7 +229,7 @@ async def rollback_email_change(application_id: uuid.UUID, db: Session = Depends
     return {"status": "Email change rolled back"}
 
 
-@app.put("/change_password", response_model=schemas.GenericConfirmation)
+@app.put("/change_password", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_basic_auth(db, credentials)
@@ -240,7 +240,7 @@ async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCr
     return {"status": "success"}
 
 
-@app.post("/reset_password", response_model=schemas.GenericConfirmation)
+@app.post("/reset_password", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_db)):
     user = crud.get_user_by_email(db, body.email)
     if user is None:
@@ -253,7 +253,7 @@ async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_
     return {"status": "email sent"}
 
 
-@app.get("/reset_password_page/{application_id}", response_class=HTMLResponse)
+@app.get("/reset_password_page/{application_id}", response_class=HTMLResponse, tags=["auth"])
 async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(get_db)):
     application = crud.get_reset_password_application(db, application_id)
     if application is None:
@@ -262,7 +262,7 @@ async def reset_password_page(application_id: uuid.UUID, db: Session = Depends(g
     return HTMLResponse(html_generator.generate_reset_password_page(str(application_id)))
 
 
-@app.post("/finish_reset_password", response_model=schemas.GenericConfirmation)
+@app.post("/finish_reset_password", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def finish_reset_password(body: schemas.FinishResetPassword, db: Session = Depends(get_db)):
     application = crud.get_reset_password_application(db, body.application_id)
     if application is None:
@@ -278,7 +278,7 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: Session =
     return {"status": "success"}
 
 
-@app.post("/upgrade_account", response_model=schemas.ApplicationCreated)
+@app.post("/upgrade_account", response_model=schemas.ApplicationCreated, tags=["auth"])
 async def upgrade_account(body: schemas.UpgradeAccount,
                           credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                           db: Session = Depends(get_db)):
@@ -301,7 +301,7 @@ async def upgrade_account(body: schemas.UpgradeAccount,
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
-@app.post("/finish_upgrade_account", response_model=schemas.GenericConfirmation)
+@app.post("/finish_upgrade_account", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
                                  credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                                  db: Session = Depends(get_db)):
@@ -323,7 +323,7 @@ async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
     return {"status": "success"}
 
 
-@app.get("/active_sessions", response_model=schemas.ActiveSessions)
+@app.get("/active_sessions", response_model=schemas.ActiveSessions, tags=["auth"])
 async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                               db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -339,7 +339,7 @@ async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depend
     return {"sessions": session_list}
 
 
-@app.post("/close_session", response_model=schemas.GenericConfirmation)
+@app.post("/close_session", response_model=schemas.GenericConfirmation, tags=["auth"])
 async def close_session(body: schemas.CloseSession,
                         credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                         db: Session = Depends(get_db)):
@@ -353,7 +353,7 @@ async def close_session(body: schemas.CloseSession,
     return {"status": "success"}
 
 
-@app.post("/create_room", response_model=schemas.RoomCreated)
+@app.post("/create_room", response_model=schemas.RoomCreated, tags=["rooms"])
 async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_access_token(db, credentials.credentials)
@@ -370,7 +370,7 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     return {"status": "success", "room_id": room.room_id}
 
 
-@app.patch("/update_room/{room_id}", response_model=schemas.GenericConfirmation)
+@app.patch("/update_room/{room_id}", response_model=schemas.GenericConfirmation, tags=["rooms"])
 async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
@@ -383,7 +383,7 @@ async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
     return {"status": "success"}
 
 
-@app.get("/room_info/{room_id}", response_model=schemas.RoomInfo)
+@app.get("/room_info/{room_id}", response_model=schemas.RoomInfo, tags=["rooms"])
 async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                         db: Session = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
@@ -398,7 +398,7 @@ async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCreden
     }
 
 
-@app.delete("/delete_room/{room_id}", response_model=schemas.GenericConfirmation)
+@app.delete("/delete_room/{room_id}", response_model=schemas.GenericConfirmation, tags=["rooms"])
 async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -409,7 +409,7 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     return {"status": "success"}
 
 
-@app.post("/join_room", response_model=schemas.GenericConfirmation)
+@app.post("/join_room", response_model=schemas.GenericConfirmation, tags=["rooms"])
 async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                     db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_access_token(db, credentials.credentials)
@@ -420,7 +420,7 @@ async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCreden
     return {"status": "success"}
 
 
-@app.post("/leave_room", response_model=schemas.GenericConfirmation)
+@app.post("/leave_room", response_model=schemas.GenericConfirmation, tags=["rooms"])
 async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -431,7 +431,7 @@ async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCred
     return {"status": "success"}
 
 
-@app.post("/add_users_to_room", response_model=schemas.GenericConfirmation)
+@app.post("/add_users_to_room", response_model=schemas.GenericConfirmation, tags=["rooms"])
 async def add_users_to_room(body: schemas.AddUsers,
                             credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                             db: Session = Depends(get_db)):
@@ -446,7 +446,7 @@ async def add_users_to_room(body: schemas.AddUsers,
     return {"status": "success"}
 
 
-@app.get("/find_rooms", response_model=schemas.RoomList)
+@app.get("/find_rooms", response_model=schemas.RoomList, tags=["rooms"])
 async def find_rooms(search: str | None = None, themes: list[str] = Query(default=None),
                      tags: list[str] = Query(default=None), languages: list[str] = Query(default=None),
                      credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
@@ -466,14 +466,14 @@ async def find_rooms(search: str | None = None, themes: list[str] = Query(defaul
     return {"rooms": rooms_data}
 
 
-@app.get("/my_rooms", response_model=schemas.RoomList)
+@app.get("/my_rooms", response_model=schemas.RoomList, tags=["rooms"])
 async def my_rooms(credentials: HTTPAuthorizationCredentials = Depends(security_bearer), db: Session = Depends(get_db)):
     user = auth_utils.get_user_by_access_token(db, credentials.credentials)
     rooms = [{"room_id": room.room_id, "title": room.room.title} for room in user.rooms]
     return {"rooms": rooms}
 
 
-@app.get("/find_tags", response_model=schemas.TagList)
+@app.get("/find_tags", response_model=schemas.TagList, tags=["rooms"])
 async def find_tags(search: str, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                     db: Session = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
@@ -482,7 +482,7 @@ async def find_tags(search: str, credentials: HTTPAuthorizationCredentials = Dep
     return {"tags": tags}
 
 
-@app.get("/find_users", response_model=schemas.UserList)
+@app.get("/find_users", response_model=schemas.UserList, tags=["rooms"])
 async def find_users(search: str, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: Session = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
