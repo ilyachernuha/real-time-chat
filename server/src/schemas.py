@@ -83,6 +83,66 @@ class CloseSession(BaseModel):
     # Access token must be included in HTTP header
 
 
+class RoomCreation(BaseModel):
+    title: str
+    description: str | None = None
+    theme: str
+    languages: set[str]
+    tags: set[str]
+    # Access token must be included in HTTP header
+
+
+class RoomUpdate(BaseModel):
+    title: str | None = None
+    description: str | None = None
+    theme: str | None = None
+    languages: set[str] | None = None
+    tags_to_add: set[str] | None = None
+    tags_to_remove: set[str] | None = None
+    # Access token must be included in HTTP header
+
+
+class JoinRoom(BaseModel):
+    room_id: UUID4
+
+
+class LeaveRoom(BaseModel):
+    room_id: UUID4
+
+
+class UserToAdd(BaseModel):
+    user_id: UUID4
+    make_admin: bool | None = None
+
+
+class AddUsers(BaseModel):
+    room_id: UUID4
+    users: list[UserToAdd]
+
+
+class RoomBasicInfo(BaseModel):
+    room_id: UUID4
+    title: str
+
+
+class RoomList(BaseModel):
+    rooms: list[RoomBasicInfo]
+
+
+class TagList(BaseModel):
+    tags: list[str]
+
+
+class UserData(BaseModel):
+    user_id: UUID4
+    username: str
+    name: str
+
+
+class UserList(BaseModel):
+    users: list[UserData]
+
+
 # RESPONSE SCHEMAS
 
 
@@ -130,6 +190,19 @@ class UsernameUpdate(BaseModel):
 class EmailUpdate(BaseModel):
     status: str
     new_email: str
+
+
+class RoomCreated(BaseModel):
+    status: str
+    room_id: UUID4
+
+
+class RoomInfo(BaseModel):
+    title: str
+    description: str | None
+    theme: str
+    languages: list[str]
+    tags: list[str]
 
 
 # SIO EVENT SCHEMAS
