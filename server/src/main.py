@@ -86,8 +86,8 @@ async def register(body: schemas.Registration, db: Session = Depends(get_db)):
     application = crud.create_register_application(db=db, username=body.username, email=body.email,
                                                    hashed_password=hashed_password, device_info=body.device_info)
     application_id_str = str(application.application_id)
-    email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
-                                               device_info=body.device_info)
+    await email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
+                                                     device_info=body.device_info)
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
@@ -192,7 +192,7 @@ async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredenti
     user = auth_utils.get_user_by_basic_auth(db, credentials)
     auth_utils.check_if_email_is_available(db, body.new_email)
     application = crud.create_change_email_application(db, user.user_id, body.new_email)
-    email_utils.send_change_email_confirmation(body.new_email, application.confirmation_code,
+    await email_utils.send_change_email_confirmation(body.new_email, application.confirmation_code,
                                                user.account_data.username)
     application_id_str = str(application.application_id)
     return {"status": "Email confirmation required", "application_id": application_id_str}
@@ -210,7 +210,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: Session
     auth_utils.check_if_email_is_available(db, application.new_email)
     user = crud.update_email(db, application.user_id, application.new_email)
     application = crud.make_change_email_application_confirmed(db, application.application_id)
-    email_utils.send_email_change_rollback(application.old_email,
+    await email_utils.send_email_change_rollback(application.old_email,
                                            str(application.application_id), user.account_data.username)
     return {"status": "Email changed", "new_email": user.account_data.email}
 
@@ -245,7 +245,7 @@ async def reset_password(body: schemas.ResetPassword, db: Session = Depends(get_
     if user.is_guest:
         raise HTTPException(status_code=400, detail="This is a guest user")
     application = crud.create_reset_password_application(db, user.account_data.user_id)
-    email_utils.send_reset_password_email(receiver=body.email, application_id=str(application.application_id))
+    await email_utils.send_reset_password_email(receiver=body.email, application_id=str(application.application_id))
 
     return {"status": "email sent"}
 
@@ -291,7 +291,7 @@ async def upgrade_account(body: schemas.UpgradeAccount,
     application_id_str = str(application.application_id)
 
     device_info = crud.get_session_by_id(db, session_id).device_info
-    email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
+    await email_utils.send_registration_confirmation(receiver=body.email, code=application.confirmation_code,
                                                device_info=device_info)
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
