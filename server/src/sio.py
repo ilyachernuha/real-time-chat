@@ -6,23 +6,19 @@ from database import db_session
 import crud
 import schemas
 from pydantic import ValidationError
+from exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 
 sio = socketio.AsyncServer(async_mode="asgi")
-sid_user_data = dict()
 
 
 @sio.event
 async def connect(sid, environ):
     auth_header = environ.get("HTTP_AUTHORIZATION")
-    if auth_header is None:
-        return False
-    scheme, token = auth_header.split()
-    if scheme != "Bearer":
-        raise ConnectionRefusedError("Unsupported auth type")
     try:
-        user_id, session_id = auth_utils.extract_access_token_data(token)
-    except auth_utils.AccessTokenValidationError as e:
+        user_id, session_id = auth_utils.extract_access_token_data(
+                              auth_utils.extract_token_from_raw_header(auth_header))
+    except (AccessTokenValidationError, BearerTokenExtractionError) as e:
         raise ConnectionRefusedError(str(e))
 
     with db_session() as db:
@@ -30,12 +26,12 @@ async def connect(sid, environ):
         if session is None:
             raise ConnectionRefusedError("Session not found")
 
-    sid_user_data[sid] = user_id
+    await sio.save_session(sid, {"user_id": user_id, "session_id": session_id})
 
 
 @sio.event
 async def disconnect(sid):
-    sid_user_data.pop(sid, None)
+    pass
 
 
 @sio.event
@@ -43,7 +39,7 @@ async def message(sid, data):
     with db_session() as db:
         try:
             validated_data = schemas.Message(**data)
-            user_id = sid_user_data[sid]
+            user_id = (await sio.get_session(sid))["user_id"]
             name = crud.get_user_by_id(db, user_id).name
             await sio.emit("message", {
                 "user": {
@@ -63,7 +59,7 @@ async def start_typing(sid, data):
     with db_session() as db:
         try:
             room = schemas.Typing(**data).room
-            user_id = sid_user_data[sid]
+            user_id = (await sio.get_session(sid))["user_id"]
             name = crud.get_user_by_id(db, user_id).name
             await sio.emit("start_typing", {
                 "user": {
@@ -81,7 +77,7 @@ async def stop_typing(sid, data):
     with db_session() as db:
         try:
             room = schemas.Typing(**data).room
-            user_id = sid_user_data[sid]
+            user_id = (await sio.get_session(sid))["user_id"]
             name = crud.get_user_by_id(db, user_id).name
             await sio.emit("stop_typing", {
                 "user": {

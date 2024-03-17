@@ -177,7 +177,7 @@ class ActiveSessions(BaseModel):
     sessions: list[Session]
 
 
-class NaneUpdate(BaseModel):
+class NameUpdate(BaseModel):
     status: str
     new_name: str
 

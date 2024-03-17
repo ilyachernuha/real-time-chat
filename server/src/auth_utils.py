@@ -14,7 +14,7 @@ import os
 from dotenv import load_dotenv
 import crud
 import db_models
-from exceptions import AccessTokenValidationError, FieldSubmitError
+from exceptions import AccessTokenValidationError, FieldSubmitError, BearerTokenExtractionError
 
 
 load_dotenv()
@@ -65,6 +65,15 @@ def get_and_validate_session_from_refresh_token(db: Session, token: str):
     if session is None:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     return session
+
+
+def extract_token_from_raw_header(auth_header: str):
+    if auth_header is None:
+        raise BearerTokenExtractionError("Authorization header not present")
+    scheme, token = auth_header.split()
+    if scheme != "Bearer":
+        raise BearerTokenExtractionError("Unsupported authorization type")
+    return token
 
 
 def validate_name(name: str):
@@ -148,6 +157,12 @@ def check_if_user_is_guest(db: Session, user_id: uuid.UUID):
 def check_if_username_is_available(db: Session, username: str):
     if crud.get_user_by_username(db, username):
         raise FieldSubmitError(status_code=400, detail="This username is taken", field="username")
+
+
+def check_if_application_exists(application: db_models.RegisterApplication | db_models.ChangeEmailApplication |
+                                db_models.UpgradeAccountApplication | db_models.ResetPasswordApplication | None):
+    if application is None:
+        raise HTTPException(status_code=404, detail="Application not found")
 
 
 def check_if_email_is_available(db: Session, email: str):

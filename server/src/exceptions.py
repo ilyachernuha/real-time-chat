@@ -10,3 +10,8 @@ class FieldSubmitError(HTTPException):
 class AccessTokenValidationError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+
+
+class BearerTokenExtractionError(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
