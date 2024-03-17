@@ -6,6 +6,7 @@ from database import db_session
 import crud
 import schemas
 from pydantic import ValidationError
+from exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 
 sio = socketio.AsyncServer(async_mode="asgi")
@@ -15,14 +16,10 @@ sid_user_data = dict()
 @sio.event
 async def connect(sid, environ):
     auth_header = environ.get("HTTP_AUTHORIZATION")
-    if auth_header is None:
-        return False
-    scheme, token = auth_header.split()
-    if scheme != "Bearer":
-        raise ConnectionRefusedError("Unsupported auth type")
     try:
-        user_id, session_id = auth_utils.extract_access_token_data(token)
-    except auth_utils.AccessTokenValidationError as e:
+        user_id, session_id = auth_utils.extract_access_token_data(
+                              auth_utils.extract_token_from_raw_header(auth_header))
+    except (AccessTokenValidationError, BearerTokenExtractionError) as e:
         raise ConnectionRefusedError(str(e))
 
     with db_session() as db:
