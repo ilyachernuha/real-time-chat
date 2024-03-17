@@ -167,7 +167,7 @@ async def token_refresh(body: schemas.TokenRefresh, db: Session = Depends(get_db
     return {"access_token": access_token, "new_refresh_token": new_refresh_token}
 
 
-@app.put("/change_name", response_model=schemas.UpdateName, tags=["auth"])
+@app.put("/change_name", response_model=schemas.NameUpdate, tags=["auth"])
 async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: Session = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
