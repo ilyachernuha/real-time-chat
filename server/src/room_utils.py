@@ -1,5 +1,5 @@
 from fastapi import HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from exceptions import FieldSubmitError
 import uuid
 import crud
@@ -69,8 +69,8 @@ def get_language_list_from_codes(language_codes: set[str]):
     return [get_language_from_code(code) for code in language_codes]
 
 
-def get_or_create_tags_from_string_set(db: Session, tag_str_set: set[str]):
-    return [crud.get_or_create_tag(db, tag_str) for tag_str in tag_str_set]
+async def get_or_create_tags_from_string_set(db: AsyncSession, tag_str_set: set[str]):
+    return [await crud.get_or_create_tag(db, tag_str) for tag_str in tag_str_set]
 
 
 def validate_room_update_data(update: RoomUpdate):
@@ -88,28 +88,29 @@ def validate_room_update_data(update: RoomUpdate):
         validate_tag_names(update.tags_to_remove)
 
 
-def patch_room(db: Session, room: db_models.Room, update: RoomUpdate):
+async def patch_room(db: AsyncSession, room: db_models.Room, update: RoomUpdate):
     if update.title is not None:
-        crud.update_room_title(db, room.room_id, update.title)
+        await crud.update_room_title(db, room.room_id, update.title)
     if update.description is not None:
         description = update.description if update.description != "" else None
-        crud.update_room_description(db, room.room_id, description)
+        await crud.update_room_description(db, room.room_id, description)
     if update.theme is not None:
-        crud.update_room_theme(db, room.room_id, get_theme_from_string(update.theme))
+        await crud.update_room_theme(db, room.room_id, get_theme_from_string(update.theme))
     if update.languages is not None:
-        crud.update_room_languages(db, room.room_id, get_language_list_from_codes(update.languages))
+        await crud.update_room_languages(db, room.room_id, get_language_list_from_codes(update.languages))
     if update.tags_to_add is not None:
-        crud.add_tags_to_room(db, room.room_id, get_or_create_tags_from_string_set(db, update.tags_to_add))
+        tags = await get_or_create_tags_from_string_set(db, update.tags_to_add)
+        await crud.add_tags_to_room(db, room.room_id, tags)
     if update.tags_to_remove is not None:
-        crud.remove_tags_from_room(db, room.room_id, list(update.tags_to_remove))
+        await crud.remove_tags_from_room(db, room.room_id, list(update.tags_to_remove))
 
 
 def convert_room_languages_to_str_list(languages: list[RoomLanguage]):
     return [language.value for language in languages]
 
 
-def convert_room_tags_to_str_list(tags: list[db_models.Tag]):
-    return [tag.tag.tag for tag in tags]
+async def convert_room_tags_to_str_list(tags: list[db_models.Tag]):
+    return [(await tag.awaitable_attrs.tag).tag for tag in tags]
 
 
 def check_if_user_is_owner(user_id: uuid.UUID, room: db_models.Room):
@@ -117,43 +118,44 @@ def check_if_user_is_owner(user_id: uuid.UUID, room: db_models.Room):
         raise HTTPException(status_code=403, detail="Only owner allowed to perform this action")
 
 
-def check_if_user_is_admin(db: Session, user_id: uuid.UUID, room: db_models.Room):
-    user_room_association = crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user_id)
+async def check_if_user_is_admin(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
+    user_room_association = await crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user_id)
     if user_room_association is None or not user_room_association.is_admin:
         raise HTTPException(status_code=403, detail="Only admins can perform this action")
 
 
-def check_if_user_can_join_room(db: Session, user_id: uuid.UUID, room: db_models.Room):
-    if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
+async def check_if_user_can_join_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
+    if await crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
         raise HTTPException(status_code=409, detail="You already joined this room")
     # implement closed room logic
     # implement user banned logic
 
 
-def check_if_user_can_leave_room(db: Session, user_id: uuid.UUID, room: db_models.Room):
+async def check_if_user_can_leave_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
     if room.owner_id == user_id:
         raise HTTPException(status_code=403, detail="Owner cannot leave the room")
-    if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) is None:
+    if await crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) is None:
         raise HTTPException(status_code=409, detail="You are not a member of this room")
 
 
-def check_if_user_can_add_users_to_room(db: Session, user_id: uuid.UUID, room: db_models.Room, add_admins: bool):
+async def check_if_user_can_add_users_to_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room,
+                                              add_admins: bool):
     if add_admins:
         check_if_user_is_owner(user_id, room)
     else:
-        check_if_user_is_admin(db, user_id, room)
+        await check_if_user_is_admin(db, user_id, room)
 
 
-def get_and_validate_list_of_users_to_add(db: Session, room: db_models.Room, add_list: list[UserToAdd]):
+async def get_and_validate_list_of_users_to_add(db: AsyncSession, room: db_models.Room, add_list: list[UserToAdd]):
     add_data = []
     for user_data in add_list:
         user_id = user_data.user_id
-        user = crud.get_user_by_id(db, user_id)
+        user = await crud.get_user_by_id(db, user_id)
         if user is None:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
         if user_data.make_admin and user.is_guest:
             raise HTTPException(status_code=403, detail="Guest users cannot be admins")
-        if crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
+        if await crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
             raise HTTPException(status_code=409, detail=f"User {user_id} already in room")
         add_data.append((user, user_data.make_admin))
     return add_data

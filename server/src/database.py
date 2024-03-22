@@ -1,40 +1,34 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.exc import OperationalError
 import os
 from dotenv import load_dotenv
-from contextlib import contextmanager
+from contextlib import asynccontextmanager
 import db_models
 
 
 load_dotenv()
 
-SQLALCHEMY_DATABASE_URL = os.getenv("POSTGRESQL_URL")
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+SQLALCHEMY_DATABASE_URI = os.getenv("POSTGRESQL_URI")
+engine = create_async_engine(SQLALCHEMY_DATABASE_URI)
+AsyncSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
 
-def init_db():
+async def init_db():
     try:
-        db_models.Base.metadata.create_all(bind=engine)
+        async with engine.begin() as conn:
+            await conn.run_sync(db_models.Base.metadata.create_all)
     except OperationalError:
         print("Error: Could not connect to the database")
 
 
 # to be used by FastAPI Depends()
-def get_db():
-    db = SessionLocal()
-    try:
+async def get_db():
+    async with AsyncSessionLocal() as db:
         yield db
-    finally:
-        db.close()
 
 
-# to be used in a with statement outside FastAPI
-@contextmanager
-def db_session():
-    db = SessionLocal()
-    try:
+# to be used outside FastAPI
+@asynccontextmanager
+async def db_session():
+    async with AsyncSessionLocal() as db:
         yield db
-    finally:
-        db.close()

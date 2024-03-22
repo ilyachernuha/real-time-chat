@@ -21,8 +21,8 @@ async def connect(sid, environ):
     except (AccessTokenValidationError, BearerTokenExtractionError) as e:
         raise ConnectionRefusedError(str(e))
 
-    with db_session() as db:
-        session = crud.get_session_by_id(db, session_id)
+    async with db_session() as db:
+        session = await crud.get_session_by_id(db, session_id)
         if session is None:
             raise ConnectionRefusedError("Session not found")
 
@@ -36,11 +36,11 @@ async def disconnect(sid):
 
 @sio.event
 async def message(sid, data):
-    with db_session() as db:
+    async with db_session() as db:
         try:
             validated_data = schemas.Message(**data)
             user_id = (await sio.get_session(sid))["user_id"]
-            name = crud.get_user_by_id(db, user_id).name
+            name = (await crud.get_user_by_id(db, user_id)).name
             await sio.emit("message", {
                 "user": {
                     "id": user_id,
@@ -56,11 +56,11 @@ async def message(sid, data):
 
 @sio.event
 async def start_typing(sid, data):
-    with db_session() as db:
+    async with db_session() as db:
         try:
             room = schemas.Typing(**data).room
             user_id = (await sio.get_session(sid))["user_id"]
-            name = crud.get_user_by_id(db, user_id).name
+            name = (await crud.get_user_by_id(db, user_id)).name
             await sio.emit("start_typing", {
                 "user": {
                     "id": user_id,
@@ -74,11 +74,11 @@ async def start_typing(sid, data):
 
 @sio.event
 async def stop_typing(sid, data):
-    with db_session() as db:
+    async with db_session() as db:
         try:
             room = schemas.Typing(**data).room
             user_id = (await sio.get_session(sid))["user_id"]
-            name = crud.get_user_by_id(db, user_id).name
+            name = (await crud.get_user_by_id(db, user_id)).name
             await sio.emit("stop_typing", {
                 "user": {
                     "id": user_id,
