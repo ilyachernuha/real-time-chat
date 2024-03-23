@@ -1,7 +1,7 @@
 from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, Integer
 from sqlalchemy.dialects.postgresql import UUID, ARRAY
-from sqlalchemy.orm import relationship, validates
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase, relationship, validates
+from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.types import Enum as SQLAlchemyEnum
 from enum import Enum
 from datetime import datetime, timezone
@@ -10,7 +10,8 @@ from room_languages import RoomLanguage
 from room_themes import RoomTheme
 
 
-Base = declarative_base()
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
 
 
 class User(Base):

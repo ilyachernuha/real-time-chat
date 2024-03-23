@@ -1,8 +1,9 @@
 from fastapi.security import HTTPBasicCredentials
 from fastapi import HTTPException
+from starlette.concurrency import run_in_threadpool
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel, EmailStr, ValidationError
 import jwt
 import secrets
@@ -60,8 +61,8 @@ def hash_refresh_token(token: str):
     return hashlib.sha512(token.encode()).hexdigest()
 
 
-def get_and_validate_session_from_refresh_token(db: Session, token: str):
-    session = crud.get_session_by_refresh_token_hash(db, hash_refresh_token(token))
+async def get_and_validate_session_from_refresh_token(db: AsyncSession, token: str):
+    session = await crud.get_session_by_refresh_token_hash(db, hash_refresh_token(token))
     if session is None:
         raise HTTPException(status_code=401, detail="Invalid refresh token")
     return session
@@ -106,9 +107,13 @@ def validate_password(password: str):
                                field="password")
 
 
-def verify_password(hashed_password, password):
+async def hash_password(password: str):
+    return await run_in_threadpool(lambda: ph.hash(password))
+
+
+async def verify_password(hashed_password, password):
     try:
-        if ph.verify(hashed_password, password):
+        if await run_in_threadpool(lambda: ph.verify(hashed_password, password)):
             return True
         else:
             raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -127,35 +132,36 @@ def is_email(string_to_check: str):
         return False
 
 
-def get_user_by_basic_auth(db: Session, credentials: HTTPBasicCredentials):
+async def get_user_by_basic_auth(db: AsyncSession, credentials: HTTPBasicCredentials):
     username = credentials.username
     password = credentials.password
 
     if is_email(username):
-        user = crud.get_user_by_email(db, username)
+        user = await crud.get_user_by_email(db, username)
     else:
-        user = crud.get_user_by_username(db, username)
+        user = await crud.get_user_by_username(db, username)
 
     if user is None:
         raise HTTPException(status_code=400, detail="Account with this login does not exist")
 
-    verify_password(user.account_data.hashed_password, password)
+    await verify_password((await user.awaitable_attrs.account_data).hashed_password, password)
     return user
 
 
-def get_user_by_access_token(db: Session, token: str):
+async def get_user_by_access_token(db: AsyncSession, token: str):
     user_id = extract_user_id_from_access_token(token)
-    return crud.get_user_by_id(db, user_id)
+    return await crud.get_user_by_id(db, user_id)
 
 
-def check_if_user_is_guest(db: Session, user_id: uuid.UUID):
-    user = crud.get_user_by_id(db, user_id)
+async def check_if_user_is_guest(db: AsyncSession, user_id: uuid.UUID):
+    user = await crud.get_user_by_id(db, user_id)
     if not user.is_guest:
         raise HTTPException(status_code=409, detail="This account is not guest")
 
 
-def check_if_username_is_available(db: Session, username: str):
-    if crud.get_user_by_username(db, username):
+async def check_if_username_is_available(db: AsyncSession, username: str):
+    user = await crud.get_user_by_username(db, username)
+    if user is not None:
         raise FieldSubmitError(status_code=400, detail="This username is taken", field="username")
 
 
@@ -165,10 +171,12 @@ def check_if_application_exists(application: db_models.RegisterApplication | db_
         raise HTTPException(status_code=404, detail="Application not found")
 
 
-def check_if_email_is_available(db: Session, email: str):
-    if crud.get_user_by_email(db, email):
+async def check_if_email_is_available(db: AsyncSession, email: str):
+    user = await crud.get_user_by_email(db, email)
+    if user is not None:
         raise FieldSubmitError(status_code=400, detail="Account with this email already exists", field="email")
-    if crud.get_pending_rollback_change_email_application_by_email(db, email):
+    application = await crud.get_pending_rollback_change_email_application_by_email(db, email)
+    if application is not None:
         raise FieldSubmitError(status_code=400, detail="This email is temporarily reserved", field="email")
 
 
