@@ -1,5 +1,6 @@
 from fastapi.security import HTTPBasicCredentials
 from fastapi import HTTPException
+from starlette.concurrency import run_in_threadpool
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -106,9 +107,13 @@ def validate_password(password: str):
                                field="password")
 
 
-def verify_password(hashed_password, password):
+async def hash_password(password: str):
+    return await run_in_threadpool(lambda: ph.hash(password))
+
+
+async def verify_password(hashed_password, password):
     try:
-        if ph.verify(hashed_password, password):
+        if await run_in_threadpool(lambda: ph.verify(hashed_password, password)):
             return True
         else:
             raise HTTPException(status_code=400, detail="Incorrect username or password")
@@ -139,7 +144,7 @@ async def get_user_by_basic_auth(db: AsyncSession, credentials: HTTPBasicCredent
     if user is None:
         raise HTTPException(status_code=400, detail="Account with this login does not exist")
 
-    verify_password((await user.awaitable_attrs.account_data).hashed_password, password)
+    await verify_password((await user.awaitable_attrs.account_data).hashed_password, password)
     return user
 
 

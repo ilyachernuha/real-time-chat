@@ -80,7 +80,7 @@ async def ping():
 async def register(body: schemas.Registration, db: AsyncSession = Depends(get_db)):
     auth_utils.validate_username(body.username)
     auth_utils.validate_password(body.password)
-    hashed_password = auth_utils.ph.hash(body.password)
+    hashed_password = await auth_utils.hash_password(body.password)
 
     await auth_utils.check_if_username_is_available(db, body.username)
     await auth_utils.check_if_email_is_available(db, body.email)
@@ -232,7 +232,7 @@ async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCr
                           db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_basic_auth(db, credentials)
     auth_utils.validate_password(body.new_password)
-    new_password_hash = auth_utils.ph.hash(body.new_password)
+    new_password_hash = await auth_utils.hash_password(body.new_password)
     await crud.update_password(db, user.user_id, new_password_hash)
     await crud.delete_sessions_by_user_id_except_one(db, user.user_id, body.session_id)
     return {"status": "success"}
@@ -266,7 +266,7 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: AsyncSess
     auth_utils.check_reset_password_application_status(application.status)
 
     auth_utils.validate_password(body.new_password)
-    new_password_hash = auth_utils.ph.hash(body.new_password)
+    new_password_hash = await auth_utils.hash_password(body.new_password)
     await crud.update_password(db, application.user_id, new_password_hash)
     await crud.make_reset_password_application_used(db, application.application_id)
     await crud.delete_sessions_by_user_id(db, application.user_id)
@@ -282,7 +282,7 @@ async def upgrade_account(body: schemas.UpgradeAccount,
 
     auth_utils.validate_username(body.username)
     auth_utils.validate_password(body.password)
-    hashed_password = auth_utils.ph.hash(body.password)
+    hashed_password = await auth_utils.hash_password(body.password)
 
     await auth_utils.check_if_username_is_available(db, body.username)
     await auth_utils.check_if_email_is_available(db, body.email)
