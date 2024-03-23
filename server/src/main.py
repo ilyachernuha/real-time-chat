@@ -256,7 +256,7 @@ async def reset_password_page(application_id: uuid.UUID, db: AsyncSession = Depe
     application = await crud.get_reset_password_application(db, application_id)
     auth_utils.check_if_application_exists(application)
     auth_utils.check_reset_password_application_status(application.status)
-    return HTMLResponse(html_generator.generate_reset_password_page(str(application_id)))
+    return HTMLResponse(await html_generator.generate_reset_password_page(str(application_id)))
 
 
 @app.post("/finish_reset_password", response_model=schemas.GenericConfirmation, tags=["auth"])
