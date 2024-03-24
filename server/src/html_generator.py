@@ -1,5 +1,3 @@
-import time
-
 from jinja2 import Environment, FileSystemLoader
 import os
 from dotenv import load_dotenv
