@@ -1,3 +1,5 @@
+import time
+
 from jinja2 import Environment, FileSystemLoader
 import os
 from dotenv import load_dotenv
@@ -7,6 +9,11 @@ load_dotenv()
 
 template_env = Environment(loader=FileSystemLoader("html_templates"), enable_async=True)
 base_url = os.getenv("BASE_URL")
+
+
+def preload_templates():
+    for template in template_env.list_templates():
+        template_env.get_template(template)
 
 
 async def generate_register_confirmation_email(code: str, device_info: str):
