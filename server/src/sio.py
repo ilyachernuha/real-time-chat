@@ -41,9 +41,10 @@ async def message(sid, data):
             validated_data = schemas.Message(**data)
             user_id = (await sio.get_session(sid))["user_id"]
             name = (await crud.get_user_by_id(db, user_id)).name
+            user_id_str = str(user_id)
             await sio.emit("message", {
                 "user": {
-                    "id": user_id,
+                    "id": user_id_str,
                     "name": name
                 },
                 "text": validated_data.text,
@@ -61,9 +62,10 @@ async def start_typing(sid, data):
             room = schemas.Typing(**data).room
             user_id = (await sio.get_session(sid))["user_id"]
             name = (await crud.get_user_by_id(db, user_id)).name
+            user_id_str = str(user_id)
             await sio.emit("start_typing", {
                 "user": {
-                    "id": user_id,
+                    "id": user_id_str,
                     "name": name
                 },
                 "room": room
@@ -79,9 +81,10 @@ async def stop_typing(sid, data):
             room = schemas.Typing(**data).room
             user_id = (await sio.get_session(sid))["user_id"]
             name = (await crud.get_user_by_id(db, user_id)).name
+            user_id_str = str(user_id)
             await sio.emit("stop_typing", {
                 "user": {
-                    "id": user_id,
+                    "id": user_id_str,
                     "name": name
                 },
                 "room": room
