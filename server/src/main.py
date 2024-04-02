@@ -36,6 +36,7 @@ app.add_middleware(
 @app.on_event("startup")
 async def startup():
     await init_db()
+    html_generator.preload_templates()
     scheduler.start()
 
 

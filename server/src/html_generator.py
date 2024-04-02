@@ -9,6 +9,11 @@ template_env = Environment(loader=FileSystemLoader("html_templates"), enable_asy
 base_url = os.getenv("BASE_URL")
 
 
+def preload_templates():
+    for template in template_env.list_templates():
+        template_env.get_template(template)
+
+
 async def generate_register_confirmation_email(code: str, device_info: str):
     return await template_env.get_template("register_confirmation_email.html").render_async(code=code,
                                                                                             device=device_info)
