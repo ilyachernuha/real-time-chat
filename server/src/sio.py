@@ -38,7 +38,7 @@ async def disconnect(sid):
 async def message(sid, data):
     async with db_session() as db:
         if not isinstance(data, dict):
-            return False
+            return "Error", {"detail": "Data must be in JSON"}
         try:
             validated_data = schemas.Message(**data)
             user_id = (await sio.get_session(sid))["user_id"]
@@ -54,14 +54,14 @@ async def message(sid, data):
                 "timestamp": int(time.time() * 1000)
             })
         except ValidationError:
-            pass
+            return "Error", {"detail": "Validation failed"}
 
 
 @sio.event
 async def start_typing(sid, data):
     async with db_session() as db:
         if not isinstance(data, dict):
-            return False
+            return "Error", {"detail": "Data must be in JSON"}
         try:
             room = schemas.Typing(**data).room
             user_id = (await sio.get_session(sid))["user_id"]
@@ -75,14 +75,14 @@ async def start_typing(sid, data):
                 "room": room
             })
         except ValidationError:
-            pass
+            return "Error", {"detail": "Validation failed"}
 
 
 @sio.event
 async def stop_typing(sid, data):
     async with db_session() as db:
         if not isinstance(data, dict):
-            return False
+            return "Error", {"detail": "Data must be in JSON"}
         try:
             room = schemas.Typing(**data).room
             user_id = (await sio.get_session(sid))["user_id"]
@@ -96,4 +96,4 @@ async def stop_typing(sid, data):
                 "room": room
             })
         except ValidationError:
-            pass
+            return "Error", {"detail": "Validation failed"}
