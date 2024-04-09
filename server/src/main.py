@@ -364,6 +364,10 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     room = await crud.create_room(db=db, owner=user, title=body.title, description=body.description, theme=theme,
                                   languages=languages, tags=tags)
     await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=True)
+    if body.users_to_add is not None:
+        add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users_to_add)
+        for user, make_admin in add_data:
+            await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
     return {"status": "success", "room_id": room.room_id}
 
 
