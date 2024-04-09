@@ -83,12 +83,18 @@ class CloseSession(BaseModel):
     # Access token must be included in HTTP header
 
 
+class UserToAdd(BaseModel):
+    user_id: UUID4
+    make_admin: bool | None = None
+
+
 class RoomCreation(BaseModel):
     title: str
     description: str | None = None
     theme: str
     languages: set[str]
     tags: set[str]
+    users_to_add: list[UserToAdd] | None = None
     # Access token must be included in HTTP header
 
 
@@ -108,11 +114,6 @@ class JoinRoom(BaseModel):
 
 class LeaveRoom(BaseModel):
     room_id: UUID4
-
-
-class UserToAdd(BaseModel):
-    user_id: UUID4
-    make_admin: bool | None = None
 
 
 class AddUsers(BaseModel):
