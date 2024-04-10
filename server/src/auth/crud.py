@@ -3,7 +3,17 @@ from sqlalchemy import select, update, delete
 import uuid
 from datetime import datetime, timezone, timedelta
 from .. import db_models
-from ..users.crud import *
+from ..users.crud import (
+    create_user,
+    create_guest_user,
+    get_user_by_id,
+    get_user_by_username,
+    get_user_by_email,
+    update_username,
+    update_email,
+    update_password,
+    upgrade_user_account
+)
 
 
 # REGISTER APPLICATIONS
