@@ -252,7 +252,7 @@ Client send `POST` request to `"/auth/reset_password"`  with the following JSON 
 
 Server checks if an account with specified email exists, then creates a reset password application. Reset password applications have unique id and contain user id, timestamp and status that can be `pending`, `used` or `expired`. Reset password applications expire automatically in 15 minutes. Single user can have multiple reset password application but each application can be used but one application can be used only once.
 
-Server sends an email to the specified address that contains reset password link that looks like this: `base_url/reset_password_page/{application_id}`.
+Server sends an email to the specified address that contains reset password link that looks like this: `base_url/auth/reset_password_page/{application_id}`.
 
 Response to client's initial request is generic and doesn't contains any important data:
 
@@ -408,7 +408,7 @@ Each change email application has rollback status which is different from status
 - `completed` (assigned if email is successfully rolled back)
 - `expired` (assigned after 72 hours since creation if rollback status is pending)
 
-When email is changed the server will send an email to the previous address, notifying user about the change and providing a rollback link. Rollback link looks like this: `base_url/rollback_email_change/{application_id}`.
+When email is changed the server will send an email to the previous address, notifying user about the change and providing a rollback link. Rollback link looks like this: `base_url/auth/rollback_email_change/{application_id}`.
 
 When user opens the link, server will revert email change, set change email applications status to `rolled_back` and rollback status to `completed`.
 
