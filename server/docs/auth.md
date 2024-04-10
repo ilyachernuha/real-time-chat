@@ -20,7 +20,7 @@ Registered users can have multiple sessions associated with their accounts while
 
 Whisper uses a combination of stateless access token and stateful refresh token. Access token is a JWT with expiration time of 15 minutes that contains `user_id` and `session_id`. Refresh token is generated randomly be the server and stored as hash. Each time a new access token is generated, refresh token is rotated.
 
-To update access token client sends `POST` request to `"/token_refresh"` with JSON body that contains:
+To update access token client sends `POST` request to `"/auth/token_refresh"` with JSON body that contains:
 
 ```
 {
@@ -44,7 +44,7 @@ Previously generated access token will remain valid until it expires even if a n
 The process of creating account involves a few steps:
 ## 1. Initial client request
 
-Client sends `POST` request to `"/create_account"` with the following JSON body structure:
+Client sends `POST` request to `"/auth/create_account"` with the following JSON body structure:
 
 ```
 {
@@ -64,7 +64,7 @@ Server checks if username and email are available and creates a register applica
 Status can have the following values:
 - `pending` (assigned at creation)
 - `confirmed` (assigned when user successfully confirms email)
-- `confirmed_elsewhere` (assigned if a another application with the same email was confirmed)
+- `email_confirmed_elsewhere` (assigned if a another application with the same email was confirmed)
 - `failed` (assigned after 3 failed confirmation attempts)
 - `expired` (assigned after 15 minutes since creation if status is pending)
 
@@ -82,7 +82,7 @@ Here's an example of server response:
 
 ## 3. Email confirmation
 
-Client sends a `POST` request to `"/finish_registration"` with the following JSON body structure:
+Client sends a `POST` request to `"/auth/finish_registration"` with the following JSON body structure:
 
 ```
 {
@@ -113,11 +113,11 @@ Here's an example of server response:
 }
 ```
 
-The `name` attribute of created user is same as `username` but it can be changed later (see CHANGING NAME).
+The `name` attribute of created user is same as `username` but it can be changed later.
 
 # LOGGING IN TO EXISTING ACCOUNT
 
-Logging in to existing account requires sending a `POST` request to `"/login"` that includes HTTP Basic Authorization header and optionally a JSON body that contains:
+Logging in to existing account requires sending a `POST` request to `"/auth/login"` that includes HTTP Basic Authorization header and optionally a JSON body that contains:
 
 ```
 {
@@ -143,7 +143,7 @@ Here's an example of server response:
 
 # LOGGING IN AS GUEST
 
-Logging in as guest requires sending a `POST` request to `"/guest_login"` with the following JSON body structure:
+Logging in as guest requires sending a `POST` request to `"/auth/guest_login"` with the following JSON body structure:
 
 ```
 {
@@ -173,7 +173,7 @@ The process of upgrading account is similar to creating new registered account a
 
 ## 1. Initial client request
 
-Client sends `POST` request to `"/upgrade_account"` with access token included in HTTP Bearer Authorization header and the following JSON body structure:
+Client sends `POST` request to `"/auth/upgrade_account"` with access token included in HTTP Bearer Authorization header and the following JSON body structure:
 
 ```
 {
@@ -190,6 +190,7 @@ Server checks if username and email are available and creates an upgrade account
 Status can have the following values:
 - `pending` (assigned at creation)
 - `confirmed` (assigned when user successfully confirms email)
+- `email_confirmed_elsewhere` (assigned if a another application with the same email was confirmed)
 - `failed` (assigned after 3 failed confirmation attempts)
 - `expired` (assigned after 15 minutes since creation if status is pending)
 
@@ -205,7 +206,7 @@ Here's an example of server response:
 
 ## 3. Email confirmation
 
-Client sends a `POST` request to `"/finish_upgrade_account"` with access token included in HTTP Bearer Authorization header and the following JSON body structure:
+Client sends a `POST` request to `"/auth/finish_upgrade_account"` with access token included in HTTP Bearer Authorization header and the following JSON body structure:
 
 ```
 {
@@ -239,7 +240,7 @@ Registered users can reset their password. This process can be broken down into 
 
 ## 1. Initial client request
 
-Client send `POST` request to `"/reset_password"`  with the following JSON body structure:
+Client send `POST` request to `"/auth/reset_password"`  with the following JSON body structure:
 
 ```
 {
@@ -265,7 +266,7 @@ Response to client's initial request is generic and doesn't contains any importa
 
 User opens reset password link provided in the email and gets an HTML page that allows user to submit a new password.
 
-To submit new password client sends `POST` request to `"/finish_reset_password"` with the following JSON body structure:
+To submit new password client sends `POST` request to `"/auth/finish_reset_password"` with the following JSON body structure:
 
 ```
 {
@@ -290,7 +291,7 @@ All sessions associated with the user account will be closed.
 
 ## 5. Logging in
 
-After successful password reset client will have to log in (see LOGGING IN TO EXISTING ACCOUNT). If reset password link was opened within the same client that sent initial `"/reset_password"` request it should be able to log in automatically (depends of front end implementation).
+After successful password reset client will have to log in (see LOGGING IN TO EXISTING ACCOUNT). If reset password link was opened within the same client that sent initial `"/auth/reset_password"` request it should be able to log in automatically (depends of front end implementation).
 
 # CHANGING USER CREDENTIALS
 
@@ -300,7 +301,7 @@ Client has to include HTTP Basic Authorization header with either username + pas
 
 There are 2 separate endpoints for changing username and password:
 
-To update username client sends `PUT` request to `"/change_username"` with HTTP Basic Authorization header and the following JSON body structure:
+To update username client sends `PUT` request to `"/auth/change_username"` with HTTP Basic Authorization header and the following JSON body structure:
 
 ```
 {
@@ -317,7 +318,7 @@ Here's an example of server response:
 }
 ```
 
-To update password client sends `PUT` request to `"/change_password"` with HTTP Basic Authorization header and the following JSON body structure:
+To update password client sends `PUT` request to `"/auth/change_password"` with HTTP Basic Authorization header and the following JSON body structure:
 
 ```
 {
@@ -341,7 +342,7 @@ Changing email is more complex as it requires users to confirm new email. Simila
 
 ## 1. Initial client request
 
-Client sends `POST` request to `"/change_email"` with HTTP Basic Authorization header and the following JSON body structure:
+Client sends `POST` request to `"/auth/change_email"` with HTTP Basic Authorization header and the following JSON body structure:
 
 ```
 {
@@ -356,6 +357,7 @@ Server validates user credentials, checks if new email is available and creates 
 Status can have the following values:
 - `pending` (assigned at creation)
 - `confirmed` (assigned when user successfully confirms new email)
+- `email_confirmed_elsewhere` (assigned if a another application with the same email was confirmed)
 - `failed` (assigned after 3 failed confirmation attempts)
 - `expired` (assigned after 15 minutes since creation if status is pending)
 - `rolled_back` (assigned if user rolled back email)
@@ -376,7 +378,7 @@ Here's an example of server response:
 
 ## 3. Email confirmation
 
-Client sends a `POST` request to `"/finish_change_email"` with the following JSON body structure:
+Client sends a `POST` request to `"/auth/finish_change_email"` with the following JSON body structure:
 
 ```
 {
@@ -416,7 +418,7 @@ When user opens the link, server will revert email change, set change email appl
 
 Changing name is available for both registered users and guests. It requires including access token in HTTP Bearer Authorization header.
 
-To change name client sends `PUT` request to `"/change_name"` with HTTP Bearer Authorization header and the following JSON body structure:
+To change name client sends `PUT` request to `"/auth/change_name"` with HTTP Bearer Authorization header and the following JSON body structure:
 
 ```
 {
@@ -439,7 +441,7 @@ Session management includes 2 main operations: getting all currently active sess
 
 ## 1. Getting active sessions
 
-To get the list of current sessions client sends `GET` request to `"/active_sessions"` that includes HTTP Bearer Authorization header with access token.
+To get the list of current sessions client sends `GET` request to `"/auth/active_sessions"` that includes HTTP Bearer Authorization header with access token.
 
 Here's an example of server response:
 
@@ -469,7 +471,7 @@ Here's an example of server response:
 
 ## 2. Closing Sessions
 
-To close a session client sends POST request to "/close_session" that includes HTTP Bearer Authorization header with access token and the following JSON body structure:
+To close a session client sends POST request to "/auth/close_session" that includes HTTP Bearer Authorization header with access token and the following JSON body structure:
 
 ```
 {
