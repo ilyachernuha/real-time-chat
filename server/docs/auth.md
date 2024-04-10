@@ -471,7 +471,7 @@ Here's an example of server response:
 
 ## 2. Closing Sessions
 
-To close a session client sends POST request to "/auth/close_session" that includes HTTP Bearer Authorization header with access token and the following JSON body structure:
+To close a session client sends `POST` request to `"/auth/close_session"` that includes HTTP Bearer Authorization header with access token and the following JSON body structure:
 
 ```
 {
