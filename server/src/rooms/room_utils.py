@@ -1,13 +1,13 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from exceptions import FieldSubmitError
+from ..exceptions import FieldSubmitError
 import uuid
-import crud
-import db_models
-from room_themes import RoomTheme
-from room_languages import RoomLanguage
 import re
-from schemas import RoomUpdate, UserToAdd
+from . import crud
+from .. import db_models
+from .room_themes import RoomTheme
+from .room_languages import RoomLanguage
+from .schemas import RoomUpdate, UserToAdd
 
 
 def check_if_room_exists(room: db_models.Room):

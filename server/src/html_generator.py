@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-template_env = Environment(loader=FileSystemLoader("html_templates"), enable_async=True)
+template_env = Environment(loader=FileSystemLoader("src/html_templates"), enable_async=True)
 base_url = os.getenv("BASE_URL")
 
 

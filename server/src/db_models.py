@@ -6,8 +6,8 @@ from sqlalchemy.types import Enum as SQLAlchemyEnum
 from enum import Enum
 from datetime import datetime, timezone
 import secrets
-from room_languages import RoomLanguage
-from room_themes import RoomTheme
+from .rooms.room_languages import RoomLanguage
+from .rooms.room_themes import RoomTheme
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -22,7 +22,7 @@ class User(Base):
     name = Column(String, nullable=False)
     account_data = relationship("AccountData", back_populates="user", uselist=False, cascade="all, delete-orphan")
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
-    rooms_owned = relationship("Room", back_populates="owner", cascade="all, delete-orphan")  # cascade ???
+    rooms_owned = relationship("Room", back_populates="owner", cascade="all, delete-orphan")
     rooms = relationship("UserRoomAssociation", back_populates="user", cascade="all, delete-orphan")
 
     @validates("is_guest", "account_data")

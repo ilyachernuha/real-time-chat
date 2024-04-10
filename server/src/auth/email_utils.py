@@ -5,7 +5,7 @@ from jinja2 import Environment, FileSystemLoader
 from fastapi import HTTPException
 import os
 from dotenv import load_dotenv
-import html_generator
+from .. import html_generator
 
 
 load_dotenv()
