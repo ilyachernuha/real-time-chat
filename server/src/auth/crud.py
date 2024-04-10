@@ -23,19 +23,9 @@ async def get_register_application_by_id(db: AsyncSession, application_id: uuid.
     return await db.get(db_models.RegisterApplication, application_id)
 
 
-async def confirm_register_application_and_invalidate_others_with_same_email(db: AsyncSession,
-                                                                             application_id: uuid.UUID):
+async def make_register_application_confirmed(db: AsyncSession, application_id: uuid.UUID):
     application = await get_register_application_by_id(db, application_id)
     application.status = db_models.RegisterApplication.Status.confirmed
-    email: str = application.email
-    stmt = (
-        update(db_models.RegisterApplication).
-        where(db_models.RegisterApplication.email == email).
-        where(db_models.RegisterApplication.status == db_models.RegisterApplication.Status.pending).
-        where(db_models.RegisterApplication.application_id != application_id).
-        values(status=db_models.RegisterApplication.Status.confirmed_elsewhere)
-    )
-    await db.execute(stmt)
     await db.commit()
     return application
 
@@ -47,6 +37,17 @@ async def increase_failed_registration_attempts(db: AsyncSession, application_id
         application.status = db_models.RegisterApplication.Status.failed
     await db.commit()
     return application
+
+
+async def invalidate_register_application_by_email(db: AsyncSession, email: str):
+    stmt = (
+        update(db_models.RegisterApplication).
+        where(db_models.RegisterApplication.email == email).
+        where(db_models.RegisterApplication.status == db_models.RegisterApplication.Status.pending).
+        values(status=db_models.RegisterApplication.Status.email_confirmed_elsewhere)
+    )
+    await db.execute(stmt)
+    await db.commit()
 
 
 async def expire_register_applications(db: AsyncSession, expire_time: timedelta):
@@ -145,6 +146,17 @@ async def make_change_email_application_rolled_back(db: AsyncSession, applicatio
     return application
 
 
+async def invalidate_change_email_application_by_email(db: AsyncSession, email: str):
+    stmt = (
+        update(db_models.ChangeEmailApplication).
+        where(db_models.ChangeEmailApplication.new_email == email).
+        where(db_models.ChangeEmailApplication.status == db_models.ChangeEmailApplication.Status.pending).
+        values(status=db_models.ChangeEmailApplication.Status.email_confirmed_elsewhere)
+    )
+    await db.execute(stmt)
+    await db.commit()
+
+
 async def expire_change_email_applications(db: AsyncSession, expire_time: timedelta):
     stmt = (
         update(db_models.ChangeEmailApplication).
@@ -199,6 +211,17 @@ async def increase_failed_upgrade_account_attempts(db: AsyncSession, application
         application.status = db_models.UpgradeAccountApplication.Status.failed
     await db.commit()
     return application
+
+
+async def invalidate_upgrade_account_application_by_email(db: AsyncSession, email: str):
+    stmt = (
+        update(db_models.UpgradeAccountApplication).
+        where(db_models.UpgradeAccountApplication.email == email).
+        where(db_models.UpgradeAccountApplication.status == db_models.UpgradeAccountApplication.Status.pending).
+        values(status=db_models.UpgradeAccountApplication.Status.email_confirmed_elsewhere)
+    )
+    await db.execute(stmt)
+    await db.commit()
 
 
 async def expire_upgrade_account_applications(db: AsyncSession, expire_time: timedelta):

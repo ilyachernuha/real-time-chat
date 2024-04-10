@@ -55,7 +55,7 @@ class RegisterApplication(Base):
         pending = 1
         confirmed = 2
         failed = 3
-        confirmed_elsewhere = 4
+        email_confirmed_elsewhere = 4
         expired = 5
 
     application_id = Column(UUID, primary_key=True)
@@ -90,8 +90,9 @@ class ChangeEmailApplication(Base):
         pending = 1
         confirmed = 2
         failed = 3
-        expired = 4
-        rolled_back = 5
+        email_confirmed_elsewhere = 4
+        expired = 5
+        rolled_back = 6
 
     class RollbackStatus(Enum):
         unavailable = 1
@@ -118,7 +119,8 @@ class UpgradeAccountApplication(Base):
         pending = 1
         confirmed = 2
         failed = 3
-        expired = 4
+        email_confirmed_elsewhere = 4
+        expired = 5
 
     application_id = Column(UUID, primary_key=True)
     user_id = Column(UUID, nullable=False)

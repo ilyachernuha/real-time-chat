@@ -190,3 +190,9 @@ def check_upgrade_account_application_status(status: db_models.UpgradeAccountApp
         raise HTTPException(status_code=400, detail="Too many failed attempts")
     if status != db_models.UpgradeAccountApplication.Status.pending:
         raise HTTPException(status_code=403, detail="This email is already in use")
+
+
+async def invalidate_all_applications_with_email(db: AsyncSession, email: str):
+    await crud.invalidate_register_application_by_email(db, email)
+    await crud.invalidate_upgrade_account_application_by_email(db, email)
+    await crud.invalidate_change_email_application_by_email(db, email)

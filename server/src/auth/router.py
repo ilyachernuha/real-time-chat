@@ -44,7 +44,8 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: AsyncS
 
     await auth_utils.check_if_username_is_available(db, application.username)
     await auth_utils.check_if_email_is_available(db, application.email)
-    await crud.confirm_register_application_and_invalidate_others_with_same_email(db, application.application_id)
+    await crud.make_register_application_confirmed(db, application.application_id)
+    await auth_utils.invalidate_all_applications_with_email(db, application.email)
     user = await crud.create_user(db=db, username=application.username, hashed_password=application.hashed_password,
                                   name=application.username, email=application.email)
     refresh_token = auth_utils.generate_refresh_token()
@@ -143,6 +144,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: AsyncSe
     await auth_utils.check_if_email_is_available(db, application.new_email)
     user = await crud.update_email(db, application.user_id, application.new_email)
     application = await crud.make_change_email_application_confirmed(db, application.application_id)
+    await auth_utils.invalidate_all_applications_with_email(db, application.new_email)
     await email_utils.send_email_change_rollback(application.old_email,
                                                  str(application.application_id), user.account_data.username)
     return {"status": "Email changed", "new_email": user.account_data.email}
@@ -246,6 +248,7 @@ async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
     await auth_utils.check_if_email_is_available(db, application.email)
     await auth_utils.check_if_user_is_guest(db, user_id)
     await crud.make_upgrade_account_confirmed(db, application.application_id)
+    await auth_utils.invalidate_all_applications_with_email(db, application.email)
     await crud.upgrade_user_account(db=db, user_id=user_id, username=application.username,
                                     hashed_password=application.hashed_password, email=application.email)
     return {"status": "success"}
