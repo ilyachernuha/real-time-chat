@@ -414,27 +414,6 @@ When user opens the link, server will revert email change, set change email appl
 
 **Note:** server reserves old email addresses while rollback is possible (rollback status is `pending`). This is necessary to avoid situations when user tries to rollback email but it is already used by another account (emails must be unique).
 
-# CHANGING NAME
-
-Changing name is available for both registered users and guests. It requires including access token in HTTP Bearer Authorization header.
-
-To change name client sends `PUT` request to `"/auth/change_name"` with HTTP Bearer Authorization header and the following JSON body structure:
-
-```
-{
-    "new_name": "qwerty"
-}
-```
-
-Here's an example of server response:
-
-```
-{
-    "status": "success",
-    "new_name": "qwerty"
-}
-```
-
 # SESSION MANAGEMENT
 
 Session management includes 2 main operations: getting all currently active sessions and closing sessions.
