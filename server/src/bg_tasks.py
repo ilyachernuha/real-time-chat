@@ -1,7 +1,7 @@
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from datetime import timedelta
-from database import db_session
-import crud
+from .database import db_session
+from .auth import crud
 
 
 async def expire_applications_task():

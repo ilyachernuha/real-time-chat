@@ -1,12 +1,12 @@
 import socketio
 from socketio.exceptions import ConnectionRefusedError
 import time
-import auth_utils
-from database import db_session
-import crud
-import schemas
 from pydantic import ValidationError
-from exceptions import AccessTokenValidationError, BearerTokenExtractionError
+from ..database import db_session
+from ..auth import auth_utils
+from . import crud
+from . import schemas
+from ..exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 
 sio = socketio.AsyncServer(async_mode="asgi")

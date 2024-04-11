@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-template_env = Environment(loader=FileSystemLoader("html_templates"), enable_async=True)
+template_env = Environment(loader=FileSystemLoader("src/html_templates"), enable_async=True)
 base_url = os.getenv("BASE_URL")
 
 
@@ -20,12 +20,12 @@ async def generate_register_confirmation_email(code: str, device_info: str):
 
 
 async def generate_reset_password_email(application_id: str):
-    reset_link = base_url + "/reset_password_page/" + application_id
+    reset_link = f"{base_url}/auth/reset_password_page/{application_id}"
     return await template_env.get_template("reset_password_email.html").render_async(reset_link=reset_link)
 
 
 async def generate_reset_password_page(application_id: str):
-    url = base_url + "/finish_reset_password"
+    url = f"{base_url}/auth/finish_reset_password"
     return await template_env.get_template("reset_password_page.html").render_async(url=url,
                                                                                     application_id=application_id)
 
@@ -35,6 +35,6 @@ async def generate_change_email_confirmation(code: str, username: str):
 
 
 async def generate_change_email_rollback(application_id: str, username: str):
-    rollback_link = base_url + "/rollback_email_change/" + application_id
+    rollback_link = f"{base_url}/auth/rollback_email_change/{application_id}"
     return await template_env.get_template("email_rollback.html").render_async(rollback_link=rollback_link,
                                                                                username=username)

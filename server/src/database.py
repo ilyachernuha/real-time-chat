@@ -3,7 +3,7 @@ from sqlalchemy.exc import OperationalError
 import os
 from dotenv import load_dotenv
 from contextlib import asynccontextmanager
-import db_models
+from . import db_models
 
 
 load_dotenv()
