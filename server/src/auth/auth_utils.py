@@ -193,3 +193,15 @@ async def invalidate_all_applications_with_email(db: AsyncSession, email: str):
     await crud.invalidate_register_application_by_email(db, email)
     await crud.invalidate_upgrade_account_application_by_email(db, email)
     await crud.invalidate_change_email_application_by_email(db, email)
+
+
+def generate_successful_login_dict(user_id: uuid.UUID, session_id: uuid.UUID, refresh_token: str):
+    user_id_str = str(user_id)
+    session_id_str = str(session_id)
+    access_token = generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }
