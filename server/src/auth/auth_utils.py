@@ -4,7 +4,7 @@ from starlette.concurrency import run_in_threadpool
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, EmailStr, ValidationError
+import email_validator
 import jwt
 import secrets
 import uuid
@@ -91,13 +91,10 @@ async def verify_password(hashed_password, password):
 
 
 def is_email(string_to_check: str):
-    class Email(BaseModel):
-        email: EmailStr
-
     try:
-        Email(email=string_to_check)
+        email_validator.validate_email(string_to_check, check_deliverability=False)
         return True
-    except ValidationError:
+    except email_validator.EmailNotValidError:
         return False
 
 
