@@ -4,7 +4,7 @@ from starlette.concurrency import run_in_threadpool
 from argon2 import PasswordHasher
 from argon2.exceptions import Argon2Error
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import BaseModel, EmailStr, ValidationError
+import email_validator
 import jwt
 import secrets
 import uuid
@@ -91,13 +91,10 @@ async def verify_password(hashed_password, password):
 
 
 def is_email(string_to_check: str):
-    class Email(BaseModel):
-        email: EmailStr
-
     try:
-        Email(email=string_to_check)
+        email_validator.validate_email(string_to_check, check_deliverability=False)
         return True
-    except ValidationError:
+    except email_validator.EmailNotValidError:
         return False
 
 
@@ -196,3 +193,15 @@ async def invalidate_all_applications_with_email(db: AsyncSession, email: str):
     await crud.invalidate_register_application_by_email(db, email)
     await crud.invalidate_upgrade_account_application_by_email(db, email)
     await crud.invalidate_change_email_application_by_email(db, email)
+
+
+def generate_successful_login_dict(user_id: uuid.UUID, session_id: uuid.UUID, refresh_token: str):
+    user_id_str = str(user_id)
+    session_id_str = str(session_id)
+    access_token = generate_access_token(user_id_str, session_id_str)
+    return {
+        "user_id": user_id_str,
+        "session_id": session_id_str,
+        "refresh_token": refresh_token,
+        "access_token": access_token
+    }

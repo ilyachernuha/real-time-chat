@@ -51,15 +51,8 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: AsyncS
     refresh_token = auth_utils.generate_refresh_token()
     session = await crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
                                         device_info=application.device_info)
-    user_id_str = str(user.user_id)
-    session_id_str = str(session.session_id)
-    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
-    return {
-        "user_id": user_id_str,
-        "session_id": session_id_str,
-        "refresh_token": refresh_token,
-        "access_token": access_token
-    }
+    return auth_utils.generate_successful_login_dict(user_id=user.user_id, session_id=session.session_id,
+                                                     refresh_token=refresh_token)
 
 
 @router.post("/login", response_model=schemas.SuccessfulLogin)
@@ -69,15 +62,8 @@ async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasic
     refresh_token = auth_utils.generate_refresh_token()
     session = await crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
                                         device_info=body.device_info if body else "Unknown")
-    user_id_str = str(user.user_id)
-    session_id_str = str(session.session_id)
-    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
-    return {
-        "user_id": user_id_str,
-        "session_id": session_id_str,
-        "refresh_token": refresh_token,
-        "access_token": access_token
-    }
+    return auth_utils.generate_successful_login_dict(user_id=user.user_id, session_id=session.session_id,
+                                                     refresh_token=refresh_token)
 
 
 @router.post("/guest_login", response_model=schemas.SuccessfulLogin)
@@ -87,15 +73,8 @@ async def guest_login(body: schemas.GuestLogin, db: AsyncSession = Depends(get_d
     refresh_token = auth_utils.generate_refresh_token()
     session = await crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
                                         device_info=body.device_info)
-    user_id_str = str(user.user_id)
-    session_id_str = str(session.session_id)
-    access_token = auth_utils.generate_access_token(user_id_str, session_id_str)
-    return {
-        "user_id": user_id_str,
-        "session_id": session_id_str,
-        "refresh_token": refresh_token,
-        "access_token": access_token
-    }
+    return auth_utils.generate_successful_login_dict(user_id=user.user_id, session_id=session.session_id,
+                                                     refresh_token=refresh_token)
 
 
 @router.post("/token_refresh", response_model=schemas.TokenUpdate)
