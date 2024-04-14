@@ -24,3 +24,16 @@ class UpdateName(BaseModel):
 class NameUpdate(BaseModel):
     status: str
     new_name: str
+
+
+class UserProfile(BaseModel):
+    name: str
+    guest: bool
+    username: str | None
+
+
+class OwnProfile(BaseModel):
+    name: str
+    guest: bool
+    username: str | None
+    email: str | None
