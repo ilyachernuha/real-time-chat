@@ -20,6 +20,7 @@ class User(Base):
     user_id = Column(UUID, primary_key=True)
     is_guest = Column(Boolean, nullable=False)
     name = Column(String, nullable=False)
+    profile_picture_id = Column(UUID, nullable=True, default=None)
     account_data = relationship("AccountData", back_populates="user", uselist=False, cascade="all, delete-orphan")
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     rooms_owned = relationship("Room", back_populates="owner", cascade="all, delete-orphan")

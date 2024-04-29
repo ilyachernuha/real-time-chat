@@ -1,12 +1,17 @@
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.concurrency import run_in_threadpool
+import asyncio
 import uuid
+from io import BytesIO
 from . import crud
 from . import schemas
 from ..database import get_db
 from ..auth import auth_utils
 from . import user_utils
+from .. import image_utils, file_utils
+from ..s3 import S3
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -30,15 +35,6 @@ async def find_users(search: str, credentials: HTTPAuthorizationCredentials = De
     return {"users": users_data}
 
 
-@router.put("/change_name", response_model=schemas.NameUpdate)
-async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
-                      db: AsyncSession = Depends(get_db)):
-    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    user_utils.validate_name(body.new_name)
-    user = await crud.update_user_name(db, user_id, body.new_name)
-    return {"status": "success", "new_name": user.name}
-
-
 @router.get("/profile/{user_id}", response_model=schemas.UserProfile)
 async def get_profile(user_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
@@ -47,7 +43,8 @@ async def get_profile(user_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     return {
         "name": user.name,
         "guest": user.is_guest,
-        "username": (await user.awaitable_attrs.account_data).username if not user.is_guest else None
+        "username": (await user.awaitable_attrs.account_data).username if not user.is_guest else None,
+        "profile_picture_id": user.profile_picture_id
     }
 
 
@@ -59,5 +56,48 @@ async def get_own_profile(credentials: HTTPAuthorizationCredentials = Depends(se
         "name": user.name,
         "guest": user.is_guest,
         "username": (await user.awaitable_attrs.account_data).username if not user.is_guest else None,
-        "email": (await user.awaitable_attrs.account_data).email if not user.is_guest else None
+        "email": (await user.awaitable_attrs.account_data).email if not user.is_guest else None,
+        "profile_picture_id": user.profile_picture_id
     }
+
+
+@router.put("/change_name", response_model=schemas.NameUpdate)
+async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                      db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    user_utils.validate_name(body.new_name)
+    user = await crud.update_user_name(db, user_id, body.new_name)
+    return {"status": "success", "new_name": user.name}
+
+
+@router.put("/set_profile_picture", response_model=schemas.ProfilePictureUpdate)
+async def set_profile_picture(image: BytesIO = Depends(file_utils.verify_profile_or_room_picture_size),
+                              credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                              db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    await run_in_threadpool(lambda: image_utils.validate_image_is_square(image))
+    image_100p = await run_in_threadpool(lambda: image_utils.compress_square_image(original=image, size=100))
+    profile_picture_id = uuid.uuid4()
+    tasks = [
+        asyncio.create_task(S3.upload_file(file=_["file"], filename=_["name"])) for _ in (
+            {"file": image, "name": f"profile-pictures/full-size/{profile_picture_id}.jpeg"},
+            {"file": image_100p, "name": f"profile-pictures/100p/{profile_picture_id}.jpeg"}
+        )
+    ]
+    await asyncio.gather(*tasks)
+    await crud.update_profile_picture_id(db=db, user_id=user_id, new_profile_picture_id=profile_picture_id)
+    return {"status": "success", "profile_picture_id": profile_picture_id}
+
+
+@router.delete("/delete_profile_picture", response_model=schemas.GenericConfirmation)
+async def delete_profile_picture(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                                 db: AsyncSession = Depends(get_db)):
+    user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
+    profile_picture_id = user.profile_picture_id
+    tasks = [asyncio.create_task(S3.delete_file(filename)) for filename in (
+        f"profile-pictures/full-size/{profile_picture_id}",
+        f"profile-pictures/100p/{profile_picture_id}"
+    )]
+    await asyncio.gather(*tasks)
+    await crud.update_profile_picture_id(db=db, user_id=user.user_id, new_profile_picture_id=None)
+    return {"status": "success"}
