@@ -86,10 +86,9 @@ async def delete_room_picture(room_id: uuid.UUID, credentials: HTTPAuthorization
     room_utils.check_if_room_exists(room)
     await room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
     room_picture_id = room.room_picture_id
-    if room_picture_id is not None:
-        await room_utils.delete_room_picture_from_s3(room_picture_id)
-    else:
+    if room_picture_id is None:
         raise HTTPException(status_code=409, detail="This room doesn't have a picture")
+    await room_utils.delete_room_picture_from_s3(room_picture_id)
     await crud.update_room_picture_id(db=db, room_id=room_id, new_room_picture_id=None)
     return {"status": "success"}
 

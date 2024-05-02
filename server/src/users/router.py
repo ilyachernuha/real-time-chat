@@ -97,9 +97,8 @@ async def delete_profile_picture(credentials: HTTPAuthorizationCredentials = Dep
                                  db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
     profile_picture_id = user.profile_picture_id
-    if profile_picture_id is not None:
-        await user_utils.delete_profile_picture_from_s3(profile_picture_id)
-    else:
+    if profile_picture_id is None:
         raise HTTPException(status_code=409, detail="You don't have profile picture")
+    await user_utils.delete_profile_picture_from_s3(profile_picture_id)
     await crud.update_profile_picture_id(db=db, user_id=user.user_id, new_profile_picture_id=None)
     return {"status": "success"}
