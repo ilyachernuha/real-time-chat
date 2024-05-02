@@ -52,12 +52,18 @@ class RoomCreated(BaseModel):
     room_id: UUID4
 
 
+class RoomPictureUpdate(BaseModel):
+    status: str
+    room_picture_id: UUID4
+
+
 class RoomInfo(BaseModel):
     title: str
     description: str | None
     theme: str
     languages: list[str]
     tags: list[str]
+    room_picture_id: UUID4 | None
 
 
 class RoomBasicInfo(BaseModel):
