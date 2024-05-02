@@ -1,5 +1,8 @@
 import re
+import uuid
+import asyncio
 from ..exceptions import FieldSubmitError
+from ..s3 import S3
 
 
 def validate_name(name: str):
@@ -30,3 +33,11 @@ def validate_password(password: str):
     if not re.match(r"^[!-~]+$", password):
         raise FieldSubmitError(status_code=400, detail="Password can have only ASCII symbols excluding whitespace",
                                field="password")
+
+
+async def delete_profile_picture_from_s3(profile_picture_id: uuid.UUID):
+    tasks = [asyncio.create_task(S3.delete_file(filename)) for filename in (
+        f"profile-pictures/full-size/{profile_picture_id}",
+        f"profile-pictures/100p/{profile_picture_id}"
+    )]
+    await asyncio.gather(*tasks)
