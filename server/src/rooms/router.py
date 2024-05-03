@@ -78,7 +78,7 @@ async def set_room_picture(room_id: uuid.UUID,
     return {"status": "success", "room_picture_id": new_room_picture_id}
 
 
-@router.delete("delete_room_picture/{room_id}", response_model=schemas.GenericConfirmation)
+@router.delete("/delete_room_picture/{room_id}", response_model=schemas.GenericConfirmation)
 async def delete_room_picture(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                               db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
