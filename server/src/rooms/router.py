@@ -193,7 +193,8 @@ async def my_rooms(credentials: HTTPAuthorizationCredentials = Depends(security_
     rooms = [
         {
             "room_id": room.room_id,
-            "title": (await room.awaitable_attrs.room).title
+            "title": (await room.awaitable_attrs.room).title,
+            "room_picture_id": (await room.awaitable_attrs.room).room_picture_id
         }
         for room in await user.awaitable_attrs.rooms
     ]
