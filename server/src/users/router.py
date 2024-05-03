@@ -28,7 +28,8 @@ async def find_users(search: str, credentials: HTTPAuthorizationCredentials = De
         {
             "user_id": user.user_id,
             "username": (await user.awaitable_attrs.account_data).username,
-            "name": user.name
+            "name": user.name,
+            "profile_picture_id": user.profile_picture_id
         }
         for user in users
     ]

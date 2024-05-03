@@ -8,6 +8,7 @@ class UserData(BaseModel):
     user_id: UUID4
     username: str
     name: str
+    profile_picture_id: UUID4 | None
 
 
 class UserList(BaseModel):

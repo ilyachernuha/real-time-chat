@@ -175,7 +175,14 @@ async def find_rooms(search: str | None = None, themes: list[str] = Query(defaul
                                     languages=(room_utils.get_language_list_from_codes(set(languages))
                                                if languages else None),
                                     tags=tags)
-    rooms_data = [{"room_id": room.room_id, "title": room.title} for room in rooms]
+    rooms_data = [
+        {
+            "room_id": room.room_id,
+            "title": room.title,
+            "room_picture_id": room.room_picture_id
+        }
+        for room in rooms
+    ]
     return {"rooms": rooms_data}
 
 

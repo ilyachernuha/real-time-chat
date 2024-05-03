@@ -69,6 +69,7 @@ class RoomInfo(BaseModel):
 class RoomBasicInfo(BaseModel):
     room_id: UUID4
     title: str
+    room_picture_id: UUID4 | None
 
 
 class RoomList(BaseModel):
