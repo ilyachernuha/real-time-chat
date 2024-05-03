@@ -85,6 +85,13 @@ async def update_password(db: AsyncSession, user_id: uuid.UUID, new_password_has
     return user
 
 
+async def update_profile_picture_id(db: AsyncSession, user_id: uuid.UUID, new_profile_picture_id: uuid.UUID | None):
+    user = await get_user_by_id(db, user_id)
+    user.profile_picture_id = new_profile_picture_id
+    await db.commit()
+    return user
+
+
 async def upgrade_user_account(db: AsyncSession, user_id: uuid.UUID, username: str, hashed_password: str, email: str):
     user = await get_user_by_id(db, user_id)
     user.is_guest = False

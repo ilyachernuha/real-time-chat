@@ -12,6 +12,7 @@ from .exceptions import AccessTokenValidationError, FieldSubmitError
 from .users.router import router as users_router
 from .auth.router import router as auth_router
 from .rooms.router import router as rooms_router
+from .s3 import S3
 
 
 app = FastAPI()
@@ -31,11 +32,13 @@ async def startup():
     await init_db()
     html_generator.preload_templates()
     scheduler.start()
+    await S3.create_client()
 
 
 @app.on_event("shutdown")
 async def shutdown():
     scheduler.shutdown()
+    await S3.close_client()
 
 
 @app.exception_handler(FieldSubmitError)

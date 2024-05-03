@@ -3,11 +3,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from ..exceptions import FieldSubmitError
 import uuid
 import re
+import asyncio
 from . import crud
 from .. import db_models
 from .room_themes import RoomTheme
 from .room_languages import RoomLanguage
 from .schemas import RoomUpdate, UserToAdd
+from ..s3 import S3
 
 
 def check_if_room_exists(room: db_models.Room):
@@ -159,3 +161,11 @@ async def get_and_validate_list_of_users_to_add(db: AsyncSession, room: db_model
             raise HTTPException(status_code=409, detail=f"User {user_id} already in room")
         add_data.append((user, user_data.make_admin))
     return add_data
+
+
+async def delete_room_picture_from_s3(room_picture_id: uuid.UUID):
+    tasks = [asyncio.create_task(S3.delete_file(filename)) for filename in (
+        f"room-pictures/full-size/{room_picture_id}.jpeg",
+        f"room-pictures/100p/{room_picture_id}.jpeg"
+    )]
+    await asyncio.gather(*tasks)
