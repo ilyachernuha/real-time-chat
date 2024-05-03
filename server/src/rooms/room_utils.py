@@ -165,7 +165,7 @@ async def get_and_validate_list_of_users_to_add(db: AsyncSession, room: db_model
 
 async def delete_room_picture_from_s3(room_picture_id: uuid.UUID):
     tasks = [asyncio.create_task(S3.delete_file(filename)) for filename in (
-        f"room-pictures/full-size/{room_picture_id}",
-        f"room-pictures/100p/{room_picture_id}"
+        f"room-pictures/full-size/{room_picture_id}.jpeg",
+        f"room-pictures/100p/{room_picture_id}.jpeg"
     )]
     await asyncio.gather(*tasks)

@@ -37,7 +37,7 @@ def validate_password(password: str):
 
 async def delete_profile_picture_from_s3(profile_picture_id: uuid.UUID):
     tasks = [asyncio.create_task(S3.delete_file(filename)) for filename in (
-        f"profile-pictures/full-size/{profile_picture_id}",
-        f"profile-pictures/100p/{profile_picture_id}"
+        f"profile-pictures/full-size/{profile_picture_id}.jpeg",
+        f"profile-pictures/100p/{profile_picture_id}.jpeg"
     )]
     await asyncio.gather(*tasks)
