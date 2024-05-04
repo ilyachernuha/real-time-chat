@@ -116,6 +116,8 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     room = await crud.get_room_by_id(db, room_id)
     room_utils.check_if_room_exists(room)
     room_utils.check_if_user_is_owner(user_id, room)
+    if room.room_picture_id is not None:
+        await room_utils.delete_room_picture_from_s3(room.room_picture_id)
     await crud.delete_room(db, room_id)
     return {"status": "success"}
 
