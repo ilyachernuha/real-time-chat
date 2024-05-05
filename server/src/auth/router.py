@@ -133,7 +133,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: AsyncSe
 async def rollback_email_change(application_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     application = await crud.get_change_email_application_by_id(db, application_id)
     auth_utils.check_if_application_exists(application)
-    auth_utils.check_change_email_rollback_status(application.status)
+    auth_utils.check_change_email_rollback_status(application.rollback_status)
 
     await crud.update_email(db, application.user_id, application.old_email)
     await crud.make_change_email_application_rolled_back(db, application_id)
