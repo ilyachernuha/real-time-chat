@@ -116,6 +116,8 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     room = await crud.get_room_by_id(db, room_id)
     room_utils.check_if_room_exists(room)
     room_utils.check_if_user_is_owner(user_id, room)
+    if room.room_picture_id is not None:
+        await room_utils.delete_room_picture_from_s3(room.room_picture_id)
     await crud.delete_room(db, room_id)
     return {"status": "success"}
 
@@ -193,7 +195,8 @@ async def my_rooms(credentials: HTTPAuthorizationCredentials = Depends(security_
     rooms = [
         {
             "room_id": room.room_id,
-            "title": (await room.awaitable_attrs.room).title
+            "title": (await room.awaitable_attrs.room).title,
+            "room_picture_id": (await room.awaitable_attrs.room).room_picture_id
         }
         for room in await user.awaitable_attrs.rooms
     ]
