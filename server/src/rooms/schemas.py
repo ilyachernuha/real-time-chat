@@ -78,3 +78,16 @@ class RoomList(BaseModel):
 
 class TagList(BaseModel):
     tags: list[str]
+
+
+class RoomMember(BaseModel):
+    user_id: UUID4
+    username: str | None
+    name: str
+    profile_picture_id: UUID4 | None
+    guest: bool
+    admin: bool
+
+
+class RoomMemberList(BaseModel):
+    members: list[RoomMember]
