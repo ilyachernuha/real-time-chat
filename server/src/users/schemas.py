@@ -4,17 +4,6 @@ from pydantic import BaseModel, UUID4
 # REQUESTS
 
 
-class UserData(BaseModel):
-    user_id: UUID4
-    username: str
-    name: str
-    profile_picture_id: UUID4 | None
-
-
-class UserList(BaseModel):
-    users: list[UserData]
-
-
 class UpdateName(BaseModel):
     new_name: str
 
@@ -24,6 +13,17 @@ class UpdateName(BaseModel):
 
 class GenericConfirmation(BaseModel):
     status: str
+
+
+class UserData(BaseModel):
+    user_id: UUID4
+    username: str
+    name: str
+    profile_picture_id: UUID4 | None
+
+
+class UserList(BaseModel):
+    users: list[UserData]
 
 
 class NameUpdate(BaseModel):
