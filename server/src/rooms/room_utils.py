@@ -148,6 +148,11 @@ async def check_if_user_can_add_users_to_room(db: AsyncSession, user_id: uuid.UU
         await check_if_user_is_admin(db, user_id, room)
 
 
+async def check_if_user_is_room_member(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID):
+    if await crud.get_user_room_association(db=db, user_id=user_id, room_id=room_id) is None:
+        raise HTTPException(status_code=403, detail="You're not a member of this room")
+
+
 async def get_and_validate_list_of_users_to_add(db: AsyncSession, room: db_models.Room, add_list: list[UserToAdd]):
     add_data = []
     for user_data in add_list:

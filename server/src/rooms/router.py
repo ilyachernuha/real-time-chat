@@ -210,3 +210,26 @@ async def find_tags(search: str, credentials: HTTPAuthorizationCredentials = Dep
     room_utils.validate_tag_name(search)
     tags = [tag.tag for tag in await crud.search_tag(db=db, tag_name=search, limit=None)]
     return {"tags": tags}
+
+
+@router.get("/room_members/{room_id}", response_model=schemas.RoomMemberList)
+async def room_members(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                       db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    room = await crud.get_room_by_id(db, room_id)
+    room_utils.check_if_room_exists(room)
+    await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room_id)
+    members_data = []
+    for user_association in await room.awaitable_attrs.users:
+        user = await user_association.awaitable_attrs.user
+        members_data.append(
+            {
+                "user_id": user_association.user_id,
+                "username": (await user.awaitable_attrs.account_data).username if not user.is_guest else None,
+                "name": user.name,
+                "profile_picture_id": user.profile_picture_id,
+                "guest": user.is_guest,
+                "admin": user_association.is_admin
+            }
+        )
+    return {"members": members_data}
