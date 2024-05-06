@@ -17,6 +17,12 @@ def check_if_room_exists(room: db_models.Room):
         raise HTTPException(status_code=404, detail="Room not found")
 
 
+async def get_room_if_exists(db: AsyncSession, room_id: uuid.UUID):
+    room = await crud.get_room_by_id(db, room_id)
+    check_if_room_exists(room)
+    return room
+
+
 def check_if_creator_not_guest(user: db_models.User):
     if user.is_guest:
         raise HTTPException(status_code=403, detail="Guest users can't create rooms")

@@ -44,8 +44,7 @@ async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=room_id)
     await room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
     room_utils.validate_room_update_data(body)
     await room_utils.patch_room(db=db, room=room, update=body)
@@ -58,8 +57,7 @@ async def set_room_picture(room_id: uuid.UUID,
                            credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                            db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=room_id)
     await room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
     old_room_picture_id = room.room_picture_id
     await run_in_threadpool(lambda: image_utils.validate_image_is_square(image))
@@ -82,8 +80,7 @@ async def set_room_picture(room_id: uuid.UUID,
 async def delete_room_picture(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                               db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=room_id)
     await room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
     room_picture_id = room.room_picture_id
     if room_picture_id is None:
@@ -97,8 +94,7 @@ async def delete_room_picture(room_id: uuid.UUID, credentials: HTTPAuthorization
 async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                         db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=room_id)
     return {
         "title": room.title,
         "description": room.description,
@@ -113,8 +109,7 @@ async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCreden
 async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=room_id)
     room_utils.check_if_user_is_owner(user_id, room)
     if room.room_picture_id is not None:
         await room_utils.delete_room_picture_from_s3(room.room_picture_id)
@@ -126,8 +121,7 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
 async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                     db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db, credentials.credentials)
-    room = await crud.get_room_by_id(db, body.room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
     await room_utils.check_if_user_can_join_room(db, user.user_id, room)
     await crud.add_user_to_room(db=db, room_id=room.room_id, user=user)
     return {"status": "success"}
@@ -137,8 +131,7 @@ async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCreden
 async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, body.room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
     await room_utils.check_if_user_can_leave_room(db, user_id, room)
     await crud.remove_user_from_room(db=db, room_id=room.room_id, user_id=user_id)
     return {"status": "success"}
@@ -149,8 +142,7 @@ async def add_users_to_room(body: schemas.AddUsers,
                             credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                             db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, body.room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
     add_admins = any(user.make_admin for user in body.users)
     await room_utils.check_if_user_can_add_users_to_room(db=db, user_id=user_id, room=room, add_admins=add_admins)
     add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users)
@@ -216,8 +208,7 @@ async def find_tags(search: str, credentials: HTTPAuthorizationCredentials = Dep
 async def room_members(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                        db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    room = await crud.get_room_by_id(db, room_id)
-    room_utils.check_if_room_exists(room)
+    room = await room_utils.get_room_if_exists(db=db, room_id=room_id)
     await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room_id)
     members_data = []
     for user_association in await room.awaitable_attrs.users:
