@@ -5,11 +5,9 @@ from starlette.concurrency import run_in_threadpool
 import asyncio
 from io import BytesIO
 import uuid
-from . import crud
-from . import schemas
+from . import crud, schemas, room_utils
 from ..database import get_db
 from ..auth import auth_utils
-from . import room_utils
 from .. import file_utils, image_utils
 from ..s3 import S3
 

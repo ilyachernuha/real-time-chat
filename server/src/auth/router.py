@@ -3,10 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBasicCredentials,
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-from . import crud
-from . import schemas
-from . import auth_utils
-from . import email_utils
+from . import crud, schemas, auth_utils, email_utils
 from ..users import user_utils
 from ..database import get_db
 from .. import html_generator
