@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 import asyncio
@@ -10,10 +10,10 @@ from ..database import get_db
 from ..auth import auth_utils
 from .. import file_utils, image_utils
 from ..s3 import S3
+from ..security import security_bearer
 
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
-security_bearer = HTTPBearer()
 
 
 @router.post("/create_room", response_model=responses.RoomCreated)

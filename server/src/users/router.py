@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.concurrency import run_in_threadpool
 import asyncio
@@ -10,10 +10,10 @@ from ..database import get_db
 from ..auth import auth_utils
 from .. import image_utils, file_utils
 from ..s3 import S3
+from ..security import security_bearer
 
 
 router = APIRouter(prefix="/users", tags=["users"])
-security_bearer = HTTPBearer()
 
 
 @router.get("/find_users", response_model=responses.UserList)

@@ -1,17 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBasicCredentials, HTTPBasic, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from . import crud, schemas, responses, auth_utils, email_utils
 from ..users import user_utils
 from ..database import get_db
+from ..security import security_basic, security_bearer
 from .. import html_generator
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-security_basic = HTTPBasic()
-security_bearer = HTTPBearer()
 
 
 @router.post("/create_account", response_model=responses.ApplicationCreated)
