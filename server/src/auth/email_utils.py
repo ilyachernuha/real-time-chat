@@ -1,37 +1,24 @@
 import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from jinja2 import Environment, FileSystemLoader
 from fastapi import HTTPException
-import os
-from dotenv import load_dotenv
-from .. import html_generator
-
-
-load_dotenv()
-
-email_address = os.getenv("EMAIL")
-email_password = os.getenv("EMAIL_PASSWORD")
-base_url = os.getenv("BASE_URL")
-smtp_host = os.getenv("SMTP_HOST")
-smtp_port = int(os.getenv("SMTP_PORT"))
-template_env = Environment(loader=FileSystemLoader("html_templates"))
+from .. import html_generator, env
 
 
 async def send_email(receiver: str, subject: str, text: str):
     try:
         message = MIMEMultipart("alternative")
         message["Subject"] = subject
-        message["From"] = email_address
+        message["From"] = env.EMAIL_ADDRESS
         message["To"] = receiver
         message_text = text
         message.attach(MIMEText(message_text, "html"))
 
         await aiosmtplib.send(message,
-                              hostname=smtp_host,
-                              port=smtp_port,
-                              username=email_address,
-                              password=email_password,
+                              hostname=env.SMTP_HOST,
+                              port=env.SMTP_PORT,
+                              username=env.EMAIL_ADDRESS,
+                              password=env.EMAIL_PASSWORD,
                               start_tls=True)
 
     except aiosmtplib.SMTPException:

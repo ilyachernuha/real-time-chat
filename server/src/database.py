@@ -1,15 +1,10 @@
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from sqlalchemy.exc import OperationalError
-import os
-from dotenv import load_dotenv
 from contextlib import asynccontextmanager
-from . import db_models
+from . import db_models, env
 
 
-load_dotenv()
-
-SQLALCHEMY_DATABASE_URI = os.getenv("POSTGRESQL_URI")
-engine = create_async_engine(SQLALCHEMY_DATABASE_URI)
+engine = create_async_engine(env.SQLALCHEMY_DATABASE_URI)
 AsyncSessionLocal = async_sessionmaker(autocommit=False, autoflush=False, bind=engine, expire_on_commit=False)
 
 

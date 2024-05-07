@@ -1,15 +1,6 @@
 import aiobotocore.session
-import os
-from dotenv import load_dotenv
 from io import BytesIO
-
-
-load_dotenv()
-
-aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-s3_region = os.getenv("S3_REGION")
-bucket_name = os.getenv("S3_BUCKET_NAME")
+from . import env
 
 
 class S3:
@@ -23,9 +14,9 @@ class S3:
         S3.__session = aiobotocore.session.get_session()
         S3.__client_context = S3.__session.create_client(
             service_name="s3",
-            aws_secret_access_key=aws_secret_access_key,
-            aws_access_key_id=aws_access_key_id,
-            region_name=s3_region
+            aws_secret_access_key=env.AWS_SECRET_ACCESS_KEY,
+            aws_access_key_id=env.AWS_ACCESS_KEY_ID,
+            region_name=env.S3_REGION
         )
         S3.__client = await S3.__client_context.__aenter__()
         S3.__client_initialized = True
@@ -42,16 +33,16 @@ class S3:
     @staticmethod
     async def upload_file(file: BytesIO, filename: str):
         file.seek(0)
-        await S3.__client.put_object(Body=file, Bucket=bucket_name, Key=filename)
+        await S3.__client.put_object(Body=file, Bucket=env.S3_BUCKET_NAME, Key=filename)
 
     @staticmethod
     async def generate_presigned_url(filename: str):
         return await S3.__client.generate_presigned_url(
             "get_object",
-            Params={"Bucket": bucket_name, "Key": filename},
+            Params={"Bucket": env.S3_BUCKET_NAME, "Key": filename},
             ExpiresIn=1000
         )
 
     @staticmethod
     async def delete_file(filename: str):
-        await S3.__client.delete_object(Bucket=bucket_name, Key=filename)
+        await S3.__client.delete_object(Bucket=env.S3_BUCKET_NAME, Key=filename)
