@@ -5,7 +5,7 @@ from starlette.concurrency import run_in_threadpool
 import asyncio
 from io import BytesIO
 import uuid
-from . import crud, schemas, room_utils
+from . import crud, schemas, room_utils, responses
 from ..database import get_db
 from ..auth import auth_utils
 from .. import file_utils, image_utils
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 security_bearer = HTTPBearer()
 
 
-@router.post("/create_room", response_model=schemas.RoomCreated)
+@router.post("/create_room", response_model=responses.RoomCreated)
 async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db, credentials.credentials)
@@ -37,7 +37,7 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     return {"status": "success", "room_id": room.room_id}
 
 
-@router.patch("/update_room/{room_id}", response_model=schemas.GenericConfirmation)
+@router.patch("/update_room/{room_id}", response_model=responses.GenericConfirmation)
 async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
@@ -49,7 +49,7 @@ async def update_room(room_id: uuid.UUID, body: schemas.RoomUpdate,
     return {"status": "success"}
 
 
-@router.put("/set_room_picture/{room_id}", response_model=schemas.RoomPictureUpdate)
+@router.put("/set_room_picture/{room_id}", response_model=responses.RoomPictureUpdate)
 async def set_room_picture(room_id: uuid.UUID,
                            image: BytesIO = Depends(file_utils.verify_profile_or_room_picture_size),
                            credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
@@ -74,7 +74,7 @@ async def set_room_picture(room_id: uuid.UUID,
     return {"status": "success", "room_picture_id": new_room_picture_id}
 
 
-@router.delete("/delete_room_picture/{room_id}", response_model=schemas.GenericConfirmation)
+@router.delete("/delete_room_picture/{room_id}", response_model=responses.GenericConfirmation)
 async def delete_room_picture(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                               db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -88,7 +88,7 @@ async def delete_room_picture(room_id: uuid.UUID, credentials: HTTPAuthorization
     return {"status": "success"}
 
 
-@router.get("/room_info/{room_id}", response_model=schemas.RoomInfo)
+@router.get("/room_info/{room_id}", response_model=responses.RoomInfo)
 async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                         db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
@@ -103,7 +103,7 @@ async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCreden
     }
 
 
-@router.delete("/delete_room/{room_id}", response_model=schemas.GenericConfirmation)
+@router.delete("/delete_room/{room_id}", response_model=responses.GenericConfirmation)
 async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -115,7 +115,7 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     return {"status": "success"}
 
 
-@router.post("/join_room", response_model=schemas.GenericConfirmation)
+@router.post("/join_room", response_model=responses.GenericConfirmation)
 async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                     db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db, credentials.credentials)
@@ -125,7 +125,7 @@ async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCreden
     return {"status": "success"}
 
 
-@router.post("/leave_room", response_model=schemas.GenericConfirmation)
+@router.post("/leave_room", response_model=responses.GenericConfirmation)
 async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -135,7 +135,7 @@ async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCred
     return {"status": "success"}
 
 
-@router.post("/add_users_to_room", response_model=schemas.GenericConfirmation)
+@router.post("/add_users_to_room", response_model=responses.GenericConfirmation)
 async def add_users_to_room(body: schemas.AddUsers,
                             credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                             db: AsyncSession = Depends(get_db)):
@@ -149,7 +149,7 @@ async def add_users_to_room(body: schemas.AddUsers,
     return {"status": "success"}
 
 
-@router.get("/find_rooms", response_model=schemas.RoomList)
+@router.get("/find_rooms", response_model=responses.RoomList)
 async def find_rooms(search: str | None = None, themes: list[str] = Query(default=None),
                      tags: list[str] = Query(default=None), languages: list[str] = Query(default=None),
                      credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
@@ -178,7 +178,7 @@ async def find_rooms(search: str | None = None, themes: list[str] = Query(defaul
     return {"rooms": rooms_data}
 
 
-@router.get("/my_rooms", response_model=schemas.RoomList)
+@router.get("/my_rooms", response_model=responses.RoomList)
 async def my_rooms(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                    db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db, credentials.credentials)
@@ -193,7 +193,7 @@ async def my_rooms(credentials: HTTPAuthorizationCredentials = Depends(security_
     return {"rooms": rooms}
 
 
-@router.get("/find_tags", response_model=schemas.TagList)
+@router.get("/find_tags", response_model=responses.TagList)
 async def find_tags(search: str, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                     db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
@@ -202,7 +202,7 @@ async def find_tags(search: str, credentials: HTTPAuthorizationCredentials = Dep
     return {"tags": tags}
 
 
-@router.get("/room_members/{room_id}", response_model=schemas.RoomMemberList)
+@router.get("/room_members/{room_id}", response_model=responses.RoomMemberList)
 async def room_members(room_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                        db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)

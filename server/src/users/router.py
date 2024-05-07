@@ -5,7 +5,7 @@ from starlette.concurrency import run_in_threadpool
 import asyncio
 import uuid
 from io import BytesIO
-from . import crud, schemas, user_utils
+from . import crud, schemas, user_utils, responses
 from ..database import get_db
 from ..auth import auth_utils
 from .. import image_utils, file_utils
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 security_bearer = HTTPBearer()
 
 
-@router.get("/find_users", response_model=schemas.UserList)
+@router.get("/find_users", response_model=responses.UserList)
 async def find_users(search: str, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
@@ -34,7 +34,7 @@ async def find_users(search: str, credentials: HTTPAuthorizationCredentials = De
     return {"users": users_data}
 
 
-@router.get("/profile/{user_id}", response_model=schemas.UserProfile)
+@router.get("/profile/{user_id}", response_model=responses.UserProfile)
 async def get_profile(user_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
@@ -47,7 +47,7 @@ async def get_profile(user_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     }
 
 
-@router.get("/me", response_model=schemas.OwnProfile)
+@router.get("/me", response_model=responses.OwnProfile)
 async def get_own_profile(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                           db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
@@ -60,7 +60,7 @@ async def get_own_profile(credentials: HTTPAuthorizationCredentials = Depends(se
     }
 
 
-@router.put("/change_name", response_model=schemas.NameUpdate)
+@router.put("/change_name", response_model=responses.NameUpdate)
 async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -69,7 +69,7 @@ async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCr
     return {"status": "success", "new_name": user.name}
 
 
-@router.put("/set_profile_picture", response_model=schemas.ProfilePictureUpdate)
+@router.put("/set_profile_picture", response_model=responses.ProfilePictureUpdate)
 async def set_profile_picture(image: BytesIO = Depends(file_utils.verify_profile_or_room_picture_size),
                               credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                               db: AsyncSession = Depends(get_db)):
@@ -91,7 +91,7 @@ async def set_profile_picture(image: BytesIO = Depends(file_utils.verify_profile
     return {"status": "success", "profile_picture_id": new_profile_picture_id}
 
 
-@router.delete("/delete_profile_picture", response_model=schemas.GenericConfirmation)
+@router.delete("/delete_profile_picture", response_model=responses.GenericConfirmation)
 async def delete_profile_picture(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                                  db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
