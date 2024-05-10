@@ -4,8 +4,7 @@ import time
 from pydantic import ValidationError
 from ..database import db_session
 from ..auth import auth_utils
-from . import crud
-from . import schemas
+from . import crud, schemas
 from ..exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 

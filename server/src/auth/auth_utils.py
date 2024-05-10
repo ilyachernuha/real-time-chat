@@ -10,31 +10,29 @@ import secrets
 import uuid
 import hashlib
 import time
-import os
-from dotenv import load_dotenv
 from . import crud
-from .. import db_models
+from .. import db_models, env
 from ..exceptions import AccessTokenValidationError, FieldSubmitError, BearerTokenExtractionError
 
 
-load_dotenv()
-
 ph = PasswordHasher()
-secret_key = os.getenv("SECRET_KEY")
 
 
 def generate_access_token(user_id_str: str, session_id_str: str):
-    token = jwt.encode({
-        "user_id": user_id_str,
-        "session_id": session_id_str,
-        "exp": int(time.time()) + 900
-    }, secret_key, algorithm="HS256")
-    return token
+    return jwt.encode(
+        payload={
+            "user_id": user_id_str,
+            "session_id": session_id_str,
+            "exp": int(time.time()) + 900
+        },
+        key=env.SECRET_KEY,
+        algorithm="HS256"
+    )
 
 
 def validate_access_token(token: str):
     try:
-        return jwt.decode(token, secret_key, algorithms=["HS256"])
+        return jwt.decode(jwt=token, key=env.SECRET_KEY, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
         raise AccessTokenValidationError("Token expired")
     except jwt.InvalidTokenError:

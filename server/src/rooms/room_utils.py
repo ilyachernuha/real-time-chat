@@ -1,6 +1,5 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from ..exceptions import FieldSubmitError
 import uuid
 import re
 import asyncio
@@ -10,11 +9,18 @@ from .room_themes import RoomTheme
 from .room_languages import RoomLanguage
 from .schemas import RoomUpdate, UserToAdd
 from ..s3 import S3
+from ..exceptions import FieldSubmitError
 
 
 def check_if_room_exists(room: db_models.Room):
     if room is None:
         raise HTTPException(status_code=404, detail="Room not found")
+
+
+async def get_room_if_exists(db: AsyncSession, room_id: uuid.UUID):
+    room = await crud.get_room_by_id(db, room_id)
+    check_if_room_exists(room)
+    return room
 
 
 def check_if_creator_not_guest(user: db_models.User):

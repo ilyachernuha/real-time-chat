@@ -1,23 +1,19 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBasicCredentials, HTTPBasic, HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBasicCredentials
 from fastapi.responses import HTMLResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
-from . import crud
-from . import schemas
-from . import auth_utils
-from . import email_utils
+from . import crud, schemas, responses, auth_utils, email_utils
 from ..users import user_utils
 from ..database import get_db
+from ..security import security_basic, security_bearer
 from .. import html_generator
 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-security_basic = HTTPBasic()
-security_bearer = HTTPBearer()
 
 
-@router.post("/create_account", response_model=schemas.ApplicationCreated)
+@router.post("/create_account", response_model=responses.ApplicationCreated)
 async def register(body: schemas.Registration, db: AsyncSession = Depends(get_db)):
     user_utils.validate_username(body.username)
     user_utils.validate_password(body.password)
@@ -33,7 +29,7 @@ async def register(body: schemas.Registration, db: AsyncSession = Depends(get_db
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
-@router.post("/finish_registration", response_model=schemas.SuccessfulLogin)
+@router.post("/finish_registration", response_model=responses.SuccessfulLogin)
 async def finish_registration(body: schemas.RegistrationConfirmation, db: AsyncSession = Depends(get_db)):
     application = await crud.get_register_application_by_id(db, body.application_id)
     auth_utils.check_if_application_exists(application)
@@ -55,7 +51,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: AsyncS
                                                      refresh_token=refresh_token)
 
 
-@router.post("/login", response_model=schemas.SuccessfulLogin)
+@router.post("/login", response_model=responses.SuccessfulLogin)
 async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasicCredentials = Depends(security_basic),
                 db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_basic_auth(db, credentials)
@@ -66,7 +62,7 @@ async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasic
                                                      refresh_token=refresh_token)
 
 
-@router.post("/guest_login", response_model=schemas.SuccessfulLogin)
+@router.post("/guest_login", response_model=responses.SuccessfulLogin)
 async def guest_login(body: schemas.GuestLogin, db: AsyncSession = Depends(get_db)):
     user_utils.validate_name(body.name)
     user = await crud.create_guest_user(db, body.name)
@@ -77,7 +73,7 @@ async def guest_login(body: schemas.GuestLogin, db: AsyncSession = Depends(get_d
                                                      refresh_token=refresh_token)
 
 
-@router.post("/token_refresh", response_model=schemas.TokenUpdate)
+@router.post("/token_refresh", response_model=responses.TokenUpdate)
 async def token_refresh(body: schemas.TokenRefresh, db: AsyncSession = Depends(get_db)):
     session = await auth_utils.get_and_validate_session_from_refresh_token(db, body.refresh_token)
     user_id_str = str((await session.awaitable_attrs.user).user_id)
@@ -89,7 +85,7 @@ async def token_refresh(body: schemas.TokenRefresh, db: AsyncSession = Depends(g
     return {"access_token": access_token, "new_refresh_token": new_refresh_token}
 
 
-@router.put("/change_username", response_model=schemas.UsernameUpdate)
+@router.put("/change_username", response_model=responses.UsernameUpdate)
 async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_basic_auth(db, credentials)
@@ -99,7 +95,7 @@ async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCr
     return {"status": "success", "new_username": user.account_data.username}
 
 
-@router.post("/change_email", response_model=schemas.ApplicationCreated)
+@router.post("/change_email", response_model=responses.ApplicationCreated)
 async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredentials = Depends(security_basic),
                        db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_basic_auth(db, credentials)
@@ -111,7 +107,7 @@ async def change_email(body: schemas.UpdateEmail, credentials: HTTPBasicCredenti
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
-@router.post("/finish_change_email", response_model=schemas.EmailUpdate)
+@router.post("/finish_change_email", response_model=responses.EmailUpdate)
 async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: AsyncSession = Depends(get_db)):
     application = await crud.get_change_email_application_by_id(db, body.application_id)
     auth_utils.check_if_application_exists(application)
@@ -129,7 +125,7 @@ async def finish_change_email(body: schemas.UpdateEmailConfirmation, db: AsyncSe
     return {"status": "Email changed", "new_email": user.account_data.email}
 
 
-@router.get("/rollback_email_change/{application_id}", response_model=schemas.GenericConfirmation)
+@router.get("/rollback_email_change/{application_id}", response_model=responses.GenericConfirmation)
 async def rollback_email_change(application_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     application = await crud.get_change_email_application_by_id(db, application_id)
     auth_utils.check_if_application_exists(application)
@@ -140,7 +136,7 @@ async def rollback_email_change(application_id: uuid.UUID, db: AsyncSession = De
     return {"status": "Email change rolled back"}
 
 
-@router.put("/change_password", response_model=schemas.GenericConfirmation)
+@router.put("/change_password", response_model=responses.GenericConfirmation)
 async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCredentials = Depends(security_basic),
                           db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_basic_auth(db, credentials)
@@ -151,7 +147,7 @@ async def change_password(body: schemas.UpdatePassword, credentials: HTTPBasicCr
     return {"status": "success"}
 
 
-@router.post("/reset_password", response_model=schemas.GenericConfirmation)
+@router.post("/reset_password", response_model=responses.GenericConfirmation)
 async def reset_password(body: schemas.ResetPassword, db: AsyncSession = Depends(get_db)):
     user = await crud.get_user_by_email(db, body.email)
     if user is None:
@@ -172,7 +168,7 @@ async def reset_password_page(application_id: uuid.UUID, db: AsyncSession = Depe
     return HTMLResponse(await html_generator.generate_reset_password_page(str(application_id)))
 
 
-@router.post("/finish_reset_password", response_model=schemas.GenericConfirmation)
+@router.post("/finish_reset_password", response_model=responses.GenericConfirmation)
 async def finish_reset_password(body: schemas.FinishResetPassword, db: AsyncSession = Depends(get_db)):
     application = await crud.get_reset_password_application(db, body.application_id)
     auth_utils.check_if_application_exists(application)
@@ -187,7 +183,7 @@ async def finish_reset_password(body: schemas.FinishResetPassword, db: AsyncSess
     return {"status": "success"}
 
 
-@router.post("/upgrade_account", response_model=schemas.ApplicationCreated)
+@router.post("/upgrade_account", response_model=responses.ApplicationCreated)
 async def upgrade_account(body: schemas.UpgradeAccount,
                           credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                           db: AsyncSession = Depends(get_db)):
@@ -211,7 +207,7 @@ async def upgrade_account(body: schemas.UpgradeAccount,
     return {"status": "Email confirmation required", "application_id": application_id_str}
 
 
-@router.post("/finish_upgrade_account", response_model=schemas.GenericConfirmation)
+@router.post("/finish_upgrade_account", response_model=responses.GenericConfirmation)
 async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
                                  credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                                  db: AsyncSession = Depends(get_db)):
@@ -233,7 +229,7 @@ async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
     return {"status": "success"}
 
 
-@router.get("/active_sessions", response_model=schemas.ActiveSessions)
+@router.get("/active_sessions", response_model=responses.ActiveSessions)
 async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                               db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -249,7 +245,7 @@ async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depend
     return {"sessions": session_list}
 
 
-@router.post("/close_session", response_model=schemas.GenericConfirmation)
+@router.post("/close_session", response_model=responses.GenericConfirmation)
 async def close_session(body: schemas.CloseSession,
                         credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                         db: AsyncSession = Depends(get_db)):
