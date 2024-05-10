@@ -1,10 +1,10 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, UUID4
 
 
 class Message(BaseModel):
     text: str
-    room: str
+    room: UUID4
 
 
 class Typing(BaseModel):
-    room: str
+    room: UUID4

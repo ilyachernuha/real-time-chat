@@ -49,7 +49,7 @@ async def message(sid, data):
                     "name": name
                 },
                 "text": validated_data.text,
-                "room": validated_data.room,
+                "room": str(validated_data.room),
                 "timestamp": int(time.time() * 1000)
             })
         except ValidationError:
@@ -62,7 +62,7 @@ async def start_typing(sid, data):
         if not isinstance(data, dict):
             return "Error", {"detail": "Data must be in JSON"}
         try:
-            room = schemas.Typing(**data).room
+            room = str(schemas.Typing(**data).room)
             user_id = (await sio.get_session(sid))["user_id"]
             name = (await crud.get_user_by_id(db, user_id)).name
             user_id_str = str(user_id)
@@ -83,7 +83,7 @@ async def stop_typing(sid, data):
         if not isinstance(data, dict):
             return "Error", {"detail": "Data must be in JSON"}
         try:
-            room = schemas.Typing(**data).room
+            room = str(schemas.Typing(**data).room)
             user_id = (await sio.get_session(sid))["user_id"]
             name = (await crud.get_user_by_id(db, user_id)).name
             user_id_str = str(user_id)
