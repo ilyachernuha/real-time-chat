@@ -4,7 +4,7 @@ import time
 from pydantic import ValidationError
 from ..database import db_session
 from ..auth import auth_utils
-from . import crud, schemas
+from . import crud, schemas, validators
 from ..exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 
@@ -34,65 +34,49 @@ async def disconnect(sid):
 
 
 @sio.event
+@validators.validate_model(model=schemas.Message)
 async def message(sid, data):
     async with db_session() as db:
-        if not isinstance(data, dict):
-            return "Error", {"detail": "Data must be in JSON"}
-        try:
-            validated_data = schemas.Message(**data)
-            user_id = (await sio.get_session(sid))["user_id"]
-            name = (await crud.get_user_by_id(db, user_id)).name
-            user_id_str = str(user_id)
-            await sio.emit("message", {
-                "user": {
-                    "id": user_id_str,
-                    "name": name
-                },
-                "text": validated_data.text,
-                "room": str(validated_data.room),
-                "timestamp": int(time.time() * 1000)
-            })
-        except ValidationError:
-            return "Error", {"detail": "Validation failed"}
+        user_id = (await sio.get_session(sid))["user_id"]
+        name = (await crud.get_user_by_id(db, user_id)).name
+        await sio.emit("message", {
+            "user": {
+                "id": str(user_id),
+                "name": name
+            },
+            "text": data.text,
+            "room": str(data.room),
+            "timestamp": int(time.time() * 1000)
+        })
 
 
 @sio.event
+@validators.validate_model(model=schemas.Typing)
 async def start_typing(sid, data):
     async with db_session() as db:
-        if not isinstance(data, dict):
-            return "Error", {"detail": "Data must be in JSON"}
-        try:
-            room = str(schemas.Typing(**data).room)
-            user_id = (await sio.get_session(sid))["user_id"]
-            name = (await crud.get_user_by_id(db, user_id)).name
-            user_id_str = str(user_id)
-            await sio.emit("start_typing", {
-                "user": {
-                    "id": user_id_str,
-                    "name": name
-                },
-                "room": room
-            })
-        except ValidationError:
-            return "Error", {"detail": "Validation failed"}
+        user_id = (await sio.get_session(sid))["user_id"]
+        name = (await crud.get_user_by_id(db, user_id)).name
+        user_id_str = str(user_id)
+        await sio.emit("start_typing", {
+            "user": {
+                "id": user_id_str,
+                "name": name
+            },
+            "room": str(data.room)
+        })
 
 
 @sio.event
+@validators.validate_model(model=schemas.Typing)
 async def stop_typing(sid, data):
     async with db_session() as db:
-        if not isinstance(data, dict):
-            return "Error", {"detail": "Data must be in JSON"}
-        try:
-            room = str(schemas.Typing(**data).room)
-            user_id = (await sio.get_session(sid))["user_id"]
-            name = (await crud.get_user_by_id(db, user_id)).name
-            user_id_str = str(user_id)
-            await sio.emit("stop_typing", {
-                "user": {
-                    "id": user_id_str,
-                    "name": name
-                },
-                "room": room
-            })
-        except ValidationError:
-            return "Error", {"detail": "Validation failed"}
+        user_id = (await sio.get_session(sid))["user_id"]
+        name = (await crud.get_user_by_id(db, user_id)).name
+        user_id_str = str(user_id)
+        await sio.emit("stop_typing", {
+            "user": {
+                "id": user_id_str,
+                "name": name
+            },
+            "room": str(data.room)
+        })
