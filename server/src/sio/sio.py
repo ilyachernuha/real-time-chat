@@ -45,7 +45,7 @@ async def message(sid, data):
                 "name": name
             },
             "text": data.text,
-            "room": str(data.room),
+            "room_id": str(data.room_id),
             "timestamp": int(time.time() * 1000)
         })
 
@@ -62,7 +62,7 @@ async def start_typing(sid, data):
                 "id": user_id_str,
                 "name": name
             },
-            "room": str(data.room)
+            "room_id": str(data.room_id)
         })
 
 
@@ -78,5 +78,5 @@ async def stop_typing(sid, data):
                 "id": user_id_str,
                 "name": name
             },
-            "room": str(data.room)
+            "room_id": str(data.room_id)
         })
