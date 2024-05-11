@@ -1,7 +1,6 @@
 import socketio
 from socketio.exceptions import ConnectionRefusedError
 import time
-from pydantic import ValidationError
 from ..database import db_session
 from ..auth import auth_utils
 from . import crud, schemas, validators
