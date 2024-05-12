@@ -1,6 +1,7 @@
 import socketio
 from socketio.exceptions import ConnectionRefusedError
 import time
+import uuid
 from ..database import db_session
 from ..auth import auth_utils
 from . import crud, schemas, validators
@@ -38,20 +39,23 @@ async def message(sid, data):
     async with db_session() as db:
         user_id = (await sio.get_session(sid))["user_id"]
         name = (await crud.get_user_by_id(db, user_id)).name
+        message_id = uuid.uuid4()
+        timestamp = int(time.time() * 1000)
         await sio.emit(
             event="message",
             data={
+                "message_id": str(message_id),
                 "user": {
                     "id": str(user_id),
                     "name": name
                 },
                 "text": data.text,
                 "room_id": str(data.room_id),
-                "timestamp": int(time.time() * 1000)
+                "timestamp": timestamp
             },
             skip_sid=sid
         )
-        return "Success", {"timestamp": int(time.time() * 1000)}
+        return "Success", {"message_id": str(message_id), "timestamp": timestamp}
 
 
 @sio.event
