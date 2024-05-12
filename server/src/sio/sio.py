@@ -38,15 +38,20 @@ async def message(sid, data):
     async with db_session() as db:
         user_id = (await sio.get_session(sid))["user_id"]
         name = (await crud.get_user_by_id(db, user_id)).name
-        await sio.emit("message", {
-            "user": {
-                "id": str(user_id),
-                "name": name
+        await sio.emit(
+            event="message",
+            data={
+                "user": {
+                    "id": str(user_id),
+                    "name": name
+                },
+                "text": data.text,
+                "room_id": str(data.room_id),
+                "timestamp": int(time.time() * 1000)
             },
-            "text": data.text,
-            "room_id": str(data.room_id),
-            "timestamp": int(time.time() * 1000)
-        })
+            skip_sid=sid
+        )
+        return "Success", {"timestamp": int(time.time() * 1000)}
 
 
 @sio.event
