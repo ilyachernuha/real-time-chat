@@ -11,6 +11,7 @@ from ..auth import auth_utils
 from .. import file_utils, image_utils
 from ..s3 import S3
 from ..security import security_bearer
+from ..sio import external as sio
 
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -19,21 +20,23 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 @router.post("/create_room", response_model=responses.RoomCreated)
 async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
-    user = await auth_utils.get_user_by_access_token(db, credentials.credentials)
-    room_utils.check_if_creator_not_guest(user)
+    creator = await auth_utils.get_user_by_access_token(db, credentials.credentials)
+    room_utils.check_if_creator_not_guest(creator)
     room_utils.validate_title(body.title)
     room_utils.validate_description(body.description)
     theme = room_utils.get_theme_from_string(body.theme)
     languages = room_utils.get_language_list_from_codes(body.languages)
     room_utils.validate_tag_names(body.tags)
     tags = await room_utils.get_or_create_tags_from_string_set(db, body.tags)
-    room = await crud.create_room(db=db, owner=user, title=body.title, description=body.description, theme=theme,
+    room = await crud.create_room(db=db, owner=creator, title=body.title, description=body.description, theme=theme,
                                   languages=languages, tags=tags)
-    await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=True)
+    await crud.add_user_to_room(db=db, room_id=room.room_id, user=creator, make_admin=True)
     if body.users_to_add is not None:
         add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users_to_add)
         for user, make_admin in add_data:
             await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
+            await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
+    await sio.add_user_to_room(user_id=creator.user_id, room_id=room.room_id)
     return {"status": "success", "room_id": room.room_id}
 
 
@@ -109,9 +112,11 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     room = await room_utils.get_room_if_exists(db=db, room_id=room_id)
     room_utils.check_if_user_is_owner(user_id, room)
+    member_ids = [user.user_id for user in await room.awaitable_attrs.users]
     if room.room_picture_id is not None:
         await room_utils.delete_room_picture_from_s3(room.room_picture_id)
     await crud.delete_room(db, room_id)
+    await sio.close_room(room_id=room_id, member_ids=member_ids)
     return {"status": "success"}
 
 
@@ -122,6 +127,7 @@ async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCreden
     room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
     await room_utils.check_if_user_can_join_room(db, user.user_id, room)
     await crud.add_user_to_room(db=db, room_id=room.room_id, user=user)
+    await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
     return {"status": "success"}
 
 
@@ -132,6 +138,7 @@ async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCred
     room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
     await room_utils.check_if_user_can_leave_room(db, user_id, room)
     await crud.remove_user_from_room(db=db, room_id=room.room_id, user_id=user_id)
+    await sio.remove_user_from_room(user_id=user_id, room_id=room.room_id)
     return {"status": "success"}
 
 
@@ -146,6 +153,7 @@ async def add_users_to_room(body: schemas.AddUsers,
     add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users)
     for user, make_admin in add_data:
         await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
+        await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
     return {"status": "success"}
 
 
