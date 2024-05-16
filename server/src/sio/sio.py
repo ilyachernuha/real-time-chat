@@ -6,12 +6,10 @@ import uuid
 from ..database import db_session
 from ..auth import auth_utils
 from . import crud, schemas, validators, utils
-from .user_sids import UserSIDs
 from ..exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 
 sio = socketio.AsyncServer(async_mode="asgi")
-user_sids = UserSIDs()
 
 
 @sio.event
@@ -30,14 +28,15 @@ async def connect(sid, environ):
         user = await crud.get_user_by_id(db, user_id)
 
         await sio.save_session(sid, {"user_id": user_id, "session_id": session_id, "name": user.name})
-        user_sids.add_sid(user_id=user_id, sid=sid)
+        await sio.enter_room(sid, user_id)
         for room_id in await utils.get_user_room_ids(user):
             await sio.enter_room(sid, room_id)
 
 
 @sio.event
 async def disconnect(sid):
-    user_sids.remove_sid(user_id=(await sio.get_session(sid))["user_id"], sid=sid)
+    user_id = (await sio.get_session(sid))["user_id"]
+    await sio.leave_room(sid, user_id)
 
 
 @sio.event
