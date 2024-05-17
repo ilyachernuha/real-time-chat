@@ -3,8 +3,15 @@ import uuid
 import asyncio
 
 
+def get_room_sids(room):
+    try:
+        return sio.manager.rooms["/"][room].keys()
+    except KeyError:
+        return []
+
+
 async def update_user_name(user_id: uuid.UUID, new_name: str):
-    for sid in sio.rooms(user_id):
+    for sid in get_room_sids(user_id):
         sid_data = await sio.get_session(sid)
         sid_data["name"] = new_name
         await sio.save_session(sid, sid_data)
@@ -21,13 +28,13 @@ async def room_state_notification(room_id: uuid.UUID, user_id: uuid.UUID, event:
 
 
 async def add_user_to_room(user_id: uuid.UUID, room_id: uuid.UUID):
-    for sid in sio.rooms(user_id):
+    for sid in get_room_sids(user_id):
         await sio.enter_room(sid=sid, room=room_id)
     await room_state_notification(room_id=room_id, user_id=user_id, event="added_to_room")
 
 
 async def remove_user_from_room(user_id: uuid.UUID, room_id: uuid.UUID):
-    for sid in sio.rooms(user_id):
+    for sid in get_room_sids(user_id):
         await sio.leave_room(sid=sid, room=room_id)
     await room_state_notification(room_id=room_id, user_id=user_id, event="removed_from_room")
 
