@@ -72,6 +72,8 @@ async def message(sid, data):
 @sio.event
 @validators.validate_model(model=schemas.UserTyping)
 async def start_typing(sid, data):
+    if data.room_id not in sio.rooms(sid):
+        return "Error", {"detail": "You're not member of this room"}
     sid_data = await sio.get_session(sid)
     user_id, name = sid_data["user_id"], sid_data["name"]
     user_id_str = str(user_id)
@@ -87,6 +89,8 @@ async def start_typing(sid, data):
 @sio.event
 @validators.validate_model(model=schemas.UserTyping)
 async def stop_typing(sid, data):
+    if data.room_id not in sio.rooms(sid):
+        return "Error", {"detail": "You're not member of this room"}
     sid_data = await sio.get_session(sid)
     user_id, name = sid_data["user_id"], sid_data["name"]
     user_id_str = str(user_id)
