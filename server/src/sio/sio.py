@@ -70,32 +70,30 @@ async def message(sid, data):
 
 
 @sio.event
-@validators.validate_model(model=schemas.Typing)
+@validators.validate_model(model=schemas.UserTyping)
 async def start_typing(sid, data):
-    async with db_session() as db:
-        user_id = (await sio.get_session(sid))["user_id"]
-        name = (await crud.get_user_by_id(db, user_id)).name
-        user_id_str = str(user_id)
-        await sio.emit("start_typing", {
-            "user": {
-                "id": user_id_str,
-                "name": name
-            },
-            "room_id": str(data.room_id)
-        })
+    sid_data = await sio.get_session(sid)
+    user_id, name = sid_data["user_id"], sid_data["name"]
+    user_id_str = str(user_id)
+    await sio.emit("start_typing", {
+        "user": {
+            "id": user_id_str,
+            "name": name
+        },
+        "room_id": str(data.room_id)
+    })
 
 
 @sio.event
-@validators.validate_model(model=schemas.Typing)
+@validators.validate_model(model=schemas.UserTyping)
 async def stop_typing(sid, data):
-    async with db_session() as db:
-        user_id = (await sio.get_session(sid))["user_id"]
-        name = (await crud.get_user_by_id(db, user_id)).name
-        user_id_str = str(user_id)
-        await sio.emit("stop_typing", {
-            "user": {
-                "id": user_id_str,
-                "name": name
-            },
-            "room_id": str(data.room_id)
-        })
+    sid_data = await sio.get_session(sid)
+    user_id, name = sid_data["user_id"], sid_data["name"]
+    user_id_str = str(user_id)
+    await sio.emit("stop_typing", {
+        "user": {
+            "id": user_id_str,
+            "name": name
+        },
+        "room_id": str(data.room_id)
+    })

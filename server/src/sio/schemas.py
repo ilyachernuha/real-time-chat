@@ -6,5 +6,5 @@ class Message(BaseModel):
     room_id: UUID4
 
 
-class Typing(BaseModel):
+class UserTyping(BaseModel):
     room_id: UUID4
