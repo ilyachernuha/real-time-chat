@@ -5,7 +5,10 @@ import time
 import uuid
 from ..database import db_session
 from ..auth import auth_utils
-from . import crud, schemas, validators, utils
+from ..users import user_utils
+from ..rooms import room_utils
+from . import crud, schemas, utils
+from .decorators import validate_model, handle_field_submission_error, handle_sqlalchemy_error
 from ..exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 
@@ -40,7 +43,8 @@ async def disconnect(sid):
 
 
 @sio.event
-@validators.validate_model(model=schemas.Message)
+@handle_sqlalchemy_error
+@validate_model(model=schemas.Message)
 async def message(sid, data):
     async with db_session() as db:
         if data.room_id not in sio.rooms(sid):
@@ -70,7 +74,7 @@ async def message(sid, data):
 
 
 @sio.event
-@validators.validate_model(model=schemas.UserTyping)
+@validate_model(model=schemas.UserTyping)
 async def start_typing(sid, data):
     if data.room_id not in sio.rooms(sid):
         return "Error", {"detail": "You're not member of this room"}
@@ -87,7 +91,7 @@ async def start_typing(sid, data):
 
 
 @sio.event
-@validators.validate_model(model=schemas.UserTyping)
+@validate_model(model=schemas.UserTyping)
 async def stop_typing(sid, data):
     if data.room_id not in sio.rooms(sid):
         return "Error", {"detail": "You're not member of this room"}
@@ -101,3 +105,59 @@ async def stop_typing(sid, data):
         },
         "room_id": str(data.room_id)
     })
+
+
+@sio.event
+@handle_sqlalchemy_error
+@handle_field_submission_error
+@validate_model(model=schemas.SearchUsers)
+async def find_users(sid, data):
+    user_utils.validate_username(data.search)
+    async with db_session() as db:
+        users_data = [
+            {
+                "user_id": str(user.user_id),
+                "username": (await user.awaitable_attrs.account_data).username,
+                "name": user.name,
+                "profile_picture_id": str(user.profile_picture_id)
+            }
+            for user in await crud.search_users(db, username=data.search, limit=10)
+        ]
+        return "Success", {"users": users_data}
+
+
+@sio.event
+@handle_sqlalchemy_error
+@handle_field_submission_error
+@validate_model(model=schemas.SearchTags)
+async def find_tags(sid, data):
+    room_utils.validate_tag_name(data.search)
+    async with db_session() as db:
+        tags = [tag.tag for tag in await crud.search_tag(db=db, tag_name=data.search, limit=10)]
+        return "Success", {"tags": tags}
+
+
+@sio.event
+@handle_sqlalchemy_error
+@handle_field_submission_error
+@validate_model(model=schemas.SearchRooms)
+async def find_rooms(sid, data):
+    room_utils.validate_title(data.search)
+    if data.tags is not None and data.tags is not set():
+        room_utils.validate_tag_names(data.tags)
+    async with db_session() as db:
+        rooms = await crud.filter_rooms(db=db, title=data.search,
+                                        themes=([room_utils.get_theme_from_string(theme) for theme in data.themes]
+                                                if data.themes else None),
+                                        languages=(room_utils.get_language_list_from_codes(set(data.languages))
+                                                   if data.languages else None),
+                                        tags=data.tags)
+        rooms_data = [
+            {
+                "room_id": str(room.room_id),
+                "title": room.title,
+                "room_picture_id": str(room.room_picture_id)
+            }
+            for room in rooms
+        ]
+        return "Success", {"rooms": rooms_data}
