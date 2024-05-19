@@ -1,7 +1,7 @@
 import functools
+import uuid
 from pydantic import ValidationError
-from sqlalchemy.exc import SQLAlchemyError
-from ..exceptions import FieldSubmitError
+from .sio import sio
 
 
 def validate_model(model):
@@ -19,21 +19,10 @@ def validate_model(model):
     return decorator
 
 
-def handle_field_submission_error(func):
+def validate_user_in_room(func):
     @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        try:
-            return await func(*args, **kwargs)
-        except FieldSubmitError as e:
-            return "Error", {"detail": e.detail, "field": e.field}
-    return wrapper
-
-
-def handle_sqlalchemy_error(func):
-    @functools.wraps(func)
-    async def wrapper(*args, **kwargs):
-        try:
-            return await func(*args, **kwargs)
-        except SQLAlchemyError:
-            return "Error", {"detail": "Unexpected database error"}
+    async def wrapper(sid, data, *args, **kwargs):
+        if uuid.UUID(data["room_id"]) not in sio.rooms(sid):
+            return "Error", {"detail": "You're not member of this room"}
+        return await func(sid, data, *args, **kwargs)
     return wrapper
