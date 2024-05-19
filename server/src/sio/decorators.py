@@ -4,15 +4,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from ..exceptions import FieldSubmitError
 
 
-def validate_json(func):
-    @functools.wraps(func)
-    async def wrapper(sid, data, *args, **kwargs):
-        if not isinstance(data, dict):
-            return "Error", {"detail": "Data must be in JSON"}
-        return await func(sid, data, *args, **kwargs)
-    return wrapper
-
-
 def validate_model(model):
     def decorator(func):
         @functools.wraps(func)
