@@ -12,7 +12,7 @@ from ..exceptions import AccessTokenValidationError, BearerTokenExtractionError
 
 
 @sio.event
-async def connect(sid, environ):
+async def connect(sid: str, environ: dict):
     auth_header = environ.get("HTTP_AUTHORIZATION")
     try:
         user_id, session_id = auth_utils.extract_access_token_data(
@@ -33,16 +33,16 @@ async def connect(sid, environ):
 
 
 @sio.event
-async def disconnect(sid):
+async def disconnect(sid: str):
     user_id = (await sio.get_session(sid))["user_id"]
     await sio.leave_room(sid, user_id)
 
 
 @sio.event
 @exception_handlers.handle_sqlalchemy_error
-@validators.validate_user_in_room
 @validators.validate_model(model=schemas.Message)
-async def message(sid, data):
+@validators.validate_user_in_room
+async def message(sid: str, data: schemas.Message):
     async with db_session() as db:
         sid_data = await sio.get_session(sid)
         user_id, name = sid_data["user_id"], sid_data["name"]
@@ -69,9 +69,9 @@ async def message(sid, data):
 
 
 @sio.event
-@validators.validate_user_in_room
 @validators.validate_model(model=schemas.UserTyping)
-async def start_typing(sid, data):
+@validators.validate_user_in_room
+async def start_typing(sid: str, data: schemas.UserTyping):
     sid_data = await sio.get_session(sid)
     user_id, name = sid_data["user_id"], sid_data["name"]
     user_id_str = str(user_id)
@@ -85,9 +85,9 @@ async def start_typing(sid, data):
 
 
 @sio.event
-@validators.validate_user_in_room
 @validators.validate_model(model=schemas.UserTyping)
-async def stop_typing(sid, data):
+@validators.validate_user_in_room
+async def stop_typing(sid: str, data: schemas.UserTyping):
     sid_data = await sio.get_session(sid)
     user_id, name = sid_data["user_id"], sid_data["name"]
     user_id_str = str(user_id)
@@ -104,7 +104,7 @@ async def stop_typing(sid, data):
 @exception_handlers.handle_sqlalchemy_error
 @exception_handlers.handle_field_submission_error
 @validators.validate_model(model=schemas.SearchUsers)
-async def find_users(sid, data):
+async def find_users(sid: str, data: schemas.SearchUsers):
     user_utils.validate_username(data.search)
     async with db_session() as db:
         users_data = [
@@ -123,7 +123,7 @@ async def find_users(sid, data):
 @exception_handlers.handle_sqlalchemy_error
 @exception_handlers.handle_field_submission_error
 @validators.validate_model(model=schemas.SearchTags)
-async def find_tags(sid, data):
+async def find_tags(sid: str, data: schemas.SearchTags):
     room_utils.validate_tag_name(data.search)
     async with db_session() as db:
         tags = [tag.tag for tag in await crud.search_tag(db=db, tag_name=data.search, limit=10)]
@@ -134,7 +134,7 @@ async def find_tags(sid, data):
 @exception_handlers.handle_sqlalchemy_error
 @exception_handlers.handle_field_submission_error
 @validators.validate_model(model=schemas.SearchRooms)
-async def find_rooms(sid, data):
+async def find_rooms(sid: str, data: schemas.SearchRooms):
     room_utils.validate_title(data.search)
     if data.tags is not None and data.tags is not set():
         room_utils.validate_tag_names(data.tags)

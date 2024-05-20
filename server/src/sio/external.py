@@ -1,9 +1,10 @@
 from .sio import sio
 import uuid
 import asyncio
+from typing import Any
 
 
-def get_room_sids(room):
+def get_room_sids(room: Any):
     try:
         return sio.manager.rooms["/"][room].keys()
     except KeyError:

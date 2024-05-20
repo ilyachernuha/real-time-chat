@@ -1,13 +1,13 @@
 import functools
-import uuid
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
+from typing import Type, Callable
 from .sio import sio
 
 
-def validate_model(model):
-    def decorator(func):
+def validate_model(model: Type[BaseModel]):
+    def decorator(func: Callable):
         @functools.wraps(func)
-        async def wrapper(sid, data, *args, **kwargs):
+        async def wrapper(sid: str, data: dict, *args, **kwargs):
             if not isinstance(data, dict):
                 return "Error", {"detail": "Data must be in JSON"}
             try:
@@ -19,10 +19,10 @@ def validate_model(model):
     return decorator
 
 
-def validate_user_in_room(func):
+def validate_user_in_room(func: Callable):
     @functools.wraps(func)
-    async def wrapper(sid, data, *args, **kwargs):
-        if uuid.UUID(data["room_id"]) not in sio.rooms(sid):
+    async def wrapper(sid: str, data: Type[BaseModel], *args, **kwargs):
+        if data.room_id not in sio.rooms(sid):
             return "Error", {"detail": "You're not member of this room"}
         return await func(sid, data, *args, **kwargs)
     return wrapper

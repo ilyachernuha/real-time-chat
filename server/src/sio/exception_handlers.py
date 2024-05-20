@@ -1,9 +1,10 @@
 import functools
+from typing import Callable
 from sqlalchemy.exc import SQLAlchemyError
 from ..exceptions import FieldSubmitError
 
 
-def handle_field_submission_error(func):
+def handle_field_submission_error(func: Callable):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
@@ -13,7 +14,7 @@ def handle_field_submission_error(func):
     return wrapper
 
 
-def handle_sqlalchemy_error(func):
+def handle_sqlalchemy_error(func: Callable):
     @functools.wraps(func)
     async def wrapper(*args, **kwargs):
         try:
