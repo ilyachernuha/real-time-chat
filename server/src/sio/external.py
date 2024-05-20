@@ -54,3 +54,9 @@ async def close_room(room_id: uuid.UUID, member_ids: list[uuid.UUID]):
     await sio.close_room(room=room_id)
     for user_id in member_ids:
         await room_state_notification(room_id=room_id, user_id=user_id, event="room_deleted")
+
+
+async def disconnect_client(user_id: uuid.UUID, session_id):
+    sids = [sid for sid in get_room_sids(user_id) if (await sio.get_session(sid))["session_id"] == session_id]
+    for sid in sids:
+        await sio.disconnect(sid)

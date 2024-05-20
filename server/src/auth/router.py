@@ -7,6 +7,7 @@ from . import crud, schemas, responses, auth_utils, email_utils
 from ..users import user_utils
 from ..database import get_db
 from ..security import security_basic, security_bearer
+from ..sio import external as sio
 from .. import html_generator
 
 
@@ -256,4 +257,5 @@ async def close_session(body: schemas.CloseSession,
     if user_id != session.user_id:
         raise HTTPException(status_code=403, detail="Session is not yours")
     await crud.delete_session(db, body.session_id)
+    await sio.disconnect_client(user_id=user_id, session_id=session.session_id)
     return {"status": "success"}
