@@ -39,6 +39,7 @@ async def startup():
 async def shutdown():
     scheduler.shutdown()
     await S3.close_client()
+    await sio.shutdown()
 
 
 @app.exception_handler(FieldSubmitError)

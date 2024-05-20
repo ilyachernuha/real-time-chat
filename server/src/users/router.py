@@ -11,6 +11,7 @@ from ..auth import auth_utils
 from .. import image_utils, file_utils
 from ..s3 import S3
 from ..security import security_bearer
+from ..sio import external as sio
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -66,6 +67,7 @@ async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCr
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     user_utils.validate_name(body.new_name)
     user = await crud.update_user_name(db, user_id, body.new_name)
+    await sio.update_user_name(user_id, user.name)
     return {"status": "success", "new_name": user.name}
 
 
