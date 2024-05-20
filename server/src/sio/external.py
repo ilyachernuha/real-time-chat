@@ -4,9 +4,9 @@ import asyncio
 from typing import Any
 
 
-def get_room_sids(room: Any):
+def get_room_sids(room: Any, namespace: str = "/"):
     try:
-        return sio.manager.rooms["/"][room].keys()
+        return sio.manager.rooms[namespace][room].keys()
     except KeyError:
         return []
 
