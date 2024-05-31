@@ -194,7 +194,7 @@ class Message(Base):
 
     message_id = Column(UUID, primary_key=True)
     user_id = Column(UUID, ForeignKey("users.user_id"), nullable=False)
-    room_id = Column(UUID, ForeignKey("room.room_id"), nullable=False, index=True)
+    room_id = Column(UUID, ForeignKey("rooms.room_id"), nullable=False, index=True)
     reply_message_id = Column(UUID, ForeignKey("messages.message_id"), nullable=True, default=None)
     text = Column(String, nullable=True)
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
