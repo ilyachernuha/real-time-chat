@@ -25,6 +25,7 @@ class User(Base):
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     rooms_owned = relationship("Room", back_populates="owner", cascade="all, delete-orphan")
     rooms = relationship("UserRoomAssociation", back_populates="user", cascade="all, delete-orphan")
+    messages = relationship("Message", back_populates="user", cascade="all, delete-orphan")
 
     @validates("is_guest", "account_data")
     def validate_user(self, key, value):
@@ -158,6 +159,7 @@ class Room(Base):
     owner = relationship("User", back_populates="rooms_owned")
     users = relationship("UserRoomAssociation", back_populates="room", cascade="all, delete-orphan")
     tags = relationship("RoomTagAssociation", back_populates="room", cascade="all, delete-orphan")
+    messages = relationship("Message", back_populates="room", cascade="all, delete-orphan")
 
 
 class UserRoomAssociation(Base):
@@ -185,3 +187,19 @@ class RoomTagAssociation(Base):
     theme = Column(SQLAlchemyEnum(RoomTheme, name="room_theme"), nullable=False, index=True)
     room = relationship("Room", back_populates="tags")
     tag = relationship("Tag", back_populates="rooms")
+
+
+class Message(Base):
+    __tablename__ = "messages"
+
+    message_id = Column(UUID, primary_key=True)
+    user_id = Column(UUID, ForeignKey("users.user_id"), nullable=False)
+    room_id = Column(UUID, ForeignKey("room.room_id"), nullable=False, index=True)
+    reply_message_id = Column(UUID, ForeignKey("messages.message_id"), nullable=True, default=None)
+    text = Column(String, nullable=True)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    update_time = Column(DateTime(timezone=True), nullable=True, default=None)
+    room = relationship("Room", back_populates="messages")
+    user = relationship("User", back_populates="messages")
+    reply_to = relationship("Message", back_populates="replies")
+    replies = relationship("Message", back_populates="reply_message")
