@@ -46,13 +46,14 @@ async def message(sid: str, data: schemas.Message):
     async with db_session() as db:
         sid_data = await sio.get_session(sid)
         user_id, name = sid_data["user_id"], sid_data["name"]
-        message_id = uuid.uuid4()
-        timestamp = int(time.time() * 1000)
+        message = await crud.create_message(db=db, user_id=user_id, room_id=data.room_id, text=data.text)
+        message_id_str = str(message.message_id)
+        timestamp = message.timestamp.isoformat()
         task = asyncio.create_task(
             sio.emit(
                 event="message",
                 data={
-                    "message_id": str(message_id),
+                    "message_id": message_id_str,
                     "user": {
                         "id": str(user_id),
                         "name": name
@@ -65,7 +66,7 @@ async def message(sid: str, data: schemas.Message):
                 skip_sid=sid
             )
         )
-        return "Success", {"message_id": str(message_id), "timestamp": timestamp}
+        return "Success", {"message_id": message_id_str, "timestamp": timestamp}
 
 
 @sio.event
