@@ -201,5 +201,5 @@ class Message(Base):
     update_time = Column(DateTime(timezone=True), nullable=True, default=None)
     room = relationship("Room", back_populates="messages")
     user = relationship("User", back_populates="messages")
-    reply_to = relationship("Message", back_populates="replies")
-    replies = relationship("Message", back_populates="reply_message")
+    reply_to = relationship("Message", back_populates="replies", remote_side=[message_id])
+    replies = relationship("Message", back_populates="reply_to")
