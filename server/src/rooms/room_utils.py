@@ -159,7 +159,7 @@ async def check_if_user_can_add_users_to_room(db: AsyncSession, user_id: uuid.UU
 
 
 async def check_if_user_is_room_member(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID):
-    if await crud.get_user_room_association(db=db, user_id=user_id, room_id=room_id) is None:
+    if not await user_is_in_room(db=db, user_id=user_id, room_id=room_id):
         raise HTTPException(status_code=403, detail="You're not a member of this room")
 
 

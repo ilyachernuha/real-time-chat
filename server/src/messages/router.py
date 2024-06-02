@@ -29,8 +29,7 @@ async def room_updates(after: float, room_id: uuid.UUID,
                        credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                        db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
-        raise HTTPException(status_code=403, detail="You are not member of this room")
+    await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room_id)
     timestamp = datetime.fromtimestamp(after, timezone.utc)
     new_messages = [
         message_utils.message_to_dict(message=message, include_message_id=True)
@@ -55,8 +54,7 @@ async def old_messages(room_id: uuid.UUID, number: int = Query(gt=10, default=10
                        credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                        db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
-        raise HTTPException(status_code=403, detail="You are not member of this room")
+    await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room_id)
     messages = [
         message_utils.message_to_dict(message=message, include_message_id=True)
         for message in (
