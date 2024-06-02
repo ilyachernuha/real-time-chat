@@ -48,7 +48,7 @@ async def message(sid: str, data: schemas.Message):
         user_id, name = sid_data["user_id"], sid_data["name"]
         message = await crud.create_message(db=db, user_id=user_id, room_id=data.room_id, text=data.text)
         message_id_str = str(message.message_id)
-        timestamp = message.timestamp.isoformat()
+        timestamp = message.timestamp.timestamp()
         task = asyncio.create_task(
             sio.emit(
                 event="message",

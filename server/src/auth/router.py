@@ -239,7 +239,7 @@ async def get_active_sessions(credentials: HTTPAuthorizationCredentials = Depend
         {
             "session_id": str(session.session_id),
             "device_info": session.device_info,
-            "latest_activity": session.latest_activity.isoformat()
+            "latest_activity": session.latest_activity.timestamp()
         }
         for session in sessions
     ]
