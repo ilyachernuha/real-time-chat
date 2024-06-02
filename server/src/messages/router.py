@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.security import  HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
+from datetime import datetime, timezone
 from . import crud, responses
 from ..security import security_bearer
 from ..database import get_db
@@ -27,6 +28,73 @@ async def message_info(message_id: uuid.UUID, credentials: HTTPAuthorizationCred
         "room_id": message.room_id,
         "reply_to": message.reply_message_id,
         "text": message.text,
-        "created_at": message.timestamp.isoformat(),
-        "updated_at": message.update_time.isoformat() if message.update_time is not None else None
+        "created_at": message.timestamp.timestamp(),
+        "updated_at": message.update_time.timestamp() if message.update_time is not None else None
     }
+
+
+@router.get("/room_updates", response_model=responses.RoomUpdates)
+async def room_updates(after: float, room_id: uuid.UUID,
+                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                       db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
+        raise HTTPException(status_code=403, detail="You are not member of this room")
+    timestamp = datetime.fromtimestamp(after, timezone.utc)
+    new_messages = [
+        {
+            "message_id": message.message_id,
+            "user_id": message.user_id,
+            "reply_to": message.reply_message_id,
+            "text": message.text,
+            "created_at": message.timestamp.timestamp(),
+            "updated_at": message.update_time.timestamp() if message.update_time is not None else None
+        }
+        for message in (
+            await crud.get_messages_in_room_created_after_timestamp(db=db, room_id=room_id, timestamp=timestamp)
+        )
+    ]
+    updated_messages = [
+        {
+            "message_id": message.message_id,
+            "user_id": message.user_id,
+            "reply_to": message.reply_message_id,
+            "text": message.text,
+            "created_at": message.timestamp.timestamp(),
+            "updated_at": message.update_time.timestamp() if message.update_time is not None else None
+        }
+        for message in (
+            await crud.get_messages_in_room_updated_after_timestamp(db=db, room_id=room_id, timestamp=timestamp)
+        )
+    ]
+    return {
+        "new_messages": new_messages,
+        "updated_messages": updated_messages
+    }
+
+
+@router.get("/old_messages", response_model=responses.OldMessages)
+async def old_messages(room_id: uuid.UUID, number: int = Query(gt=10, default=100), before: float | None = None,
+                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                       db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
+        raise HTTPException(status_code=403, detail="You are not member of this room")
+    messages = [
+        {
+            "message_id": message.message_id,
+            "user_id": message.user_id,
+            "reply_to": message.reply_message_id,
+            "text": message.text,
+            "created_at": message.timestamp.timestamp(),
+            "updated_at": message.update_time.timestamp() if message.update_time is not None else None
+        }
+        for message in (
+            await crud.get_messages_in_room_before_timestamp(db=db, room_id=room_id,
+                                                             timestamp=datetime.fromtimestamp(before, timezone.utc),
+                                                             limit=number)
+                if before is not None else
+            await crud.get_latest_messages_in_room(db=db, room_id=room_id, limit=number)
+        )
+    ]
+    return {"messages": messages}

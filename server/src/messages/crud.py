@@ -44,7 +44,18 @@ async def get_messages_in_room_before_timestamp(db: AsyncSession, room_id: uuid.
     stmt = (
         select(db_models.Message)
         .filter(db_models.Message.room_id == room_id)
-        .filter(db_models.Message.update_time <= timestamp)
+        .filter(db_models.Message.timestamp <= timestamp)
+        .order_by(db_models.Message.timestamp.desc())
+        .limit(limit)
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
+async def get_latest_messages_in_room(db: AsyncSession, room_id: uuid.UUID, limit: int = 100):
+    stmt = (
+        select(db_models.Message)
+        .filter(db_models.Message.room_id == room_id)
         .order_by(db_models.Message.timestamp.desc())
         .limit(limit)
     )

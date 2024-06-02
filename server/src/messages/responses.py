@@ -6,5 +6,23 @@ class MessageInfo(BaseModel):
     room_id: UUID4
     reply_to: UUID4 | None
     text: str | None
-    created_at: str
-    updated_at: str | None
+    created_at: float
+    updated_at: float | None
+
+
+class MessageLoadInfo(BaseModel):
+    message_id: UUID4
+    user_id: UUID4
+    reply_to: UUID4 | None
+    text: str | None
+    created_at: float
+    updated_at: float | None
+
+
+class RoomUpdates(BaseModel):
+    new_messages: list[MessageLoadInfo]
+    updated_messages: list[MessageLoadInfo]
+
+
+class OldMessages(BaseModel):
+    messages: list[MessageLoadInfo]
