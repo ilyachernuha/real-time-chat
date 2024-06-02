@@ -17,9 +17,7 @@ router = APIRouter(prefix="/messages", tags=["messages"])
 async def message_info(message_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                        db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
-    message = await crud.get_message_by_id(db=db, message_id=message_id)
-    if message is None:
-        raise HTTPException(status_code=404, detail="Message not found")
+    message = await message_utils.get_message_if_exits(db=db, message_id=message_id)
     room_id = message.room_id
     if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
         raise HTTPException(status_code=403, detail="You cannot access this message")

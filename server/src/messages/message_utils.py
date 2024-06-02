@@ -1,5 +1,19 @@
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
+from . import crud
 from .. import db_models
+
+
+def check_if_message_exits(message: db_models.Message):
+    if message is None:
+        raise HTTPException(status_code=404, detail="Message not found")
+
+
+async def get_message_if_exits(db: AsyncSession, message_id: uuid.UUID):
+    message = await crud.get_message_by_id(db=db, message_id=message_id)
+    check_if_message_exits(message)
+    return message
 
 
 def message_to_dict(message: db_models.Message, include_message_id: bool = False, include_room_id: bool = False):
