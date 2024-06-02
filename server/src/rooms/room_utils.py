@@ -12,7 +12,7 @@ from ..s3 import S3
 from ..exceptions import FieldSubmitError
 
 
-def check_if_room_exists(room: db_models.Room):
+def check_if_room_exists(room: db_models.Room | None):
     if room is None:
         raise HTTPException(status_code=404, detail="Room not found")
 

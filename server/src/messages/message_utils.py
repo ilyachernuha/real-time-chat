@@ -5,7 +5,7 @@ from . import crud
 from .. import db_models
 
 
-def check_if_message_exits(message: db_models.Message):
+def check_if_message_exits(message: db_models.Message | None):
     if message is None:
         raise HTTPException(status_code=404, detail="Message not found")
 
