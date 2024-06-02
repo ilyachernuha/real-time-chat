@@ -10,7 +10,7 @@ class MessageInfo(BaseModel):
     updated_at: float | None
 
 
-class MessageLoadInfo(BaseModel):
+class MessageInRoomInfo(BaseModel):
     message_id: UUID4
     user_id: UUID4
     reply_to: UUID4 | None
@@ -20,9 +20,9 @@ class MessageLoadInfo(BaseModel):
 
 
 class RoomUpdates(BaseModel):
-    new_messages: list[MessageLoadInfo]
-    updated_messages: list[MessageLoadInfo]
+    new_messages: list[MessageInRoomInfo]
+    updated_messages: list[MessageInRoomInfo]
 
 
 class OldMessages(BaseModel):
-    messages: list[MessageLoadInfo]
+    messages: list[MessageInRoomInfo]
