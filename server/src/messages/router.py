@@ -3,7 +3,7 @@ from fastapi.security import  HTTPAuthorizationCredentials
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from datetime import datetime, timezone
-from . import crud, responses
+from . import crud, responses, message_utils
 from ..security import security_bearer
 from ..database import get_db
 from ..auth import auth_utils
@@ -23,14 +23,7 @@ async def message_info(message_id: uuid.UUID, credentials: HTTPAuthorizationCred
     room_id = message.room_id
     if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
         raise HTTPException(status_code=403, detail="You cannot access this message")
-    return {
-        "user_id": message.user_id,
-        "room_id": message.room_id,
-        "reply_to": message.reply_message_id,
-        "text": message.text,
-        "created_at": message.timestamp.timestamp(),
-        "updated_at": message.update_time.timestamp() if message.update_time is not None else None
-    }
+    return message_utils.message_to_dict(message=message, include_room_id=True)
 
 
 @router.get("/room_updates", response_model=responses.RoomUpdates)
@@ -42,27 +35,13 @@ async def room_updates(after: float, room_id: uuid.UUID,
         raise HTTPException(status_code=403, detail="You are not member of this room")
     timestamp = datetime.fromtimestamp(after, timezone.utc)
     new_messages = [
-        {
-            "message_id": message.message_id,
-            "user_id": message.user_id,
-            "reply_to": message.reply_message_id,
-            "text": message.text,
-            "created_at": message.timestamp.timestamp(),
-            "updated_at": message.update_time.timestamp() if message.update_time is not None else None
-        }
+        message_utils.message_to_dict(message=message, include_message_id=True)
         for message in (
             await crud.get_messages_in_room_created_after_timestamp(db=db, room_id=room_id, timestamp=timestamp)
         )
     ]
     updated_messages = [
-        {
-            "message_id": message.message_id,
-            "user_id": message.user_id,
-            "reply_to": message.reply_message_id,
-            "text": message.text,
-            "created_at": message.timestamp.timestamp(),
-            "updated_at": message.update_time.timestamp() if message.update_time is not None else None
-        }
+        message_utils.message_to_dict(message=message, include_message_id=True)
         for message in (
             await crud.get_messages_in_room_updated_after_timestamp(db=db, room_id=room_id, timestamp=timestamp)
         )
@@ -81,14 +60,7 @@ async def old_messages(room_id: uuid.UUID, number: int = Query(gt=10, default=10
     if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
         raise HTTPException(status_code=403, detail="You are not member of this room")
     messages = [
-        {
-            "message_id": message.message_id,
-            "user_id": message.user_id,
-            "reply_to": message.reply_message_id,
-            "text": message.text,
-            "created_at": message.timestamp.timestamp(),
-            "updated_at": message.update_time.timestamp() if message.update_time is not None else None
-        }
+        message_utils.message_to_dict(message=message, include_message_id=True)
         for message in (
             await crud.get_messages_in_room_before_timestamp(db=db, room_id=room_id,
                                                              timestamp=datetime.fromtimestamp(before, timezone.utc),
