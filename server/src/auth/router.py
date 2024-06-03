@@ -76,7 +76,11 @@ async def guest_login(body: schemas.GuestLogin, db: AsyncSession = Depends(get_d
 
 @router.post("/token_refresh", response_model=responses.TokenUpdate)
 async def token_refresh(body: schemas.TokenRefresh, db: AsyncSession = Depends(get_db)):
-    session = await auth_utils.get_and_validate_session_from_refresh_token(db, body.refresh_token)
+    session = (
+        await auth_utils.get_session_by_id_and_validate_refresh_token(db, body.session_id, body.refresh_token)
+        if body.session_id is not None else
+        await auth_utils.get_and_validate_session_from_refresh_token(db, body.refresh_token)
+    )
     user_id_str = str((await session.awaitable_attrs.user).user_id)
     session_id_str = str(session.session_id)
     new_refresh_token = auth_utils.generate_refresh_token()
