@@ -12,7 +12,7 @@ from ..s3 import S3
 from ..exceptions import FieldSubmitError
 
 
-def check_if_room_exists(room: db_models.Room):
+def check_if_room_exists(room: db_models.Room | None):
     if room is None:
         raise HTTPException(status_code=404, detail="Room not found")
 
@@ -132,8 +132,12 @@ async def check_if_user_is_admin(db: AsyncSession, user_id: uuid.UUID, room: db_
         raise HTTPException(status_code=403, detail="Only admins can perform this action")
 
 
+async def user_is_in_room(db: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID):
+    return await crud.get_user_room_association(db, room_id=room_id, user_id=user_id) is not None
+
+
 async def check_if_user_can_join_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
-    if await crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
+    if await user_is_in_room(db, room_id=room.room_id, user_id=user_id):
         raise HTTPException(status_code=409, detail="You already joined this room")
     # implement closed room logic
     # implement user banned logic
@@ -142,7 +146,7 @@ async def check_if_user_can_join_room(db: AsyncSession, user_id: uuid.UUID, room
 async def check_if_user_can_leave_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
     if room.owner_id == user_id:
         raise HTTPException(status_code=403, detail="Owner cannot leave the room")
-    if await crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id) is None:
+    if not await user_is_in_room(db, room_id=room.room_id, user_id=user_id):
         raise HTTPException(status_code=409, detail="You are not a member of this room")
 
 
@@ -155,7 +159,7 @@ async def check_if_user_can_add_users_to_room(db: AsyncSession, user_id: uuid.UU
 
 
 async def check_if_user_is_room_member(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID):
-    if await crud.get_user_room_association(db=db, user_id=user_id, room_id=room_id) is None:
+    if not await user_is_in_room(db=db, user_id=user_id, room_id=room_id):
         raise HTTPException(status_code=403, detail="You're not a member of this room")
 
 

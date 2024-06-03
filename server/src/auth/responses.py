@@ -22,7 +22,7 @@ class TokenUpdate(BaseModel):
 class Session(BaseModel):
     session_id: UUID4
     device_info: str
-    latest_activity: str
+    latest_activity: float
 
 
 class ActiveSessions(BaseModel):

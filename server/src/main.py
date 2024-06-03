@@ -12,6 +12,7 @@ from .exceptions import AccessTokenValidationError, FieldSubmitError
 from .users.router import router as users_router
 from .auth.router import router as auth_router
 from .rooms.router import router as rooms_router
+from .messages.router import router as messages_router
 from .s3 import S3
 
 
@@ -77,6 +78,7 @@ async def ping():
 app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(rooms_router)
+app.include_router(messages_router)
 
 app.mount("/public", StaticFiles(directory="public"))
 app.mount("/socket.io", socketio.ASGIApp(sio))
