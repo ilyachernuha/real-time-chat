@@ -24,6 +24,7 @@ class GuestLogin(BaseModel):
 
 class TokenRefresh(BaseModel):
     refresh_token: str
+    session_id: UUID4 | None = None
 
 
 class UpdateUsername(BaseModel):

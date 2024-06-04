@@ -58,6 +58,15 @@ def hash_refresh_token(token: str):
     return hashlib.sha512(token.encode()).hexdigest()
 
 
+async def get_session_by_id_and_validate_refresh_token(db: AsyncSession, session_id: uuid.UUID, token: str):
+    session = await crud.get_session_by_id(db, session_id)
+    if session is None:
+        raise HTTPException(status_code=401, detail="Invalid session id")
+    if session.refresh_token_hash != hash_refresh_token(token):
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
+    return session
+
+
 async def get_and_validate_session_from_refresh_token(db: AsyncSession, token: str):
     session = await crud.get_session_by_refresh_token_hash(db, hash_refresh_token(token))
     if session is None:
