@@ -26,7 +26,15 @@ async def connect(sid: str, environ: dict):
             raise ConnectionRefusedError("Session not found")
         user = await crud.get_user_by_id(db, user_id)
 
-        await sio.save_session(sid, {"user_id": user_id, "session_id": session_id, "name": user.name})
+        await sio.save_session(
+            sid=sid,
+            session={
+                "user_id": user_id,
+                "session_id": session_id,
+                "name": user.name,
+                "profile_picture_id": user.profile_picture_id
+            }
+        )
         await sio.enter_room(sid, user_id)
         for room_id in await utils.get_user_room_ids(user):
             await sio.enter_room(sid, room_id)
@@ -45,7 +53,7 @@ async def disconnect(sid: str):
 async def message(sid: str, data: schemas.Message):
     async with db_session() as db:
         sid_data = await sio.get_session(sid)
-        user_id, name = sid_data["user_id"], sid_data["name"]
+        user_id, name, profile_picture_id = sid_data["user_id"], sid_data["name"], sid_data["profile_picture_id"]
         message = await crud.create_message(db=db, user_id=user_id, room_id=data.room_id, text=data.text)
         message_id_str = str(message.message_id)
         timestamp = message.timestamp.timestamp()
@@ -56,7 +64,8 @@ async def message(sid: str, data: schemas.Message):
                     "message_id": message_id_str,
                     "user": {
                         "id": str(user_id),
-                        "name": name
+                        "name": name,
+                        "profile_picture_id": str(profile_picture_id) if profile_picture_id is not None else None
                     },
                     "text": data.text,
                     "room_id": str(data.room_id),

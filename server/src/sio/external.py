@@ -11,6 +11,13 @@ async def update_user_name(user_id: uuid.UUID, new_name: str):
         await sio.save_session(sid, sid_data)
 
 
+async def update_user_profile_picture(user_id: uuid.UUID, new_picture_id: uuid.UUID | None):
+    for sid in utils.get_room_sids(user_id):
+        sid_data = await sio.get_session(sid)
+        sid_data["profile_picture_id"] = new_picture_id
+        await sio.save_session(sid, sid_data)
+
+
 async def room_state_notification(room_id: uuid.UUID, user_id: uuid.UUID, event: str):
     task = asyncio.create_task(
         sio.emit(

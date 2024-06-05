@@ -90,6 +90,7 @@ async def set_profile_picture(image: BytesIO = Depends(file_utils.verify_profile
     await crud.update_profile_picture_id(db=db, user_id=user.user_id, new_profile_picture_id=new_profile_picture_id)
     if old_profile_picture_id is not None:
         await user_utils.delete_profile_picture_from_s3(old_profile_picture_id)
+    await sio.update_user_profile_picture(user_id=user.user_id, new_picture_id=new_profile_picture_id)
     return {"status": "success", "profile_picture_id": new_profile_picture_id}
 
 
@@ -102,4 +103,5 @@ async def delete_profile_picture(credentials: HTTPAuthorizationCredentials = Dep
         raise HTTPException(status_code=409, detail="You don't have profile picture")
     await user_utils.delete_profile_picture_from_s3(profile_picture_id)
     await crud.update_profile_picture_id(db=db, user_id=user.user_id, new_profile_picture_id=None)
+    await sio.update_user_profile_picture(user_id=user.user_id, new_picture_id=None)
     return {"status": "success"}
