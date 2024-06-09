@@ -51,6 +51,7 @@ async def message(sid: str, data: schemas.Message):
     async with db_session() as db:
         sid_data = await sio.get_session(sid)
         user_id, name, profile_picture_id = sid_data["user_id"], sid_data["name"], sid_data["profile_picture_id"]
+        message_utils.validate_message_text(data.text)
         message = await crud.create_message(db=db, user_id=user_id, room_id=data.room_id, text=data.text)
         message_id_str = str(message.message_id)
         timestamp = message.timestamp.timestamp()
