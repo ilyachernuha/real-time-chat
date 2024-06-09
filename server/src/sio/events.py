@@ -1,31 +1,28 @@
 from socketio.exceptions import ConnectionRefusedError
+from sqlalchemy.exc import SQLAlchemyError
 import asyncio
-import time
-import uuid
 from .sio import sio
 from ..database import db_session
 from ..auth import auth_utils
 from ..users import user_utils
 from ..rooms import room_utils
-from . import crud, schemas, utils, validators, exception_handlers
-from ..exceptions import AccessTokenValidationError, BearerTokenExtractionError
+from ..messages import message_utils
+from . import crud, schemas, utils, validators
+from .exception_handlers import handle_exceptions
+from ..exceptions import (AccessTokenValidationError, BearerTokenExtractionError, MessageValidationError,
+                          FieldSubmitError)
 
 
 @sio.event
+@handle_exceptions
 async def connect(sid: str, environ: dict):
     auth_header = environ.get("HTTP_AUTHORIZATION")
-    try:
-        user_id, session_id = auth_utils.extract_access_token_data(
-                              auth_utils.extract_token_from_raw_header(auth_header))
-    except (AccessTokenValidationError, BearerTokenExtractionError) as e:
-        raise ConnectionRefusedError(str(e))
-
+    user_id, session_id = auth_utils.extract_access_token_data(auth_utils.extract_token_from_raw_header(auth_header))
     async with db_session() as db:
         session = await crud.get_session_by_id(db, session_id)
         if session is None:
             raise ConnectionRefusedError("Session not found")
         user = await crud.get_user_by_id(db, user_id)
-
         await sio.save_session(
             sid=sid,
             session={
@@ -47,13 +44,14 @@ async def disconnect(sid: str):
 
 
 @sio.event
-@exception_handlers.handle_sqlalchemy_error
+@handle_exceptions
 @validators.validate_model(model=schemas.Message)
 @validators.validate_user_in_room
 async def message(sid: str, data: schemas.Message):
     async with db_session() as db:
         sid_data = await sio.get_session(sid)
         user_id, name, profile_picture_id = sid_data["user_id"], sid_data["name"], sid_data["profile_picture_id"]
+        message_utils.validate_message_text(data.text)
         message = await crud.create_message(db=db, user_id=user_id, room_id=data.room_id, text=data.text)
         message_id_str = str(message.message_id)
         timestamp = message.timestamp.timestamp()
@@ -111,8 +109,7 @@ async def stop_typing(sid: str, data: schemas.UserTyping):
 
 
 @sio.event
-@exception_handlers.handle_sqlalchemy_error
-@exception_handlers.handle_field_submission_error
+@handle_exceptions
 @validators.validate_model(model=schemas.SearchUsers)
 async def find_users(sid: str, data: schemas.SearchUsers):
     user_utils.validate_username(data.search)
@@ -130,8 +127,7 @@ async def find_users(sid: str, data: schemas.SearchUsers):
 
 
 @sio.event
-@exception_handlers.handle_sqlalchemy_error
-@exception_handlers.handle_field_submission_error
+@handle_exceptions
 @validators.validate_model(model=schemas.SearchTags)
 async def find_tags(sid: str, data: schemas.SearchTags):
     room_utils.validate_tag_name(data.search)
@@ -141,8 +137,7 @@ async def find_tags(sid: str, data: schemas.SearchTags):
 
 
 @sio.event
-@exception_handlers.handle_sqlalchemy_error
-@exception_handlers.handle_field_submission_error
+@handle_exceptions
 @validators.validate_model(model=schemas.SearchRooms)
 async def find_rooms(sid: str, data: schemas.SearchRooms):
     room_utils.validate_title(data.search)

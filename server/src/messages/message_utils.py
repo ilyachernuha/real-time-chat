@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from . import crud
 from .. import db_models
+from ..exceptions import MessageValidationError
 
 
 def check_if_message_exits(message: db_models.Message | None):
@@ -29,3 +30,10 @@ def message_to_dict(message: db_models.Message, include_message_id: bool = False
     if include_room_id:
         message_dict["room_id"] = message.room_id
     return message_dict
+
+
+def validate_message_text(text: str):
+    if not text:
+        raise MessageValidationError("Message cannot be empty")
+    if len(text) > 1000:
+        raise MessageValidationError("Message cannot contain > 1000 characters")
