@@ -1,5 +1,4 @@
 from socketio.exceptions import ConnectionRefusedError
-from sqlalchemy.exc import SQLAlchemyError
 import asyncio
 from .sio import sio
 from ..database import db_session
@@ -9,8 +8,6 @@ from ..rooms import room_utils
 from ..messages import message_utils
 from . import crud, schemas, utils, validators
 from .exception_handlers import handle_exceptions
-from ..exceptions import (AccessTokenValidationError, BearerTokenExtractionError, MessageValidationError,
-                          FieldSubmitError)
 
 
 @sio.event
