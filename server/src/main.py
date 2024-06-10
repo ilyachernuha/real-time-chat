@@ -8,7 +8,7 @@ from .database import init_db
 from .bg_tasks import scheduler
 from . import html_generator
 from .sio.sio import sio
-from .exceptions import AccessTokenValidationError, FieldSubmitError
+from .exceptions import AccessTokenValidationError, FieldSubmitError, MessageValidationError
 from .users.router import router as users_router
 from .auth.router import router as auth_router
 from .rooms.router import router as rooms_router
@@ -58,6 +58,14 @@ async def field_submit_error_handler(request: Request, exc: FieldSubmitError):
 async def access_token_validation_error_handler(request: Request, exc: AccessTokenValidationError):
     return JSONResponse(
         status_code=401,
+        content={"detail": str(exc)}
+    )
+
+
+@app.exception_handler(MessageValidationError)
+async def message_validation_error_handler(request: Request, exc: MessageValidationError):
+    return JSONResponse(
+        status_code=422,
         content={"detail": str(exc)}
     )
 

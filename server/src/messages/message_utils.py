@@ -1,6 +1,7 @@
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
+from datetime import datetime, timezone, timedelta
 from . import crud
 from .. import db_models
 from ..exceptions import MessageValidationError
@@ -15,6 +16,13 @@ async def get_message_if_exits(db: AsyncSession, message_id: uuid.UUID):
     message = await crud.get_message_by_id(db=db, message_id=message_id)
     check_if_message_exits(message)
     return message
+
+
+def check_if_user_can_edit_message(message: db_models.Message, user_ud: uuid.UUID):
+    if message.user_id != user_ud:
+        raise HTTPException(status_code=403, detail="This message is not yours")
+    if message.timestamp + timedelta(days=2) < datetime.now(timezone.utc):
+        raise HTTPException(status_code=403, detail="You cannot edit messages older then 2 days")
 
 
 def message_to_dict(message: db_models.Message, include_message_id: bool = False, include_room_id: bool = False):

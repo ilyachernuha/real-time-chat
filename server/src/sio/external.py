@@ -60,3 +60,17 @@ async def disconnect_client(user_id: uuid.UUID, session_id):
     sids = [sid for sid in utils.get_room_sids(user_id) if (await sio.get_session(sid))["session_id"] == session_id]
     for sid in sids:
         await sio.disconnect(sid)
+
+
+async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str):
+    task = asyncio.create_task(
+        sio.emit(
+            event="message_update",
+            data={
+                "room_id": str(room_id),
+                "message_id": str(message_id),
+                "text": text
+            },
+            room=room_id
+        )
+    )
