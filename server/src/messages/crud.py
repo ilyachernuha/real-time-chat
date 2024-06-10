@@ -64,7 +64,7 @@ async def get_latest_messages_in_room(db: AsyncSession, room_id: uuid.UUID, limi
 
 
 async def update_message(db: AsyncSession, message_id: uuid.UUID, text: str | None):
-    message = get_message_by_id(db, message_id)
+    message = await get_message_by_id(db, message_id)
     message.text = text
     message.update_time = datetime.now(timezone.utc)
     await db.commit()

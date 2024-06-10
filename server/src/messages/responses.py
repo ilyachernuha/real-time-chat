@@ -1,4 +1,5 @@
 from pydantic import BaseModel, UUID4
+from ..responses_global import GenericConfirmation
 
 
 class MessageInfo(BaseModel):
