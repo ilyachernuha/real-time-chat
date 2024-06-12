@@ -62,7 +62,7 @@ async def disconnect_client(user_id: uuid.UUID, session_id):
         await sio.disconnect(sid)
 
 
-async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str):
+async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str | None):
     task = asyncio.create_task(
         sio.emit(
             event="message_update",
