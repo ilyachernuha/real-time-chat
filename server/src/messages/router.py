@@ -75,8 +75,19 @@ async def edit_message(message_id: uuid.UUID, body: schemas.EditMessage,
                        db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     message = await message_utils.get_message_if_exits(db=db, message_id=message_id)
-    message_utils.check_if_user_can_edit_message(message=message, user_ud=user_id)
+    message_utils.check_if_user_can_edit_message(message=message, user_id=user_id)
     message_utils.validate_message_text(body.text)
     await crud.update_message(db=db, message_id=message_id, text=body.text)
     await sio.emit_message_update(room_id=message.room_id, message_id=message_id, text=body.text)
+    return {"status": "success"}
+
+
+@router.delete("/delete_message/{message_id}", response_model=responses.GenericConfirmation)
+async def delete_message(message_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                         db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    message = await message_utils.get_message_if_exits(db=db, message_id=message_id)
+    message_utils.check_if_user_can_delete_message(message=message, user_id=user_id)
+    await crud.update_message(db=db, message_id=message_id, text=None)
+    await sio.emit_message_update(room_id=message.room_id, message_id=message_id, text=None)
     return {"status": "success"}

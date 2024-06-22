@@ -18,11 +18,30 @@ async def get_message_if_exits(db: AsyncSession, message_id: uuid.UUID):
     return message
 
 
-def check_if_user_can_edit_message(message: db_models.Message, user_ud: uuid.UUID):
-    if message.user_id != user_ud:
+def check_if_message_belongs_to_user(message: db_models.Message, user_id: uuid.UUID):
+    if message.user_id != user_id:
         raise HTTPException(status_code=403, detail="This message is not yours")
+
+
+def check_if_message_is_not_deleted(message: db_models.Message):
+    if message.text is None:
+        raise HTTPException(status_code=409, detail="Message is deleted")
+
+
+def check_if_message_is_editable(message: db_models.Message):
     if message.timestamp + timedelta(days=2) < datetime.now(timezone.utc):
         raise HTTPException(status_code=403, detail="You cannot edit messages older then 2 days")
+
+
+def check_if_user_can_edit_message(message: db_models.Message, user_id: uuid.UUID):
+    check_if_message_belongs_to_user(message=message, user_id=user_id)
+    check_if_message_is_not_deleted(message)
+    check_if_message_is_editable(message)
+
+
+def check_if_user_can_delete_message(message: db_models.Message, user_id: uuid.UUID):
+    check_if_message_belongs_to_user(message=message, user_id=user_id)
+    check_if_message_is_not_deleted(message)
 
 
 def message_to_dict(message: db_models.Message, include_message_id: bool = False, include_room_id: bool = False):
