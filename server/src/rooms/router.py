@@ -21,6 +21,7 @@ router = APIRouter(prefix="/rooms", tags=["rooms"])
 async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     creator = await auth_utils.get_user_by_access_token(db, credentials.credentials)
+    session_id = auth_utils.extract_session_id_from_access_token(credentials.credentials)
     room_utils.check_if_creator_not_guest(creator)
     room_utils.validate_title(body.title)
     room_utils.validate_description(body.description)
@@ -36,7 +37,7 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
         for user, make_admin in add_data:
             await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
             await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
-    await sio.add_user_to_room(user_id=creator.user_id, room_id=room.room_id)
+    await sio.add_user_to_room(user_id=creator.user_id, room_id=room.room_id, skip_session=session_id)
     return {"status": "success", "room_id": room.room_id}
 
 
@@ -124,10 +125,11 @@ async def delete_room(room_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
 async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                     db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db, credentials.credentials)
+    session_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
     await room_utils.check_if_user_can_join_room(db, user.user_id, room)
     await crud.add_user_to_room(db=db, room_id=room.room_id, user=user)
-    await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
+    await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id, skip_session=session_id)
     return {"status": "success"}
 
 
@@ -135,10 +137,11 @@ async def join_room(body: schemas.JoinRoom, credentials: HTTPAuthorizationCreden
 async def leave_room(body: schemas.LeaveRoom, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    session_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
     await room_utils.check_if_user_can_leave_room(db, user_id, room)
     await crud.remove_user_from_room(db=db, room_id=room.room_id, user_id=user_id)
-    await sio.remove_user_from_room(user_id=user_id, room_id=room.room_id)
+    await sio.remove_user_from_room(user_id=user_id, room_id=room.room_id, skip_session=session_id)
     return {"status": "success"}
 
 

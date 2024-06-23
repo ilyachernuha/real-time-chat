@@ -1,6 +1,6 @@
 from socketio.exceptions import ConnectionRefusedError
 import asyncio
-from .sio import sio
+from .sio import sio, sid_map
 from ..database import db_session
 from ..auth import auth_utils
 from ..users import user_utils
@@ -19,6 +19,8 @@ async def connect(sid: str, environ: dict):
         session = await crud.get_session_by_id(db, session_id)
         if session is None:
             raise ConnectionRefusedError("Session not found")
+        if sid_map.get(session.session_id):
+            raise ConnectionRefusedError("Session already connected")
         user = await crud.get_user_by_id(db, user_id)
         await sio.save_session(
             sid=sid,
@@ -32,12 +34,14 @@ async def connect(sid: str, environ: dict):
         await sio.enter_room(sid, user_id)
         for room_id in await utils.get_user_room_ids(user):
             await sio.enter_room(sid, room_id)
+        sid_map[session.session_id] = sid
 
 
 @sio.event
 async def disconnect(sid: str):
-    user_id = (await sio.get_session(sid))["user_id"]
-    await sio.leave_room(sid, user_id)
+    sid_data = await sio.get_session(sid)
+    await sio.leave_room(sid, sid_data["user_id"])
+    sid_map.pop(sid_data["session_id"], None)
 
 
 @sio.event
