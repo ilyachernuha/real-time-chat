@@ -43,6 +43,10 @@ def extract_user_id_from_access_token(token: str):
     return uuid.UUID(validate_access_token(token)["user_id"])
 
 
+def extract_session_id_from_access_token(token: str):
+    return uuid.UUID(validate_access_token(token)["session_id"])
+
+
 def extract_access_token_data(token: str):
     payload = validate_access_token(token)
     user_id = uuid.UUID(payload["user_id"])

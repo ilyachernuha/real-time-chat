@@ -1,4 +1,4 @@
-from .sio import sio
+from .sio import sio, sid_map
 from . import utils
 import uuid
 import asyncio
@@ -18,26 +18,29 @@ async def update_user_profile_picture(user_id: uuid.UUID, new_picture_id: uuid.U
         await sio.save_session(sid, sid_data)
 
 
-async def room_state_notification(room_id: uuid.UUID, user_id: uuid.UUID, event: str):
+async def room_state_notification(room_id: uuid.UUID, user_id: uuid.UUID, event: str,
+                                  skip_session: uuid.UUID | None = None):
     task = asyncio.create_task(
         sio.emit(
             event=event,
             data={"room_id": str(room_id)},
-            room=user_id
+            room=user_id,
+            skip_sid=(sid_map[skip_session] if skip_session else None)
         )
     )
 
 
-async def add_user_to_room(user_id: uuid.UUID, room_id: uuid.UUID):
+async def add_user_to_room(user_id: uuid.UUID, room_id: uuid.UUID, skip_session: uuid.UUID | None = None):
     for sid in utils.get_room_sids(user_id):
         await sio.enter_room(sid=sid, room=room_id)
-    await room_state_notification(room_id=room_id, user_id=user_id, event="added_to_room")
+    await room_state_notification(room_id=room_id, user_id=user_id, event="added_to_room", skip_session=skip_session)
 
 
-async def remove_user_from_room(user_id: uuid.UUID, room_id: uuid.UUID):
+async def remove_user_from_room(user_id: uuid.UUID, room_id: uuid.UUID, skip_session: uuid.UUID | None = None):
     for sid in utils.get_room_sids(user_id):
         await sio.leave_room(sid=sid, room=room_id)
-    await room_state_notification(room_id=room_id, user_id=user_id, event="removed_from_room")
+    await room_state_notification(room_id=room_id, user_id=user_id, event="removed_from_room",
+                                  skip_session=skip_session)
 
 
 async def add_multiple_users_to_room(user_ids: list[uuid.UUID], room_id: uuid.UUID):
@@ -50,10 +53,10 @@ async def remove_multiple_users_from_room(user_ids: list[uuid.UUID], room_id: uu
         await remove_user_from_room(user_id=user_id, room_id=room_id)
 
 
-async def close_room(room_id: uuid.UUID, member_ids: list[uuid.UUID]):
+async def close_room(room_id: uuid.UUID, member_ids: list[uuid.UUID], skip_session: uuid.UUID | None = None):
     await sio.close_room(room=room_id)
     for user_id in member_ids:
-        await room_state_notification(room_id=room_id, user_id=user_id, event="room_deleted")
+        await room_state_notification(room_id=room_id, user_id=user_id, event="room_deleted", skip_session=skip_session)
 
 
 async def disconnect_client(user_id: uuid.UUID, session_id):
@@ -62,7 +65,8 @@ async def disconnect_client(user_id: uuid.UUID, session_id):
         await sio.disconnect(sid)
 
 
-async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str | None):
+async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str | None,
+                              skip_session: uuid.UUID | None = None):
     task = asyncio.create_task(
         sio.emit(
             event="message_update",
@@ -71,6 +75,7 @@ async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: s
                 "message_id": str(message_id),
                 "text": text
             },
-            room=room_id
+            room=room_id,
+            skip_sid=(sid_map[skip_session] if skip_session else None)
         )
     )
