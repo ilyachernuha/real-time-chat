@@ -60,9 +60,7 @@ async def close_room(room_id: uuid.UUID, member_ids: list[uuid.UUID], skip_sessi
 
 
 async def disconnect_client(user_id: uuid.UUID, session_id):
-    sids = [sid for sid in utils.get_room_sids(user_id) if (await sio.get_session(sid))["session_id"] == session_id]
-    for sid in sids:
-        await sio.disconnect(sid)
+    sio.disconnect(sid_map[session_id])
 
 
 async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str | None,
