@@ -1,5 +1,6 @@
 from .sio import sio, sid_map
 from . import utils
+from .. import db_models
 import uuid
 import asyncio
 
@@ -60,7 +61,7 @@ async def close_room(room_id: uuid.UUID, member_ids: list[uuid.UUID], skip_sessi
 
 
 async def disconnect_client(session_id: uuid.UUID):
-    await sio.disconnect(sid_map[session_id])
+    await sio.disconnect(utils.get_sid_by_session_id(session_id))
 
 
 async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str | None,
@@ -74,6 +75,27 @@ async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: s
                 "text": text
             },
             room=room_id,
-            skip_sid=(sid_map[skip_session] if skip_session else None)
+            skip_sid=utils.get_sid_by_session_id(skip_session)
+        )
+    )
+
+
+async def emit_message(user: db_models.User, message: db_models.Message, skip_session: uuid.UUID | None = None):
+    task = asyncio.create_task(
+        sio.emit(
+            event="message",
+            data={
+                "message_id": str(message.message_id),
+                "user": {
+                    "id": str(user.user_id),
+                    "name": user.name,
+                    "profile_picture_id": str(user.profile_picture_id) if user.profile_picture_id is not None else None
+                },
+                "text": message.text,
+                "room_id": str(message.room_id),
+                "timestamp": message.timestamp.timestamp()
+            },
+            room=message.room_id,
+            skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )
