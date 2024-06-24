@@ -261,5 +261,5 @@ async def close_session(body: schemas.CloseSession,
     if user_id != session.user_id:
         raise HTTPException(status_code=403, detail="Session is not yours")
     await crud.delete_session(db, body.session_id)
-    await sio.disconnect_client(user_id=user_id, session_id=session.session_id)
+    await sio.disconnect_client(session_id=session.session_id)
     return {"status": "success"}
