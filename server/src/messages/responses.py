@@ -27,3 +27,8 @@ class RoomUpdates(BaseModel):
 
 class OldMessages(BaseModel):
     messages: list[MessageInRoomInfo]
+
+
+class MessageCreated(BaseModel):
+    status: str
+    message_id: UUID4

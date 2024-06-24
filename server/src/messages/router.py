@@ -69,6 +69,18 @@ async def old_messages(room_id: uuid.UUID, number: int = Query(gt=10, default=10
     return {"messages": messages}
 
 
+@router.post("/send_message", response_model=responses.MessageCreated)
+async def send_message(body: schemas.Message, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                       db: AsyncSession = Depends(get_db)):
+    user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
+    session_id = auth_utils.extract_session_id_from_access_token(credentials.credentials)
+    message_utils.validate_message_text(body.text)
+    await room_utils.check_if_user_is_room_member(db=db, user_id=user.user_id, room_id=body.room_id)
+    message = await crud.create_message(db=db, user_id=user.user_id, room_id=body.room_id, text=body.text)
+    await sio.emit_message(user=user, message=message, skip_session=session_id)
+    return {"status": "success", "message_id": message.message_id}
+
+
 @router.patch("/edit_message/{message_id}", response_model=responses.GenericConfirmation)
 async def edit_message(message_id: uuid.UUID, body: schemas.EditMessage,
                        credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
