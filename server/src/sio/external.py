@@ -61,7 +61,7 @@ async def close_room(room_id: uuid.UUID, member_ids: list[uuid.UUID], skip_sessi
 
 
 async def disconnect_client(session_id: uuid.UUID):
-    await sio.disconnect(sid_map[session_id])
+    await sio.disconnect(utils.get_sid_by_session_id(session_id))
 
 
 async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: str | None,
@@ -75,7 +75,7 @@ async def emit_message_update(room_id: uuid.UUID, message_id: uuid.UUID, text: s
                 "text": text
             },
             room=room_id,
-            skip_sid=(sid_map[skip_session] if skip_session else None)
+            skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )
 
@@ -96,6 +96,6 @@ async def emit_message(user: db_models.User, message: db_models.Message, skip_se
                 "timestamp": message.timestamp.timestamp()
             },
             room=message.room_id,
-            # skip_sid=(sid_map[skip_session] if skip_session else None)
+            skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )

@@ -1,5 +1,6 @@
+import uuid
 from typing import Any
-from .sio import sio
+from .sio import sio, sid_map
 from .. import db_models
 
 
@@ -12,3 +13,10 @@ def get_room_sids(room: Any, namespace: str = "/"):
         return sio.manager.rooms[namespace][room].keys()
     except KeyError:
         return []
+
+
+def get_sid_by_session_id(session_id: uuid.UUID | None):
+    try:
+        return sid_map[session_id]
+    except KeyError:
+        return None
