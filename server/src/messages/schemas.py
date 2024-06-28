@@ -8,3 +8,4 @@ class EditMessage(BaseModel):
 class Message(BaseModel):
     text: str
     room_id: UUID4
+    reply_message_id: UUID4 | None = None

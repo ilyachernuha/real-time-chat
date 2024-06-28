@@ -53,7 +53,10 @@ async def message(sid: str, data: schemas.Message):
         sid_data = await sio.get_session(sid)
         user_id, name, profile_picture_id = sid_data["user_id"], sid_data["name"], sid_data["profile_picture_id"]
         message_utils.validate_message_text(data.text)
-        message = await crud.create_message(db=db, user_id=user_id, room_id=data.room_id, text=data.text)
+        if data.reply_message_id is not None:
+            await message_utils.validate_message_reply(db=db, message_id=data.reply_message_id, room_id=data.room_id)
+        message = await crud.create_message(db=db, user_id=user_id, room_id=data.room_id, text=data.text,
+                                            reply_message_id=data.reply_message_id)
         message_id_str = str(message.message_id)
         timestamp = message.timestamp.timestamp()
         task = asyncio.create_task(
@@ -68,6 +71,7 @@ async def message(sid: str, data: schemas.Message):
                     },
                     "text": data.text,
                     "room_id": str(data.room_id),
+                    "reply_to": str(message.reply_message_id) if message.reply_message_id else None,
                     "timestamp": timestamp
                 },
                 room=data.room_id,

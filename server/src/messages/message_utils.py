@@ -64,3 +64,12 @@ def validate_message_text(text: str):
         raise MessageValidationError("Message cannot be empty")
     if len(text) > 1000:
         raise MessageValidationError("Message cannot contain > 1000 characters")
+
+
+async def validate_message_reply(db: AsyncSession, message_id: uuid.UUID, room_id: uuid.UUID):
+    message = await crud.get_message_by_id(db=db, message_id=message_id)
+    if message is None:
+        raise MessageValidationError("Message you're replying to does not exist")
+    if message.room_id != room_id:
+        raise MessageValidationError(
+            "Room you're sending message to and the room of the message you're replying to do not match")

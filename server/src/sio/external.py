@@ -26,7 +26,7 @@ async def room_state_notification(room_id: uuid.UUID, user_id: uuid.UUID, event:
             event=event,
             data={"room_id": str(room_id)},
             room=user_id,
-            skip_sid=(sid_map[skip_session] if skip_session else None)
+            skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )
 
@@ -93,6 +93,7 @@ async def emit_message(user: db_models.User, message: db_models.Message, skip_se
                 },
                 "text": message.text,
                 "room_id": str(message.room_id),
+                "reply_to": str(message.reply_message_id) if message.reply_message_id else None,
                 "timestamp": message.timestamp.timestamp()
             },
             room=message.room_id,
