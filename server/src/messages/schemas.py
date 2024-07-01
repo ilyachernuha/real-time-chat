@@ -1,11 +1,14 @@
 from pydantic import BaseModel, UUID4
+from fastapi import Form
+from dataclasses import dataclass
 
 
 class EditMessage(BaseModel):
     text: str
 
 
-class Message(BaseModel):
-    text: str
-    room_id: UUID4
-    reply_message_id: UUID4 | None = None
+@dataclass
+class Message:
+    text: str = Form(...)
+    room_id: UUID4 = Form(...)
+    reply_message_id: UUID4 | None = Form(default=None)

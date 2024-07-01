@@ -70,7 +70,8 @@ async def old_messages(room_id: uuid.UUID, number: int = Query(gt=10, default=10
 
 
 @router.post("/send_message", response_model=responses.MessageCreated)
-async def send_message(body: schemas.Message, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+async def send_message(body: schemas.Message = Depends(),
+                       credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                        db: AsyncSession = Depends(get_db)):
     user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
     session_id = auth_utils.extract_session_id_from_access_token(credentials.credentials)
