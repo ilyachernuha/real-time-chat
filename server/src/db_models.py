@@ -203,3 +203,21 @@ class Message(Base):
     user = relationship("User", back_populates="messages")
     reply_to = relationship("Message", back_populates="replies", remote_side=[message_id])
     replies = relationship("Message", back_populates="reply_to")
+    attachments = relationship("Attachment", back_populates="message", cascade="all, delete-orphan")
+
+
+class Attachment(Base):
+    __tablename__ = "attachments"
+
+    class AttachmentType(Enum):
+        file = "file"
+        image = "image"
+        video = "video"
+        audio = "audio"
+        voice_message = "voice_message"
+
+    attachment_id = Column(UUID, primary_key=True)
+    message_id = Column(UUID, ForeignKey("messages.message_id"), nullable=False)
+    type = Column(SQLAlchemyEnum(AttachmentType, neme="attachment_type"), nullable=False)
+    original_name = Column(String, nullable=True, default=None)
+    message = relationship("Message", back_populates="attachments")
