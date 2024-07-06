@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 import secrets
 from .rooms.room_languages import RoomLanguage
 from .rooms.room_themes import RoomTheme
+from .attachment import AttachmentType
 
 
 class Base(AsyncAttrs, DeclarativeBase):
@@ -208,13 +209,6 @@ class Message(Base):
 
 class Attachment(Base):
     __tablename__ = "attachments"
-
-    class AttachmentType(Enum):
-        file = "file"
-        image = "image"
-        video = "video"
-        audio = "audio"
-        voice_message = "voice_message"
 
     attachment_id = Column(UUID, primary_key=True)
     message_id = Column(UUID, ForeignKey("messages.message_id"), nullable=False)
