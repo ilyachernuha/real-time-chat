@@ -88,6 +88,23 @@ async def send_message(body: schemas.Message = Depends(),
     return {"status": "success", "message_id": message.message_id}
 
 
+@router.post("/send_voice_message", response_model=responses.MessageCreated)
+async def send_voice_message(body: schemas.VoiceMessage = Depends(),
+                             credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                             db: AsyncSession = Depends(get_db)):
+    user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
+    session_id = auth_utils.extract_session_id_from_access_token(credentials.credentials)
+    await room_utils.check_if_user_is_room_member(db=db, user_id=user.user_id, room_id=body.room_id)
+    if body.reply_message_id is not None:
+        await message_utils.validate_message_reply(db=db, message_id=body.reply_message_id, room_id=body.room_id)
+    message = await crud.create_message(db=db, user_id=user.user_id, room_id=body.room_id, text=None,
+                                        reply_message_id=body.reply_message_id)
+    await message_utils.add_attachments_to_message_and_upload_to_s3(db=db, message=message,
+                                                                    attachments=[body.voice])
+    await sio.emit_message(user=user, message=message, skip_session=session_id)
+    return {"status": "success", "message_id": message.message_id}
+
+
 @router.patch("/edit_message/{message_id}", response_model=responses.GenericConfirmation)
 async def edit_message(message_id: uuid.UUID, body: schemas.EditMessage,
                        credentials: HTTPAuthorizationCredentials = Depends(security_bearer),

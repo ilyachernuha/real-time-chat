@@ -33,12 +33,13 @@ async def verify_video(video: UploadFile):
     return Attachment(type=AttachmentType.video, file=BytesIO(await video.read()))
 
 
-async def verify_audio(audio: UploadFile):
+async def verify_audio(audio: UploadFile, voice_message: bool = False):
     if not audio.filename.endswith(".mp3"):
         raise HTTPException(status_code=422, detail="Audio must be mp3")
     if audio.size > 10 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="File too large")
-    return Attachment(type=AttachmentType.audio, file=BytesIO(await audio.read()))
+    return Attachment(type=(AttachmentType.voice_message if voice_message else AttachmentType.audio),
+                      file=BytesIO(await audio.read()))
 
 
 async def process_and_verify_attachment_based_on_type(attachment: UploadFile):
@@ -53,3 +54,7 @@ async def get_attachments(attachments: list[UploadFile] = File(default=None, max
     return [
         await process_and_verify_attachment_based_on_type(attachment) for attachment in attachments
     ] if attachments else None
+
+
+async def get_voice(voice: UploadFile = File(default=None)):
+    return await verify_audio(audio=voice, voice_message=True) if voice else None

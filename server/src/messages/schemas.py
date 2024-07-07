@@ -14,3 +14,10 @@ class Message:
     room_id: UUID4 = Form(...)
     reply_message_id: UUID4 | None = Form(default=None)
     attachments: list[file_utils.Attachment] | None = Depends(file_utils.get_attachments)
+
+
+@dataclass
+class VoiceMessage:
+    room_id: UUID4 = Form(...)
+    reply_message_id: UUID4 | None = Form(default=None)
+    voice: file_utils.Attachment | None = Depends(file_utils.get_voice)
