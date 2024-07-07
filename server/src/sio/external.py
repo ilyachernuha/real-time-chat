@@ -99,6 +99,6 @@ async def emit_message(user: db_models.User, message: db_models.Message, skip_se
                 "timestamp": message.timestamp.timestamp()
             },
             room=message.room_id,
-            # skip_sid=utils.get_sid_by_session_id(skip_session)
+            skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )

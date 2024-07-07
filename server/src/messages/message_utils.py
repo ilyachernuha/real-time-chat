@@ -118,5 +118,5 @@ async def get_attachment_if_exists(db: AsyncSession, attachment_id: uuid.UUID):
 async def check_if_user_can_access_attachment(db: AsyncSession, user_id: uuid.UUID, attachment: db_models.Attachment):
     message = await attachment.awaitable_attrs.message
     room = await message.awaitable_attrs.room
-    if not room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room.room_id):
+    if not await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room.room_id):
         raise HTTPException(status_code=403, detail="You don't have access to this attachment")
