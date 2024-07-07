@@ -9,7 +9,7 @@ from ..attachment import AttachmentType
 # MESSAGES
 
 
-async def create_message(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID, text: str,
+async def create_message(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID, text: str | None,
                          reply_message_id: uuid.UUID | None = None):
     message_id = uuid.uuid4()
     message = db_models.Message(message_id=message_id, user_id=user_id, room_id=room_id, text=text,
