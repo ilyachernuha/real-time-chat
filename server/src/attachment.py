@@ -16,3 +16,4 @@ class Attachment(BaseModel):
 
     type: AttachmentType
     file: BytesIO
+    filename: str | None = None

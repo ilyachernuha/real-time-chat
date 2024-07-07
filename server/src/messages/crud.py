@@ -3,6 +3,10 @@ from sqlalchemy import select, update
 import uuid
 from datetime import datetime, timezone
 from .. import db_models
+from ..attachment import AttachmentType
+
+
+# MESSAGES
 
 
 async def create_message(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID, text: str,
@@ -69,3 +73,20 @@ async def update_message(db: AsyncSession, message_id: uuid.UUID, text: str | No
     message.update_time = datetime.now(timezone.utc)
     await db.commit()
     return message
+
+
+# ATTACHMENTS
+
+
+async def create_attachment(db: AsyncSession, message_id: uuid.UUID, attachment_type: AttachmentType,
+                            original_name: str | None = None):
+    attachment_id = uuid.uuid4()
+    attachment = db_models.Attachment(attachment_id=attachment_id, message_id=message_id, type=attachment_type,
+                                      original_name=original_name)
+    db.add(attachment)
+    await db.commit()
+    return attachment
+
+
+async def get_attachment_by_id(db: AsyncSession, attachment_id: uuid.UUID):
+    return await db.get(db_models.Attachment, attachment_id)

@@ -22,7 +22,7 @@ async def message_info(message_id: uuid.UUID, credentials: HTTPAuthorizationCred
     room_id = message.room_id
     if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room_id):
         raise HTTPException(status_code=403, detail="You cannot access this message")
-    return message_utils.message_to_dict(message=message, include_room_id=True)
+    return await message_utils.message_to_dict(message=message, include_room_id=True)
 
 
 @router.get("/room_updates", response_model=responses.RoomUpdates)
@@ -33,13 +33,13 @@ async def room_updates(after: float, room_id: uuid.UUID,
     await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room_id)
     timestamp = datetime.fromtimestamp(after, timezone.utc)
     new_messages = [
-        message_utils.message_to_dict(message=message, include_message_id=True)
+        await message_utils.message_to_dict(message=message, include_message_id=True)
         for message in (
             await crud.get_messages_in_room_created_after_timestamp(db=db, room_id=room_id, timestamp=timestamp)
         )
     ]
     updated_messages = [
-        message_utils.message_to_dict(message=message, include_message_id=True)
+        await message_utils.message_to_dict(message=message, include_message_id=True)
         for message in (
             await crud.get_messages_in_room_updated_after_timestamp(db=db, room_id=room_id, timestamp=timestamp)
         )
@@ -57,7 +57,7 @@ async def old_messages(room_id: uuid.UUID, number: int = Query(gt=10, default=10
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room_id)
     messages = [
-        message_utils.message_to_dict(message=message, include_message_id=True)
+        await message_utils.message_to_dict(message=message, include_message_id=True)
         for message in (
             await crud.get_messages_in_room_before_timestamp(db=db, room_id=room_id,
                                                              timestamp=datetime.fromtimestamp(before, timezone.utc),
@@ -81,6 +81,9 @@ async def send_message(body: schemas.Message = Depends(),
         await message_utils.validate_message_reply(db=db, message_id=body.reply_message_id, room_id=body.room_id)
     message = await crud.create_message(db=db, user_id=user.user_id, room_id=body.room_id, text=body.text,
                                         reply_message_id=body.reply_message_id)
+    if body.attachments is not None:
+        await message_utils.add_attachments_to_message_and_upload_to_s3(db=db, message=message,
+                                                                        attachments=body.attachments)
     await sio.emit_message(user=user, message=message, skip_session=session_id)
     return {"status": "success", "message_id": message.message_id}
 
@@ -108,3 +111,13 @@ async def delete_message(message_id: uuid.UUID, credentials: HTTPAuthorizationCr
     await crud.update_message(db=db, message_id=message_id, text=None)
     await sio.emit_message_update(room_id=message.room_id, message_id=message_id, text=None, skip_session=session_id)
     return {"status": "success"}
+
+
+@router.get("/attachment/{attachment_id}", response_model=responses.Attachment)
+async def get_attachment(attachment_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                         db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    attachment = await message_utils.get_attachment_if_exists(db=db, attachment_id=attachment_id)
+    await message_utils.check_if_user_can_access_attachment(db=db, user_id=user_id, attachment=attachment)
+    return await message_utils.attachment_to_dict(attachment=attachment,
+                                                  message=(await attachment.awaitable_attrs.message))

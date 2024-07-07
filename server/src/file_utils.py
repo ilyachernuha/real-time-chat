@@ -14,7 +14,7 @@ async def verify_profile_or_room_picture_size(form: str = Form, image: UploadFil
 async def verify_file(file: UploadFile):
     if file.size > 25 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="File too large")
-    return Attachment(type=AttachmentType.file, file=BytesIO(await file.read()))
+    return Attachment(type=AttachmentType.file, file=BytesIO(await file.read()), filename=file.filename)
 
 
 async def verify_image(image: UploadFile):

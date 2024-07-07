@@ -1,6 +1,7 @@
-from .sio import sio, sid_map
+from .sio import sio
 from . import utils
 from .. import db_models
+from ..messages import message_utils
 import uuid
 import asyncio
 
@@ -94,9 +95,10 @@ async def emit_message(user: db_models.User, message: db_models.Message, skip_se
                 "text": message.text,
                 "room_id": str(message.room_id),
                 "reply_to": str(message.reply_message_id) if message.reply_message_id else None,
+                "attachments": await message_utils.attachments_to_dict(message),
                 "timestamp": message.timestamp.timestamp()
             },
             room=message.room_id,
-            skip_sid=utils.get_sid_by_session_id(skip_session)
+            # skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )
