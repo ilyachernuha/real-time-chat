@@ -26,8 +26,8 @@ def check_if_message_belongs_to_user(message: db_models.Message, user_id: uuid.U
         raise HTTPException(status_code=403, detail="This message is not yours")
 
 
-def check_if_message_is_not_deleted(message: db_models.Message):
-    if message.text is None:
+async def check_if_message_is_not_deleted(message: db_models.Message):
+    if message.text is None and not await message.awaitable_attrs.attachments:
         raise HTTPException(status_code=409, detail="Message is deleted")
 
 
@@ -36,15 +36,15 @@ def check_if_message_is_editable(message: db_models.Message):
         raise HTTPException(status_code=403, detail="You cannot edit messages older then 2 days")
 
 
-def check_if_user_can_edit_message(message: db_models.Message, user_id: uuid.UUID):
+async def check_if_user_can_edit_message(message: db_models.Message, user_id: uuid.UUID):
     check_if_message_belongs_to_user(message=message, user_id=user_id)
-    check_if_message_is_not_deleted(message)
     check_if_message_is_editable(message)
+    await check_if_message_is_not_deleted(message)
 
 
-def check_if_user_can_delete_message(message: db_models.Message, user_id: uuid.UUID):
+async def check_if_user_can_delete_message(message: db_models.Message, user_id: uuid.UUID):
     check_if_message_belongs_to_user(message=message, user_id=user_id)
-    check_if_message_is_not_deleted(message)
+    await check_if_message_is_not_deleted(message)
 
 
 async def attachment_to_dict(attachment: db_models.Attachment, message: db_models.Message):
@@ -130,3 +130,10 @@ async def check_if_user_can_access_attachment(db: AsyncSession, user_id: uuid.UU
     room = await message.awaitable_attrs.room
     if not await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room.room_id):
         raise HTTPException(status_code=403, detail="You don't have access to this attachment")
+
+
+async def delete_attachments(db: AsyncSession, message: db_models.Message):
+    for attachment in await message.awaitable_attrs.attachments:
+        attachment_id = attachment.attachment_id
+        await crud.delete_attachment(db=db, attachment_id=attachment_id)
+        await S3.delete_file(f"attachments/{message.room_id}/{attachment_id}")

@@ -90,3 +90,9 @@ async def create_attachment(db: AsyncSession, message_id: uuid.UUID, attachment_
 
 async def get_attachment_by_id(db: AsyncSession, attachment_id: uuid.UUID):
     return await db.get(db_models.Attachment, attachment_id)
+
+
+async def delete_attachment(db: AsyncSession, attachment_id: uuid.UUID):
+    attachment = await get_attachment_by_id(db=db, attachment_id=attachment_id)
+    await db.delete(attachment)
+    await db.commit()

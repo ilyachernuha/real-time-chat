@@ -110,7 +110,7 @@ async def edit_message(message_id: uuid.UUID, body: schemas.EditMessage,
                        db: AsyncSession = Depends(get_db)):
     user_id, session_id = auth_utils.extract_access_token_data(credentials.credentials)
     message = await message_utils.get_message_if_exits(db=db, message_id=message_id)
-    message_utils.check_if_user_can_edit_message(message=message, user_id=user_id)
+    await message_utils.check_if_user_can_edit_message(message=message, user_id=user_id)
     message_utils.validate_message_text(body.text)
     await crud.update_message(db=db, message_id=message_id, text=body.text)
     await sio.emit_message_update(room_id=message.room_id, message_id=message_id, text=body.text,
@@ -123,8 +123,11 @@ async def delete_message(message_id: uuid.UUID, credentials: HTTPAuthorizationCr
                          db: AsyncSession = Depends(get_db)):
     user_id, session_id = auth_utils.extract_access_token_data(credentials.credentials)
     message = await message_utils.get_message_if_exits(db=db, message_id=message_id)
-    message_utils.check_if_user_can_delete_message(message=message, user_id=user_id)
-    await crud.update_message(db=db, message_id=message_id, text=None)
+    await message_utils.check_if_user_can_delete_message(message=message, user_id=user_id)
+    if message.text is not None:
+        await crud.update_message(db=db, message_id=message_id, text=None)
+    if await message.awaitable_attrs.attachments:
+        await message_utils.delete_attachments(db=db, message=message)
     await sio.emit_message_update(room_id=message.room_id, message_id=message_id, text=None, skip_session=session_id)
     return {"status": "success"}
 
