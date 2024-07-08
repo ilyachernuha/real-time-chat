@@ -2,7 +2,7 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 from datetime import datetime, timezone, timedelta
-from . import crud, schemas
+from . import crud
 from .. import db_models
 from ..exceptions import MessageValidationError
 from ..attachment import Attachment
@@ -95,13 +95,14 @@ async def validate_message_reply(db: AsyncSession, message_id: uuid.UUID, room_i
             "Room you're sending message to and the room of the message you're replying to do not match")
 
 
-async def validate_message_body(db: AsyncSession, body: schemas.Message):
-    if body.text is not None:
-        validate_message_text(body.text)
-    if body.reply_message_id is not None:
-        await validate_message_reply(db=db, message_id=body.reply_message_id, room_id=body.room_id)
-    if body.text is None and body.attachments is None:
+async def validate_message(db: AsyncSession, room_id: uuid.UUID, text: str | None, reply_message_id: uuid.UUID | None,
+                           attachments: bool):
+    if text is not None:
+        validate_message_text(text)
+    if text is None and not attachments:
         raise MessageValidationError("Message cannot be empty")
+    if reply_message_id is not None:
+        await validate_message_reply(db=db, message_id=reply_message_id, room_id=room_id)
 
 
 async def add_attachments_to_message_and_upload_to_s3(db: AsyncSession, message: db_models.Message,

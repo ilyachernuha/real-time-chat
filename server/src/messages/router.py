@@ -76,7 +76,8 @@ async def send_message(body: schemas.Message = Depends(),
     user = await auth_utils.get_user_by_access_token(db=db, token=credentials.credentials)
     session_id = auth_utils.extract_session_id_from_access_token(credentials.credentials)
     await room_utils.check_if_user_is_room_member(db=db, user_id=user.user_id, room_id=body.room_id)
-    await message_utils.validate_message_body(db=db, body=body)
+    await message_utils.validate_message(db=db, room_id=body.room_id, text=body.text,
+                                         reply_message_id=body.reply_message_id, attachments=bool(body.attachments))
     message = await crud.create_message(db=db, user_id=user.user_id, room_id=body.room_id, text=body.text,
                                         reply_message_id=body.reply_message_id)
     if body.attachments is not None:
