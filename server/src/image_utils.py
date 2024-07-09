@@ -17,3 +17,11 @@ def compress_square_image(original: BytesIO, size: int):
         output = BytesIO()
         img.resize((size, size)).convert("RGB").save(fp=output, format="jpeg")
         return output
+
+
+def validate_image(image: BytesIO):
+    try:
+        with Image.open(image) as img:
+            pass
+    except UnidentifiedImageError:
+        raise HTTPException(status_code=422, detail="Image can't be processed")
