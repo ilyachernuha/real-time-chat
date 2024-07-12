@@ -2,6 +2,13 @@ from pydantic import BaseModel, UUID4
 from ..responses_global import GenericConfirmation
 
 
+class Attachment(BaseModel):
+    attachment_id: UUID4
+    type: str
+    presigned_url: str
+    original_name: str | None
+
+
 class MessageInfo(BaseModel):
     user_id: UUID4
     room_id: UUID4
@@ -9,6 +16,7 @@ class MessageInfo(BaseModel):
     text: str | None
     created_at: float
     updated_at: float | None
+    attachments: list[Attachment]
 
 
 class MessageInRoomInfo(BaseModel):
@@ -18,6 +26,7 @@ class MessageInRoomInfo(BaseModel):
     text: str | None
     created_at: float
     updated_at: float | None
+    attachments: list[Attachment]
 
 
 class RoomUpdates(BaseModel):
