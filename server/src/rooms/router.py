@@ -30,7 +30,7 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     room_utils.validate_tag_names(body.tags)
     tags = await room_utils.get_or_create_tags_from_string_set(db, body.tags)
     room = await crud.create_room(db=db, owner=creator, title=body.title, description=body.description, theme=theme,
-                                  languages=languages, tags=tags)
+                                  languages=languages, tags=tags, public=body.make_public)
     await crud.add_user_to_room(db=db, room_id=room.room_id, user=creator, make_admin=True)
     if body.users_to_add is not None:
         add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users_to_add)

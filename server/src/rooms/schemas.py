@@ -12,6 +12,7 @@ class RoomCreation(BaseModel):
     theme: str
     languages: set[str]
     tags: set[str]
+    make_public: bool = True
     users_to_add: list[UserToAdd] | None = None
 
 

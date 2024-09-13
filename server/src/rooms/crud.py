@@ -11,10 +11,10 @@ from ..users.crud import get_user_by_id
 
 
 async def create_room(db: AsyncSession, owner: db_models.User, title: str, description: str | None, theme: RoomTheme,
-                      languages: list[RoomLanguage], tags: list[db_models.Tag]):
+                      languages: list[RoomLanguage], tags: list[db_models.Tag], public: bool):
     room_id = uuid.uuid4()
     room = db_models.Room(room_id=room_id, owner_id=owner.user_id, title=title, description=description, theme=theme,
-                          languages=languages)
+                          languages=languages, is_public=public)
     db.add(room)
     for tag in tags:
         association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, theme=theme, room=room, tag=tag)
