@@ -19,6 +19,7 @@ class RoomInfo(BaseModel):
     languages: list[str]
     tags: list[str]
     room_picture_id: UUID4 | None
+    is_public: bool
 
 
 class RoomBasicInfo(BaseModel):

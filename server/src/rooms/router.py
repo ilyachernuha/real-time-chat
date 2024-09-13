@@ -103,7 +103,8 @@ async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCreden
         "theme": room.theme.value,
         "languages": room_utils.convert_room_languages_to_str_list(room.languages),
         "tags": await room_utils.convert_room_tags_to_str_list(list(await room.awaitable_attrs.tags)),
-        "room_picture_id": room.room_picture_id
+        "room_picture_id": room.room_picture_id,
+        "is_public": room.is_public
     }
 
 
