@@ -16,7 +16,4 @@ def get_room_sids(room: Any, namespace: str = "/"):
 
 
 def get_sid_by_session_id(session_id: uuid.UUID | None):
-    try:
-        return sid_map[session_id]
-    except KeyError:
-        return None
+    return sid_map.get(session_id, None)
