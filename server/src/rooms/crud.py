@@ -65,6 +65,13 @@ async def update_room_theme(db: AsyncSession, room_id: uuid.UUID, new_theme: Roo
     return room
 
 
+async def update_privacy_type(db: AsyncSession, room_id: uuid.UUID, public: bool):
+    room = await get_room_by_id(db, room_id)
+    room.is_public = public
+    await db.commit()
+    return room
+
+
 async def update_room_picture_id(db: AsyncSession, room_id: uuid.UUID, new_room_picture_id: uuid.UUID | None):
     room = await get_room_by_id(db, room_id)
     room.room_picture_id = new_room_picture_id

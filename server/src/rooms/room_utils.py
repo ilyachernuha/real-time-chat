@@ -111,6 +111,8 @@ async def patch_room(db: AsyncSession, room: db_models.Room, update: RoomUpdate)
         await crud.add_tags_to_room(db, room.room_id, tags)
     if update.tags_to_remove is not None:
         await crud.remove_tags_from_room(db, room.room_id, list(update.tags_to_remove))
+    if update.public is not None:
+        await crud.update_privacy_type(db, room.room_id, update.public)
 
 
 def convert_room_languages_to_str_list(languages: list[RoomLanguage]):

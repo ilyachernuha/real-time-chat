@@ -23,6 +23,7 @@ class RoomUpdate(BaseModel):
     languages: set[str] | None = None
     tags_to_add: set[str] | None = None
     tags_to_remove: set[str] | None = None
+    public: bool | None = None
 
 
 class JoinRoom(BaseModel):
