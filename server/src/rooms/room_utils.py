@@ -141,7 +141,8 @@ async def user_is_in_room(db: AsyncSession, room_id: uuid.UUID, user_id: uuid.UU
 async def check_if_user_can_join_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
     if await user_is_in_room(db, room_id=room.room_id, user_id=user_id):
         raise HTTPException(status_code=409, detail="You already joined this room")
-    # implement closed room logic
+    if not room.is_public:
+        raise HTTPException(status_code=403, detail="This room is private")
     # implement user banned logic
 
 
