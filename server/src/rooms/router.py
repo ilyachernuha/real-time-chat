@@ -164,7 +164,7 @@ async def add_users_to_room(body: schemas.AddUsers,
 @router.get("/find_rooms", response_model=responses.RoomList)
 async def find_rooms(search: str | None = None, themes: list[str] = Query(default=None),
                      tags: list[str] = Query(default=None), languages: list[str] = Query(default=None),
-                     credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                     public: bool | None = None, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
     if search is None and themes is None and tags is None and languages is None:
@@ -178,7 +178,7 @@ async def find_rooms(search: str | None = None, themes: list[str] = Query(defaul
                                             if themes else None),
                                     languages=(room_utils.get_language_list_from_codes(set(languages))
                                                if languages else None),
-                                    tags=tags)
+                                    tags=tags, public=public)
     rooms_data = [
         {
             "room_id": room.room_id,

@@ -28,7 +28,7 @@ async def get_room_by_id(db: AsyncSession, room_id: uuid.UUID):
 
 
 async def filter_rooms(db: AsyncSession, title: str | None, themes: list[RoomTheme] | None,
-                       languages: list[RoomLanguage] | None, tags: list[str] | None):
+                       languages: list[RoomLanguage] | None, tags: list[str] | None, public: bool | None = None):
     stmt = select(db_models.Room) if tags is None else select(db_models.Room).join(db_models.RoomTagAssociation)
     if title is not None:
         stmt = stmt.where(db_models.Room.title.ilike(f"%{title}%"))
@@ -38,6 +38,8 @@ async def filter_rooms(db: AsyncSession, title: str | None, themes: list[RoomThe
         stmt = stmt.where(db_models.Room.languages.op("&&")(languages))
     if tags is not None:
         stmt = stmt.where(db_models.Room.tags.any(db_models.RoomTagAssociation.tag_name.in_(tags)))
+    if public is not None:
+        stmt = stmt.where(db_models.Room.is_public == public)
     result = await db.execute(stmt)
     return result.scalars().all()
 

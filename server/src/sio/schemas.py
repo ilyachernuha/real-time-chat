@@ -24,3 +24,4 @@ class SearchRooms(BaseModel):
     themes: set[str] | None = None
     tags: set[str] | None = None
     languages: set[str] | None = None
+    public: bool | None = None

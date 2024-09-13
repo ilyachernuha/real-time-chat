@@ -154,7 +154,7 @@ async def find_rooms(sid: str, data: schemas.SearchRooms):
                                                 if data.themes else None),
                                         languages=(room_utils.get_language_list_from_codes(set(data.languages))
                                                    if data.languages else None),
-                                        tags=data.tags)
+                                        tags=data.tags, public=data.public)
         rooms_data = [
             {
                 "room_id": str(room.room_id),
