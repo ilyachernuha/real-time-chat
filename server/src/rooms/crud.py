@@ -11,10 +11,10 @@ from ..users.crud import get_user_by_id
 
 
 async def create_room(db: AsyncSession, owner: db_models.User, title: str, description: str | None, theme: RoomTheme,
-                      languages: list[RoomLanguage], tags: list[db_models.Tag]):
+                      languages: list[RoomLanguage], tags: list[db_models.Tag], public: bool):
     room_id = uuid.uuid4()
     room = db_models.Room(room_id=room_id, owner_id=owner.user_id, title=title, description=description, theme=theme,
-                          languages=languages)
+                          languages=languages, is_public=public)
     db.add(room)
     for tag in tags:
         association = db_models.RoomTagAssociation(room_id=room_id, tag_name=tag.tag, theme=theme, room=room, tag=tag)
@@ -28,7 +28,7 @@ async def get_room_by_id(db: AsyncSession, room_id: uuid.UUID):
 
 
 async def filter_rooms(db: AsyncSession, title: str | None, themes: list[RoomTheme] | None,
-                       languages: list[RoomLanguage] | None, tags: list[str] | None):
+                       languages: list[RoomLanguage] | None, tags: list[str] | None, public: bool | None = None):
     stmt = select(db_models.Room) if tags is None else select(db_models.Room).join(db_models.RoomTagAssociation)
     if title is not None:
         stmt = stmt.where(db_models.Room.title.ilike(f"%{title}%"))
@@ -38,6 +38,8 @@ async def filter_rooms(db: AsyncSession, title: str | None, themes: list[RoomThe
         stmt = stmt.where(db_models.Room.languages.op("&&")(languages))
     if tags is not None:
         stmt = stmt.where(db_models.Room.tags.any(db_models.RoomTagAssociation.tag_name.in_(tags)))
+    if public is not None:
+        stmt = stmt.where(db_models.Room.is_public == public)
     result = await db.execute(stmt)
     return result.scalars().all()
 
@@ -61,6 +63,13 @@ async def update_room_theme(db: AsyncSession, room_id: uuid.UUID, new_theme: Roo
     room.theme = new_theme
     for tag_association in room.tags:
         tag_association.theme = new_theme
+    await db.commit()
+    return room
+
+
+async def update_privacy_type(db: AsyncSession, room_id: uuid.UUID, public: bool):
+    room = await get_room_by_id(db, room_id)
+    room.is_public = public
     await db.commit()
     return room
 

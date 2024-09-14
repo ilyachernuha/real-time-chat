@@ -30,7 +30,7 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     room_utils.validate_tag_names(body.tags)
     tags = await room_utils.get_or_create_tags_from_string_set(db, body.tags)
     room = await crud.create_room(db=db, owner=creator, title=body.title, description=body.description, theme=theme,
-                                  languages=languages, tags=tags)
+                                  languages=languages, tags=tags, public=body.make_public)
     await crud.add_user_to_room(db=db, room_id=room.room_id, user=creator, make_admin=True)
     if body.users_to_add is not None:
         add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users_to_add)
@@ -103,7 +103,8 @@ async def get_room_info(room_id: uuid.UUID, credentials: HTTPAuthorizationCreden
         "theme": room.theme.value,
         "languages": room_utils.convert_room_languages_to_str_list(room.languages),
         "tags": await room_utils.convert_room_tags_to_str_list(list(await room.awaitable_attrs.tags)),
-        "room_picture_id": room.room_picture_id
+        "room_picture_id": room.room_picture_id,
+        "is_public": room.is_public
     }
 
 
@@ -163,7 +164,7 @@ async def add_users_to_room(body: schemas.AddUsers,
 @router.get("/find_rooms", response_model=responses.RoomList)
 async def find_rooms(search: str | None = None, themes: list[str] = Query(default=None),
                      tags: list[str] = Query(default=None), languages: list[str] = Query(default=None),
-                     credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                     public: bool | None = None, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
     if search is None and themes is None and tags is None and languages is None:
@@ -177,7 +178,7 @@ async def find_rooms(search: str | None = None, themes: list[str] = Query(defaul
                                             if themes else None),
                                     languages=(room_utils.get_language_list_from_codes(set(languages))
                                                if languages else None),
-                                    tags=tags)
+                                    tags=tags, public=public)
     rooms_data = [
         {
             "room_id": room.room_id,

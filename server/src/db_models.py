@@ -157,6 +157,7 @@ class Room(Base):
     theme = Column(SQLAlchemyEnum(RoomTheme, name="room_theme"), nullable=False)
     languages = Column(ARRAY(SQLAlchemyEnum(RoomLanguage, name="room_language")), nullable=False)
     room_picture_id = Column(UUID, nullable=True, default=None)
+    is_public = Column(Boolean, nullable=False, default=True)
     owner = relationship("User", back_populates="rooms_owned")
     users = relationship("UserRoomAssociation", back_populates="room", cascade="all, delete-orphan")
     tags = relationship("RoomTagAssociation", back_populates="room", cascade="all, delete-orphan")
