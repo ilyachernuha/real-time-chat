@@ -26,6 +26,7 @@ class User(Base):
     sessions = relationship("Session", back_populates="user", cascade="all, delete-orphan")
     rooms_owned = relationship("Room", back_populates="owner", cascade="all, delete-orphan")
     rooms = relationship("UserRoomAssociation", back_populates="user", cascade="all, delete-orphan")
+    banned = relationship("UserRoomBan", back_populates="user", cascade="all, delete-orphan")
     messages = relationship("Message", back_populates="user", cascade="all, delete-orphan")
 
     @validates("is_guest", "account_data")
@@ -160,6 +161,7 @@ class Room(Base):
     is_public = Column(Boolean, nullable=False, default=True)
     owner = relationship("User", back_populates="rooms_owned")
     users = relationship("UserRoomAssociation", back_populates="room", cascade="all, delete-orphan")
+    banned_users = relationship("UserRoomBan", back_populates="room", cascade="all, delete-orphan")
     tags = relationship("RoomTagAssociation", back_populates="room", cascade="all, delete-orphan")
     messages = relationship("Message", back_populates="room", cascade="all, delete-orphan")
 
@@ -172,6 +174,15 @@ class UserRoomAssociation(Base):
     is_admin = Column(Boolean, default=False)
     user = relationship("User", back_populates="rooms")
     room = relationship("Room", back_populates="users")
+
+
+class UserRoomBan(Base):
+    __tablename__ = "users_banned_in_rooms"
+
+    user_id = Column(UUID, ForeignKey("users.user_id"), primary_key=True)
+    room_id = Column(UUID, ForeignKey("rooms.room_id"), primary_key=True)
+    user = relationship("User", back_populates="banned")
+    room = relationship("Room", back_populates="banned_users")
 
 
 class Tag(Base):
