@@ -3,6 +3,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 import re
 import asyncio
+
+from sqlalchemy.util import await_only
+
 from . import crud
 from .. import db_models
 from .room_themes import RoomTheme
@@ -128,14 +131,22 @@ def check_if_user_is_owner(user_id: uuid.UUID, room: db_models.Room):
         raise HTTPException(status_code=403, detail="Only owner allowed to perform this action")
 
 
-async def check_if_user_is_admin(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
-    user_room_association = await crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user_id)
-    if user_room_association is None or not user_room_association.is_admin:
-        raise HTTPException(status_code=403, detail="Only admins can perform this action")
-
-
 async def user_is_in_room(db: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID):
     return await crud.get_user_room_association(db, room_id=room_id, user_id=user_id) is not None
+
+
+async def user_is_banned(db: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID):
+    return await crud.get_user_room_ban_association(db, room_id=room_id, user_id=user_id) is not None
+
+
+async def user_is_admin(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
+    user_room_association = await crud.get_user_room_association(db=db, room_id=room.room_id, user_id=user_id)
+    return user_room_association is not None and user_room_association.is_admin
+
+
+async def check_if_user_is_admin(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
+    if not await user_is_admin(db, user_id=user_id, room=room):
+        raise HTTPException(status_code=403, detail="Only admins can perform this action")
 
 
 async def check_if_user_can_join_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
@@ -143,7 +154,8 @@ async def check_if_user_can_join_room(db: AsyncSession, user_id: uuid.UUID, room
         raise HTTPException(status_code=409, detail="You already joined this room")
     if not room.is_public:
         raise HTTPException(status_code=403, detail="This room is private")
-    # implement user banned logic
+    if await user_is_banned(db, room_id=room.room_id, user_id=user_id):
+        raise HTTPException(status_code=403, detail="You are banned in this room")
 
 
 async def check_if_user_can_leave_room(db: AsyncSession, user_id: uuid.UUID, room: db_models.Room):
@@ -177,8 +189,22 @@ async def get_and_validate_list_of_users_to_add(db: AsyncSession, room: db_model
             raise HTTPException(status_code=403, detail="Guest users cannot be admins")
         if await crud.get_user_room_association(db, room_id=room.room_id, user_id=user_id):
             raise HTTPException(status_code=409, detail=f"User {user_id} already in room")
+        if await user_is_banned(db, room_id=room.room_id, user_id=user_id):
+            raise HTTPException(status_code=409, detail=f"User {user_id} is banned in this room")
         add_data.append((user, user_data.make_admin))
     return add_data
+
+
+async def get_and_validate_list_of_users_to_ban(db: AsyncSession, room: db_models.Room, ban_list: list[uuid.UUID]):
+    users = []
+    for user_id in ban_list:
+        user = await crud.get_user_by_id(db, user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+        if await user_is_admin(db=db, user_id=user_id, room=room):
+            raise HTTPException(status_code=403, detail=f"User {user_id} is admin and cannot be banned")
+        users.append(user)
+    return users
 
 
 async def delete_room_picture_from_s3(room_picture_id: uuid.UUID):

@@ -129,8 +129,30 @@ async def get_user_room_association(db: AsyncSession, room_id: uuid.UUID, user_i
 async def remove_user_from_room(db: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID):
     room = await get_room_by_id(db, room_id)
     association = await get_user_room_association(db, room_id, user_id)
-    await db.delete(association)
+    if association is not None:
+        await db.delete(association)
+        await db.commit()
+    return room
+
+
+async def add_user_to_banned_in_room(db: AsyncSession, room_id: uuid.UUID, user: db_models.User):
+    room = await get_room_by_id(db, room_id)
+    association = db_models.UserRoomBan(user_id=user.user_id, room_id=room_id, user=user, room=room)
+    db.add(association)
     await db.commit()
+    return room
+
+
+async def get_user_room_ban_association(db: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID):
+    return await db.get(db_models.UserRoomBan, (user_id, room_id))
+
+
+async def remove_user_from_banned_in_room(db: AsyncSession, room_id: uuid.UUID, user_id: uuid.UUID):
+    room = await get_room_by_id(db, room_id)
+    association = await get_user_room_ban_association(db, room_id, user_id)
+    if association is not None:
+        await db.delete(association)
+        await db.commit()
     return room
 
 

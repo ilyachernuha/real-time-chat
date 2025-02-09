@@ -161,6 +161,38 @@ async def add_users_to_room(body: schemas.AddUsers,
     return {"status": "success"}
 
 
+@router.post("/ban_users", response_model=responses.GenericConfirmation)
+async def ban_user(body: schemas.BanUsers,
+                   credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                   db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
+    await room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
+    users = await room_utils.get_and_validate_list_of_users_to_ban(db=db, room=room, ban_list=body.users)
+    for user in users:
+        if await room_utils.user_is_banned(db=db, room_id= body.room_id, user_id=user.user_id):
+            continue
+        await crud.remove_user_from_room(db=db, room_id=body.room_id, user_id=user.user_id)
+        await sio.remove_user_from_room(user_id=user.user_id, room_id=body.room_id)
+        await crud.add_user_to_banned_in_room(db=db, room_id=body.room_id, user=user)
+    return {"status": "success"}
+
+
+@router.post("/unban_users", response_model=responses.GenericConfirmation)
+async def unban_user(body: schemas.BanUsers,
+                     credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
+                     db: AsyncSession = Depends(get_db)):
+    user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
+    room = await room_utils.get_room_if_exists(db=db, room_id=body.room_id)
+    await room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
+    for user_id in body.users:
+        user = await crud.get_user_by_id(db=db, user_id=user_id)
+        if user is None:
+            raise HTTPException(status_code=404, detail=f"User {user_id} not found")
+        await crud.remove_user_from_banned_in_room(db=db, room_id=body.room_id, user_id=user_id)
+    return {"status": "success"}
+
+
 @router.get("/find_rooms", response_model=responses.RoomList)
 async def find_rooms(search: str | None = None, themes: list[str] = Query(default=None),
                      tags: list[str] = Query(default=None), languages: list[str] = Query(default=None),

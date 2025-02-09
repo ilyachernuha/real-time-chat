@@ -37,3 +37,8 @@ class LeaveRoom(BaseModel):
 class AddUsers(BaseModel):
     room_id: UUID4
     users: list[UserToAdd]
+
+
+class BanUsers(BaseModel):
+    room_id: UUID4
+    users: list[UUID4]
