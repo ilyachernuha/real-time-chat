@@ -40,6 +40,7 @@ async def get_profile(user_id: uuid.UUID, credentials: HTTPAuthorizationCredenti
                       db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
     user = await crud.get_user_by_id(db, user_id)
+    user_utils.check_if_user_exists(user)
     return {
         "name": user.name,
         "guest": user.is_guest,

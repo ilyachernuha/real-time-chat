@@ -1,8 +1,10 @@
 import re
 import uuid
 import asyncio
+from fastapi import HTTPException
 from ..exceptions import FieldSubmitError
 from ..s3 import S3
+from .. import db_models
 
 
 def validate_name(name: str):
@@ -41,3 +43,8 @@ async def delete_profile_picture_from_s3(profile_picture_id: uuid.UUID):
         f"profile-pictures/100p/{profile_picture_id}.jpeg"
     )]
     await asyncio.gather(*tasks)
+
+
+def check_if_user_exists(user: db_models.User | None):
+    if user is None:
+        raise HTTPException(status_code=404, detail="Room not found")
