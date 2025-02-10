@@ -170,7 +170,7 @@ async def ban_user(body: schemas.BanUsers,
     await room_utils.check_if_user_is_admin(db=db, user_id=user_id, room=room)
     users = await room_utils.get_and_validate_list_of_users_to_ban(db=db, room=room, ban_list=body.users)
     for user in users:
-        if await room_utils.user_is_banned(db=db, room_id= body.room_id, user_id=user.user_id):
+        if await room_utils.user_is_banned(db=db, room_id=body.room_id, user_id=user.user_id):
             continue
         await crud.remove_user_from_room(db=db, room_id=body.room_id, user_id=user.user_id)
         await sio.remove_user_from_room(user_id=user.user_id, room_id=body.room_id)
