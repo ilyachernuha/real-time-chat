@@ -8,7 +8,7 @@ from .database import init_db
 from .bg_tasks import scheduler
 from . import html_generator
 from .sio.sio import sio
-from .exceptions import AccessTokenValidationError, FieldSubmitError, MessageValidationError
+from .exceptions import AccessTokenValidationError, FieldSubmitError, MessageValidationError, PrivateMessageDeliveryError
 from .users.router import router as users_router
 from .auth.router import router as auth_router
 from .rooms.router import router as rooms_router
@@ -75,6 +75,14 @@ async def sqlalchemy_error_handler(request: Request, exc: SQLAlchemyError):
     return JSONResponse(
         status_code=500,
         content={"detail": "Unexpected database error"}
+    )
+
+
+@app.exception_handler(PrivateMessageDeliveryError)
+async def private_message_delivery_error_handler(request: Request, exc: PrivateMessageDeliveryError):
+    return JSONResponse(
+        status_code=404,
+        content={"detail": "Recipient not found or unable to deliver message"}
     )
 
 

@@ -2,9 +2,11 @@ import re
 import uuid
 import asyncio
 from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
 from ..exceptions import FieldSubmitError
 from ..s3 import S3
 from .. import db_models
+from . import crud
 
 
 def validate_name(name: str):
@@ -47,4 +49,10 @@ async def delete_profile_picture_from_s3(profile_picture_id: uuid.UUID):
 
 def check_if_user_exists(user: db_models.User | None):
     if user is None:
-        raise HTTPException(status_code=404, detail="Room not found")
+        raise HTTPException(status_code=404, detail="User not found")
+
+
+async def get_user_if_exists(db: AsyncSession, user_id: uuid.UUID):
+    user = await crud.get_user_by_id(db=db, user_id=user_id)
+    check_if_user_exists(user)
+    return user

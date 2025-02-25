@@ -39,8 +39,7 @@ async def find_users(search: str, credentials: HTTPAuthorizationCredentials = De
 async def get_profile(user_id: uuid.UUID, credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                       db: AsyncSession = Depends(get_db)):
     auth_utils.validate_access_token(credentials.credentials)
-    user = await crud.get_user_by_id(db, user_id)
-    user_utils.check_if_user_exists(user)
+    user = await user_utils.get_user_if_exists(db=db, user_id=user_id)
     return {
         "name": user.name,
         "guest": user.is_guest,

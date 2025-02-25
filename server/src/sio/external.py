@@ -102,3 +102,34 @@ async def emit_message(user: db_models.User, message: db_models.Message, skip_se
             skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )
+
+
+async def emit_private_message(message: db_models.PrivateMessage, skip_session: uuid.UUID | None = None):
+    await utils.emit_private_message_internal(message=message, sid_to_skip=utils.get_sid_by_session_id(skip_session))
+
+
+async def emit_private_message_update(message_id: uuid.UUID, sender_id: uuid.UUID, receiver_id: uuid.UUID,
+                                      text: str | None, skip_session: uuid.UUID | None = None):
+    test1 = asyncio.create_task(
+        sio.emit(
+            event="private_message_update",
+            data={
+                "user_id": str(sender_id),
+                "message_id": str(message_id),
+                "text": text
+            },
+            room=receiver_id
+        )
+    )
+    task2 = asyncio.create_task(
+        sio.emit(
+            event="private_message_update",
+            data={
+                "user_id": str(receiver_id),
+                "message_id": str(message_id),
+                "text": text
+            },
+            room=sender_id,
+            skip_sid=utils.get_sid_by_session_id(skip_session)
+        )
+    )

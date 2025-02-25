@@ -8,6 +8,10 @@ class EditMessage(BaseModel):
     text: str
 
 
+class BlockUser(BaseModel):
+    user_id: UUID4
+
+
 @dataclass
 class Message:
     text: str | None = Form(default=None)
@@ -19,5 +23,20 @@ class Message:
 @dataclass
 class VoiceMessage:
     room_id: UUID4 = Form(...)
+    reply_message_id: UUID4 | None = Form(default=None)
+    voice: file_utils.Attachment | None = Depends(file_utils.get_voice)
+
+
+@dataclass
+class PrivateMessage:
+    text: str | None = Form(default=None)
+    receiver_id: UUID4 = Form(...)
+    reply_message_id: UUID4 | None = Form(default=None)
+    attachments: list[file_utils.Attachment] | None = Depends(file_utils.get_attachments)
+
+
+@dataclass
+class PrivateVoiceMessage:
+    receiver_id: UUID4 = Form(...)
     reply_message_id: UUID4 | None = Form(default=None)
     voice: file_utils.Attachment | None = Depends(file_utils.get_voice)

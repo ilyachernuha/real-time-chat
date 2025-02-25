@@ -3,7 +3,7 @@ import functools
 from typing import Callable
 from sqlalchemy.exc import SQLAlchemyError
 from ..exceptions import (AccessTokenValidationError, BearerTokenExtractionError, MessageValidationError,
-                          FieldSubmitError)
+                          FieldSubmitError, PrivateMessageDeliveryError)
 
 
 def handle_exceptions(func: Callable):
@@ -19,4 +19,6 @@ def handle_exceptions(func: Callable):
             return "Error", {"detail": str(e)}
         except (AccessTokenValidationError, BearerTokenExtractionError) as e:
             raise ConnectionRefusedError(str(e))
+        except PrivateMessageDeliveryError:
+            return "Error", {"detail": "Recipient not found or unable to deliver message"}
     return wrapper
