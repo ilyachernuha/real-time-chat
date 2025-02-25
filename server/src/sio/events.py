@@ -6,7 +6,7 @@ from ..auth import auth_utils
 from ..users import user_utils
 from ..rooms import room_utils
 from ..messages import message_utils
-from . import crud, schemas, utils, validators
+from . import crud, schemas, utils, validators, external
 from .exception_handlers import handle_exceptions
 
 
@@ -82,6 +82,25 @@ async def message(sid: str, data: schemas.Message):
 
 
 @sio.event
+@handle_exceptions
+@validators.validate_model(model=schemas.PrivateMessage)
+async def private_message(sid: str, data: schemas.PrivateMessage):
+    async with db_session() as db:
+        user_id = (await sio.get_session(sid))["user_id"]
+        message_utils.validate_message_text(data.text)
+        await message_utils.check_if_user_can_message_user(db=db, receiver_id=data.receiver_id, sender_id=user_id)
+        if data.reply_message_id is not None:
+            await message_utils.validate_private_message_reply(db=db, message_id=data.reply_message_id,
+                                                               user_ids=(user_id, data.receiver_id))
+        message = await crud.create_private_message(db=db, sender_id=user_id, receiver_id=data.receiver_id,
+                                                    text=data.text, reply_message_id=data.reply_message_id)
+        message_id_str = str(message.message_id)
+        timestamp = message.timestamp.timestamp()
+        await utils.emit_private_message_internal(message=message, sid_to_skip=sid)
+        return "Success", {"message_id": message_id_str, "timestamp": timestamp}
+
+
+@sio.event
 @validators.validate_model(model=schemas.UserTyping)
 @validators.validate_user_in_room
 async def start_typing(sid: str, data: schemas.UserTyping):
@@ -111,6 +130,34 @@ async def stop_typing(sid: str, data: schemas.UserTyping):
         },
         "room_id": str(data.room_id)
     })
+
+
+@sio.event
+@validators.validate_model(model=schemas.UserTypingPrivate)
+async def start_typing_private(sid, data: schemas.UserTypingPrivate):
+    user_id = (await sio.get_session(sid))["user_id"]
+    await sio.emit(
+        event="start_typing_private",
+        data={
+            "user_id": str(user_id)
+        },
+        room=data.receiver_id,
+        skip_sid=sid
+    )
+
+
+@sio.event
+@validators.validate_model(model=schemas.UserTypingPrivate)
+async def stop_typing_private(sid, data: schemas.UserTypingPrivate):
+    user_id = (await sio.get_session(sid))["user_id"]
+    await sio.emit(
+        event="stop_typing_private",
+        data={
+            "user_id": str(user_id)
+        },
+        room=data.receiver_id,
+        skip_sid=sid
+    )
 
 
 @sio.event

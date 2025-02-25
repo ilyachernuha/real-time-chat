@@ -28,6 +28,13 @@ class User(Base):
     rooms = relationship("UserRoomAssociation", back_populates="user", cascade="all, delete-orphan")
     banned = relationship("UserRoomBan", back_populates="user", cascade="all, delete-orphan")
     messages = relationship("Message", back_populates="user", cascade="all, delete-orphan")
+    user_bans_applied = relationship("UserUserBan", back_populates="banned_user",
+                                     foreign_keys="[UserUserBan.banned_id]")
+    user_bans_received = relationship("UserUserBan", back_populates="banned_by", foreign_keys="[UserUserBan.banner_id]")
+    sent_private_messages = relationship("PrivateMessage", back_populates="sender",
+                                         foreign_keys="[PrivateMessage.sender_id]", cascade="all, delete-orphan")
+    received_private_messages = relationship("PrivateMessage", back_populates="receiver",
+                                             foreign_keys="[PrivateMessage.receiver_id]", cascade="all, delete-orphan")
 
     @validates("is_guest", "account_data")
     def validate_user(self, key, value):
@@ -219,11 +226,61 @@ class Message(Base):
     attachments = relationship("Attachment", back_populates="message", cascade="all, delete-orphan")
 
 
+class PrivateMessage(Base):
+    __tablename__ = "private_messages"
+
+    message_id = Column(UUID, primary_key=True)
+    sender_id = Column(UUID, ForeignKey("users.user_id"), nullable=False, index=True)
+    receiver_id = Column(UUID, ForeignKey("users.user_id"), nullable=False, index=True)
+    reply_message_id = Column(UUID, ForeignKey("private_messages.message_id"), nullable=True, default=None)
+    text = Column(String, nullable=True)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    update_time = Column(DateTime(timezone=True), nullable=True, default=None)
+    sender = relationship("User", back_populates="sent_private_messages", foreign_keys=[sender_id])
+    receiver = relationship("User", back_populates="received_private_messages", foreign_keys=[receiver_id])
+    reply_to = relationship("PrivateMessage", back_populates="replies", remote_side=[message_id])
+    replies = relationship("PrivateMessage", back_populates="reply_to")
+    attachments = relationship("Attachment", back_populates="private_message", cascade="all, delete-orphan")
+
+
 class Attachment(Base):
     __tablename__ = "attachments"
 
+    class MessageType(Enum):
+        public = 1
+        private = 2
+
     attachment_id = Column(UUID, primary_key=True)
-    message_id = Column(UUID, ForeignKey("messages.message_id"), nullable=False)
+    message_id = Column(UUID, ForeignKey("messages.message_id"), nullable=True)
+    private_message_id = Column(UUID, ForeignKey("private_messages.message_id"), nullable=True)
     type = Column(SQLAlchemyEnum(AttachmentType, neme="attachment_type"), nullable=False)
     original_name = Column(String, nullable=True, default=None)
+    message_type = Column(SQLAlchemyEnum(MessageType, name="message_relationship_type"), nullable=False)
     message = relationship("Message", back_populates="attachments")
+    private_message = relationship("PrivateMessage", back_populates="attachments")
+
+    @validates("message_id", "private_message_id", "message_type")
+    def validate_relationships(self, key, value):
+        if key in {"message_id", "private_message_id"}:
+            message_present = self.message_id is not None or (key == "message_id" and value is not None)
+            private_message_present = self.private_message_id is not None or \
+                                      (key == "private_message_id" and value is not None)
+            if message_present and private_message_present:
+                raise ValueError("An attachment cannot be linked to both a public and a private message")
+            if not message_present and not private_message_present:
+                raise ValueError("An attachment must be linked to either a public or a private message")
+        if key == "message_type":
+            if self.message_id is not None and value != Attachment.MessageType.public:
+                raise ValueError("message_type must be 'public' if message_id is set")
+            if self.private_message_id is not None and value != Attachment.MessageType.private:
+                raise ValueError("message_type must be 'private' if private_message_id is set")
+        return value
+
+
+class UserUserBan(Base):
+    __tablename__ = "users_banned_by_users"
+
+    banned_id = Column(UUID, ForeignKey("users.user_id"), primary_key=True)
+    banner_id = Column(UUID, ForeignKey("users.user_id"), primary_key=True)
+    banned_user = relationship("User", back_populates="user_bans_applied", foreign_keys=[banned_id])
+    banned_by = relationship("User", back_populates="user_bans_received", foreign_keys=[banner_id])

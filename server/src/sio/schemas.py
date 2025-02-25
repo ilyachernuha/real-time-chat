@@ -7,8 +7,18 @@ class Message(BaseModel):
     reply_message_id: UUID4 | None = None
 
 
+class PrivateMessage(BaseModel):
+    text: str
+    receiver_id: UUID4
+    reply_message_id: UUID4 | None = None
+
+
 class UserTyping(BaseModel):
     room_id: UUID4
+
+
+class UserTypingPrivate(BaseModel):
+    receiver_id: UUID4
 
 
 class SearchUsers(BaseModel):
