@@ -106,14 +106,18 @@ async def private_message(sid: str, data: schemas.PrivateMessage):
 async def start_typing(sid: str, data: schemas.UserTyping):
     sid_data = await sio.get_session(sid)
     user_id, name = sid_data["user_id"], sid_data["name"]
-    user_id_str = str(user_id)
-    await sio.emit("start_typing", {
-        "user": {
-            "id": user_id_str,
-            "name": name
+    await sio.emit(
+        event="start_typing",
+        data={
+            "user": {
+                "id": str(user_id),
+                "name": name
+            },
+            "room_id": str(data.room_id)
         },
-        "room_id": str(data.room_id)
-    })
+        room=data.room_id,
+        skip_sid=user_id
+    )
 
 
 @sio.event
@@ -122,14 +126,18 @@ async def start_typing(sid: str, data: schemas.UserTyping):
 async def stop_typing(sid: str, data: schemas.UserTyping):
     sid_data = await sio.get_session(sid)
     user_id, name = sid_data["user_id"], sid_data["name"]
-    user_id_str = str(user_id)
-    await sio.emit("stop_typing", {
-        "user": {
-            "id": user_id_str,
-            "name": name
+    await sio.emit(
+        event="stop_typing",
+        data={
+            "user": {
+                "id": str(user_id),
+                "name": name
+            },
+            "room_id": str(data.room_id)
         },
-        "room_id": str(data.room_id)
-    })
+        room=data.room_id,
+        skip_sid=user_id
+    )
 
 
 @sio.event
