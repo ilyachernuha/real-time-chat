@@ -1,5 +1,5 @@
 from sqlalchemy import Column, ForeignKey, String, Boolean, DateTime, Integer
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy.dialects.postgresql import UUID, ARRAY, JSON
 from sqlalchemy.orm import DeclarativeBase, relationship, validates
 from sqlalchemy.ext.asyncio import AsyncAttrs
 from sqlalchemy.types import Enum as SQLAlchemyEnum
@@ -35,6 +35,7 @@ class User(Base):
                                          foreign_keys="[PrivateMessage.sender_id]", cascade="all, delete-orphan")
     received_private_messages = relationship("PrivateMessage", back_populates="receiver",
                                              foreign_keys="[PrivateMessage.receiver_id]", cascade="all, delete-orphan")
+    notifications = relationship("Notification", back_populates="user", cascade="all, delete-orphan")
 
     @validates("is_guest", "account_data")
     def validate_user(self, key, value):
@@ -284,3 +285,20 @@ class UserUserBan(Base):
     banner_id = Column(UUID, ForeignKey("users.user_id"), primary_key=True)
     banned_user = relationship("User", back_populates="user_bans_applied", foreign_keys=[banned_id])
     banned_by = relationship("User", back_populates="user_bans_received", foreign_keys=[banner_id])
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    class Type(Enum):
+        new_login = 1
+        added_to_room = 2
+        banned_from_room = 3
+        unbanned_from_room = 4
+
+    notification_id = Column(UUID, primary_key=True)
+    user_id = Column(UUID, ForeignKey("users.user_id"), nullable=False)
+    type = Column(SQLAlchemyEnum(Type, name="notification_type"), nullable=False)
+    details = Column(JSON, nullable=False)
+    timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    user = relationship("User", back_populates="notifications")

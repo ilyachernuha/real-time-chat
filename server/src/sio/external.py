@@ -133,3 +133,15 @@ async def emit_private_message_update(message_id: uuid.UUID, sender_id: uuid.UUI
             skip_sid=utils.get_sid_by_session_id(skip_session)
         )
     )
+
+
+async def emit_notification(user_id: uuid.UUID, notification_id: uuid.UUID, type: str, details: dict,
+                            skip_session: uuid.UUID | None = None):
+    task = asyncio.create_task(
+        sio.emit(
+            event="notification",
+            data=details,
+            room=user_id,
+            skip_sid=utils.get_sid_by_session_id(skip_session)
+        )
+    )

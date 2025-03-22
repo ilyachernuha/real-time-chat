@@ -42,3 +42,9 @@ class AddUsers(BaseModel):
 class BanUsers(BaseModel):
     room_id: UUID4
     users: list[UUID4]
+    reason: str | None = None
+
+
+class UnbanUsers(BaseModel):
+    room_id: UUID4
+    users: list[UUID4]

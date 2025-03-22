@@ -8,10 +8,11 @@ import uuid
 from . import crud, schemas, room_utils, responses
 from ..database import get_db
 from ..auth import auth_utils
-from .. import file_utils, image_utils
+from .. import file_utils, image_utils, db_models
 from ..s3 import S3
 from ..security import security_bearer
 from ..sio import external as sio
+from ..notifications import notification_utils
 
 
 router = APIRouter(prefix="/rooms", tags=["rooms"])
@@ -35,8 +36,8 @@ async def create_room(body: schemas.RoomCreation, credentials: HTTPAuthorization
     if body.users_to_add is not None:
         add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users_to_add)
         for user, make_admin in add_data:
-            await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
-            await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
+            await room_utils.add_users_to_room(db=db, room=room, user=user, make_admin=make_admin,
+                                               adder_id=creator.user_id)
     await sio.add_user_to_room(user_id=creator.user_id, room_id=room.room_id, skip_session=session_id)
     return {"status": "success", "room_id": room.room_id}
 
@@ -156,8 +157,7 @@ async def add_users_to_room(body: schemas.AddUsers,
     await room_utils.check_if_user_can_add_users_to_room(db=db, user_id=user_id, room=room, add_admins=add_admins)
     add_data = await room_utils.get_and_validate_list_of_users_to_add(db=db, room=room, add_list=body.users)
     for user, make_admin in add_data:
-        await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
-        await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
+        await room_utils.add_users_to_room(db=db, room=room, user=user, make_admin=make_admin, adder_id=user_id)
     return {"status": "success"}
 
 
@@ -175,11 +175,14 @@ async def ban_user(body: schemas.BanUsers,
         await crud.remove_user_from_room(db=db, room_id=body.room_id, user_id=user.user_id)
         await sio.remove_user_from_room(user_id=user.user_id, room_id=body.room_id)
         await crud.add_user_to_banned_in_room(db=db, room_id=body.room_id, user=user)
+        await notification_utils.create_banned_from_room_notification(db=db, user_id=user.user_id,
+                                                                      room_id=body.room_id, banner_id=user_id,
+                                                                      reason=body.reason)
     return {"status": "success"}
 
 
 @router.post("/unban_users", response_model=responses.GenericConfirmation)
-async def unban_user(body: schemas.BanUsers,
+async def unban_user(body: schemas.UnbanUsers,
                      credentials: HTTPAuthorizationCredentials = Depends(security_bearer),
                      db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
@@ -190,6 +193,8 @@ async def unban_user(body: schemas.BanUsers,
         if user is None:
             raise HTTPException(status_code=404, detail=f"User {user_id} not found")
         await crud.remove_user_from_banned_in_room(db=db, room_id=body.room_id, user_id=user_id)
+        await notification_utils.create_unbanned_from_room_notification(db=db, user_id=user.user_id,
+                                                                        room_id=room.room_id, unbanner_id=user_id)
     return {"status": "success"}
 
 
