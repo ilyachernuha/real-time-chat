@@ -2,6 +2,11 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
+  androidStatusBar: {
+    translucent: true,
+    backgroundColor: "transparent",
+    barStyle: "light-content",
+  },
   name: "Whisper",
   slug: "real-time-chat",
   version: "1.0.0",
@@ -9,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   icon: "./assets/images/icon.png",
   scheme: "whisper",
   userInterfaceStyle: "automatic",
-  "newArchEnabled": true,
+  newArchEnabled: true,
   splash: {
     image: "./assets/images/splash.png",
     resizeMode: "contain",
