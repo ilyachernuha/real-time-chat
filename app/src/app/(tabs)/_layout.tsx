@@ -2,16 +2,16 @@ import React from "react";
 import { Redirect, Tabs } from "expo-router";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
-import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 import { SafeAreaView } from "@/components/Themed";
 import { useAuth } from "@/hooks/useAuth";
 import ChannelsHeader from "@/components/ChannelsHeader";
-import { MaterialIcons } from "@expo/vector-icons";
 import Fonts from "@/constants/Fonts";
 import StyledText from "@/components/StyledText";
 import Icons from "@/components/Icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   const { refreshToken, isLoading } = useAuth();
   const colorScheme = useColorScheme();
 
@@ -39,16 +39,11 @@ export default function TabLayout() {
       screenOptions={{
         tabBarInactiveTintColor: Colors[colorScheme ?? "light"].secondaryLightGrey,
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].mainPurple,
-        // Disable the static render of the header on web
-        // to prevent a hydration error in React Navigation v6.
-        headerShown: useClientOnlyValue(false, true),
+        headerShown: true,
         tabBarStyle: {
           backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey,
-          borderTopWidth: 0,
-          elevation: 0,
-          shadowOpacity: 0,
-          marginVertical: 8,
-          height: 60,
+          borderColor: Colors[colorScheme ?? "light"].mainDarkGrey,
+          height: 60 + insets.bottom,
         },
         tabBarLabelStyle: Fonts[10],
       }}
@@ -58,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: "Channels",
           tabBarIcon: ({ color }) => <Icons name="browse" size={24} color={color} />,
-          header: () => <ChannelsHeader />,
+          header: () => <ChannelsHeader top={insets.top + 8} />,
         }}
       />
       <Tabs.Screen

@@ -58,33 +58,21 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{ animation: "fade" }}>
-        <Stack.Screen
-          name="(auth)"
-          options={{
-            headerShown: false,
-            statusBarColor: Colors[colorScheme ?? "light"].background,
-            navigationBarColor: Colors[colorScheme ?? "light"].background,
-            contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
-          }}
-        />
-        <Stack.Screen
-          name="(tabs)"
-          options={{
-            headerShown: false,
-            statusBarColor: Colors[colorScheme ?? "light"].mainDarkGrey,
-            navigationBarColor: Colors[colorScheme ?? "light"].mainDarkGrey,
-            contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey },
-          }}
-        />
-        <Stack.Screen
-          name="chat/[id]"
-          options={{
-            statusBarColor: Colors[colorScheme ?? "light"].mainDarkGrey,
-            navigationBarColor: Colors[colorScheme ?? "light"].background,
-            contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
-          }}
-        />
+      <Stack
+        screenOptions={{
+          contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
+          headerShown: false,
+          statusBarTranslucent: true,
+          statusBarBackgroundColor: "transparent",
+          statusBarStyle: "light",
+          navigationBarTranslucent: true,
+          navigationBarColor: "transparent",
+          animation: "fade",
+        }}
+      >
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="chat/[id]" />
         <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
