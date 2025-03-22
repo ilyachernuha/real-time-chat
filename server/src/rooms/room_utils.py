@@ -218,5 +218,5 @@ async def add_users_to_room(db: AsyncSession, room: db_models.Room, user: db_mod
                             make_admin: bool, adder_id: uuid.UUID):
     await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
     await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
-    await crud.crate_nofitication(db=db, user_id=user.user_id, type=db_models.Notification.Type.added_to_room,
+    await crud.create_nofitication(db=db, user_id=user.user_id, type=db_models.Notification.Type.added_to_room,
                                   details={"room_id": str(room.room_id), "added_by": str(adder_id)})
