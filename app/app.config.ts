@@ -4,8 +4,12 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
   androidStatusBar: {
     translucent: true,
-    backgroundColor: "transparent",
     barStyle: "light-content",
+    backgroundColor: "#030708",
+  },
+  androidNavigationBar: {
+    barStyle: "light-content",
+    backgroundColor: "#030708",
   },
   name: "Whisper",
   slug: "real-time-chat",

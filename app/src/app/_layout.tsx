@@ -65,6 +65,8 @@ function RootLayoutNav() {
           statusBarTranslucent: true,
           statusBarBackgroundColor: "transparent",
           statusBarStyle: "light",
+          navigationBarTranslucent: true,
+          navigationBarColor: "transparent",
           animation: "fade",
         }}
       >

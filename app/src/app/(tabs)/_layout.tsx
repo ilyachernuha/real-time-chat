@@ -43,7 +43,7 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey,
           borderColor: Colors[colorScheme ?? "light"].mainDarkGrey,
-          height: 60,
+          height: 60 + insets.bottom,
         },
         tabBarLabelStyle: Fonts[10],
       }}
