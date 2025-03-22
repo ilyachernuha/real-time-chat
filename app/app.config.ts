@@ -1,7 +1,7 @@
-import "ts-node/register";
-import { ExpoConfig } from "expo/config";
+import { ExpoConfig, ConfigContext } from "expo/config";
 
-const config: ExpoConfig = {
+export default ({ config }: ConfigContext): ExpoConfig => ({
+  ...config,
   name: "Whisper",
   slug: "real-time-chat",
   version: "1.0.0",
@@ -9,6 +9,7 @@ const config: ExpoConfig = {
   icon: "./assets/images/icon.png",
   scheme: "whisper",
   userInterfaceStyle: "automatic",
+  "newArchEnabled": true,
   splash: {
     image: "./assets/images/splash.png",
     resizeMode: "contain",
@@ -36,7 +37,7 @@ const config: ExpoConfig = {
         data: [
           {
             scheme: "https",
-            host: "happytown.store",
+            host: "aerocock.com",
           },
         ],
         category: ["BROWSABLE", "DEFAULT"],
@@ -62,6 +63,8 @@ const config: ExpoConfig = {
     url: "https://u.expo.dev/d06a97c0-7847-41ec-8068-0df714fd7f3e",
   },
   plugins: [
+    "expo-router",
+    "expo-secure-store",
     [
       "expo-font",
       {
@@ -73,13 +76,9 @@ const config: ExpoConfig = {
         ],
       },
     ],
-    "expo-router",
-    "expo-secure-store",
   ],
   experiments: {
     typedRoutes: true,
   },
   backgroundColor: "#030708",
-};
-
-export default config;
+});
