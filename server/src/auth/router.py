@@ -8,6 +8,7 @@ from ..users import user_utils
 from ..database import get_db
 from ..security import security_basic, security_bearer
 from ..sio import external as sio
+from ..notifications import notification_utils
 from .. import html_generator
 
 
@@ -59,6 +60,7 @@ async def login(body: schemas.Login = Body(default=None), credentials: HTTPBasic
     refresh_token = auth_utils.generate_refresh_token()
     session = await crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
                                         device_info=body.device_info if body else "Unknown")
+    await notification_utils.create_new_login_notification(db=db, session=session)
     return auth_utils.generate_successful_login_dict(user_id=user.user_id, session_id=session.session_id,
                                                      refresh_token=refresh_token)
 

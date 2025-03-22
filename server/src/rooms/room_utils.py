@@ -3,9 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import uuid
 import re
 import asyncio
-
 from sqlalchemy.util import await_only
-
 from . import crud
 from .. import db_models
 from .room_themes import RoomTheme
@@ -13,6 +11,7 @@ from .room_languages import RoomLanguage
 from .schemas import RoomUpdate, UserToAdd
 from ..s3 import S3
 from ..exceptions import FieldSubmitError
+from ..sio import external as sio
 
 
 def check_if_room_exists(room: db_models.Room | None):
@@ -213,3 +212,11 @@ async def delete_room_picture_from_s3(room_picture_id: uuid.UUID):
         f"room-pictures/100p/{room_picture_id}.jpeg"
     )]
     await asyncio.gather(*tasks)
+
+
+async def add_users_to_room(db: AsyncSession, room: db_models.Room, user: db_models.User,
+                            make_admin: bool, adder_id: uuid.UUID):
+    await crud.add_user_to_room(db=db, room_id=room.room_id, user=user, make_admin=make_admin)
+    await sio.add_user_to_room(user_id=user.user_id, room_id=room.room_id)
+    await crud.crate_nofitication(db=db, user_id=user.user_id, type=db_models.Notification.Type.added_to_room,
+                                  details={"room_id": str(room.room_id), "added_by": str(adder_id)})

@@ -5,6 +5,7 @@ from .. import db_models
 from .room_languages import RoomLanguage
 from .room_themes import RoomTheme
 from ..users.crud import get_user_by_id
+from ..notifications.crud import crate_nofitication
 
 
 # ROOMS
