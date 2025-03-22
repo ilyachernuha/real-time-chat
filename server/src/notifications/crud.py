@@ -5,7 +5,7 @@ from datetime import datetime
 from .. import db_models
 
 
-async def crate_nofitication(db: AsyncSession, user_id: uuid.UUID, type: db_models.Notification.Type, details: dict):
+async def create_nofitication(db: AsyncSession, user_id: uuid.UUID, type: db_models.Notification.Type, details: dict):
     notification_id = uuid.uuid4()
     notification = db_models.Notification(notification_id=notification_id, user_id=user_id, type=type, details=details)
     db.add(notification)
@@ -17,7 +17,7 @@ async def get_notification_by_id(db: AsyncSession, notification_id: uuid.UUID):
     return await db.get(db_models.Notification, notification_id)
 
 
-async def get_notification_of_user_crated_after_timestamp(db: AsyncSession, user_id: uuid.UUID, timestamp: datetime):
+async def get_notification_of_user_created_after_timestamp(db: AsyncSession, user_id: uuid.UUID, timestamp: datetime):
     stmt = (
         select(db_models.Notification)
         .filter(db_models.Notification.user_id == user_id)

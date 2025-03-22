@@ -25,7 +25,7 @@ async def get_notifications_after_timestamp(after: float,
             "timestamp": notification.timestamp.timestamp(),
             "details": notification.details
         }
-        for notification in await crud.get_notification_of_user_crated_after_timestamp(db=db, user_id=user_id,
+        for notification in await crud.get_notification_of_user_created_after_timestamp(db=db, user_id=user_id,
                                                                                        timestamp=timestamp)
     ]
     return {"notifications": notifications}
