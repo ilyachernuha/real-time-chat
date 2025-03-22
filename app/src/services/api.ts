@@ -4,12 +4,16 @@ import API from "@/constants/API";
 import * as SecureStore from "expo-secure-store";
 import { RefreshTokenResponse } from "./types";
 
+const api = axios.create({
+  baseURL: API.apiURL,
+});
+
 const refrehTokens = async () => {
   try {
     const refreshToken = await SecureStore.getItemAsync("refreshToken");
     const {
       data: { access_token, new_refresh_token },
-    } = await api.post<RefreshTokenResponse>("/token_refresh", {
+    } = await api.post<RefreshTokenResponse>("auth/token_refresh", {
       refresh_token: refreshToken,
     });
     await SecureStore.setItemAsync("accessToken", access_token);
@@ -19,10 +23,6 @@ const refrehTokens = async () => {
     console.error("Error refreshing token:", error);
   }
 };
-
-const api = axios.create({
-  baseURL: API.apiURL,
-});
 
 api.interceptors.request.use(
   async (config) => {
