@@ -37,7 +37,7 @@ async def delete_notification(notification_id: uuid.UUID,
                               db: AsyncSession = Depends(get_db)):
     user_id, session_id = auth_utils.extract_access_token_data(credentials.credentials)
     notification = await notification_utils.get_notification_if_exists(db=db, notification_id=notification_id)
-    notification_utils.check_if_nofitication_belongs_to_user(notification=notification, user_id=user_id)
+    notification_utils.check_if_notification_belongs_to_user(notification=notification, user_id=user_id)
     notification_utils.check_if_notification_can_be_deleted(notification=notification, session_id=session_id)
-    await crud.delete_nofitication(db=db, notification_id=notification_id)
+    await crud.delete_notification(db=db, notification_id=notification_id)
     return {"status": "success"}
