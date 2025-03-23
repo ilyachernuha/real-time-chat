@@ -1,3 +1,6 @@
+import { RoomLanguageCode } from "@/constants/RoomLanguages";
+import { RoomTheme } from "@/constants/RoomThemes";
+
 export type RegisterCredentials = {
   username: string;
   email: string;
@@ -34,4 +37,34 @@ export type ResetPasswordRequest = {
 export type ChangeNameResponse = {
   status: string;
   new_name: string;
+};
+
+export type CreateRoom = {
+  title: string;
+  description: string;
+  theme: RoomTheme;
+  languages: RoomLanguageCode[];
+  tags: string[];
+  make_public: boolean;
+  users_to_add: [
+    {
+      user_id: string;
+      make_admin: boolean;
+    }
+  ];
+};
+
+export type CreateRoomResponse = {
+  status: string;
+  room_id: string;
+};
+
+type Room = {
+  room_id: string;
+  title: string;
+  room_picture_id: string;
+};
+
+export type MyRoomResponse = {
+  rooms: Room[];
 };

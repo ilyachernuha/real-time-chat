@@ -7,16 +7,8 @@ import React, { useEffect } from "react";
 import { useColorScheme } from "@/components/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthProvider";
 import Colors from "@/constants/Colors";
-
-export {
-  // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
-} from "expo-router";
-
-export const unstable_settings = {
-  // Ensure that reloading on `/modal` keeps a back button present.
-  initialRouteName: "(tabs)",
-};
+import Fonts from "@/constants/Fonts";
+import { StatusBar } from "expo-status-bar";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -31,18 +23,13 @@ export default function RootLayout() {
     ...FontAwesome.font,
   });
 
-  // Expo Router uses Error Boundaries to catch errors in the navigation tree.
   useEffect(() => {
-    if (error) throw error;
-  }, [error]);
-
-  useEffect(() => {
-    if (loaded) {
+    if (loaded || error) {
       SplashScreen.hideAsync();
     }
-  }, [loaded]);
+  }, [loaded, error]);
 
-  if (!loaded) {
+  if (!loaded && !error) {
     return null;
   }
 
@@ -58,10 +45,26 @@ function RootLayoutNav() {
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
+      <StatusBar style="light" backgroundColor="transparent" translucent />
       <Stack
         screenOptions={{
           contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
           headerShown: false,
+          headerStyle: {
+            backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey,
+          },
+          headerTitleStyle: {
+            color: Colors[colorScheme ?? "light"].text,
+            fontFamily: Fonts[14].fontFamily,
+            fontSize: Fonts[14].fontSize,
+            fontWeight: Fonts[14].fontWeight,
+          },
+          headerTintColor: Colors[colorScheme ?? "light"].mainPurple,
+          headerTitleAlign: "center",
+          headerBackTitleStyle: {
+            fontFamily: Fonts[14].fontFamily,
+            fontSize: Fonts[14].fontSize,
+          },
           statusBarTranslucent: true,
           statusBarBackgroundColor: "transparent",
           statusBarStyle: "light",
@@ -71,9 +74,8 @@ function RootLayoutNav() {
         }}
       >
         <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="(tabs)" options={{ headerTitleAlign: "center" }} />
         <Stack.Screen name="chat/[id]" />
-        <Stack.Screen name="modal" options={{ presentation: "modal" }} />
       </Stack>
     </ThemeProvider>
   );

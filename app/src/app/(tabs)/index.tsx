@@ -66,9 +66,11 @@ const renderItem: ListRenderItem<Chat> = ({ item }) => (
 
 const Chats = () => {
   return (
-    <View style={styles.container}>
-      <FlatList<Chat> renderItem={renderItem} data={data} keyExtractor={(item) => item.id} />
-    </View>
+    <>
+      <View style={styles.container}>
+        <FlatList<Chat> renderItem={renderItem} data={data} keyExtractor={(item) => item.id} />
+      </View>
+    </>
   );
 };
 
