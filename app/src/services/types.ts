@@ -41,17 +41,17 @@ export type ChangeNameResponse = {
 
 export type CreateRoom = {
   title: string;
-  description: string;
+  description?: string;
   theme: RoomTheme;
   languages: RoomLanguageCode[];
   tags: string[];
   make_public: boolean;
-  users_to_add: [
-    {
-      user_id: string;
-      make_admin: boolean;
-    }
-  ];
+  // users_to_add: [
+  //   {
+  //     user_id: string;
+  //     make_admin: boolean;
+  //   }
+  // ];
 };
 
 export type CreateRoomResponse = {
@@ -59,7 +59,7 @@ export type CreateRoomResponse = {
   room_id: string;
 };
 
-type Room = {
+export type Room = {
   room_id: string;
   title: string;
   room_picture_id: string;
