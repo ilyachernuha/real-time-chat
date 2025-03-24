@@ -254,7 +254,7 @@ class Attachment(Base):
     attachment_id = Column(UUID, primary_key=True)
     message_id = Column(UUID, ForeignKey("messages.message_id"), nullable=True)
     private_message_id = Column(UUID, ForeignKey("private_messages.message_id"), nullable=True)
-    type = Column(SQLAlchemyEnum(AttachmentType, neme="attachment_type"), nullable=False)
+    type = Column(SQLAlchemyEnum(AttachmentType, name="attachment_type"), nullable=False)
     original_name = Column(String, nullable=True, default=None)
     message_type = Column(SQLAlchemyEnum(MessageType, name="message_relationship_type"), nullable=False)
     message = relationship("Message", back_populates="attachments")
