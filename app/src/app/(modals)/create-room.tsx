@@ -112,7 +112,7 @@ const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
                 paddingHorizontal: 16,
                 paddingRight: 8,
                 backgroundColor: Colors.dark.mainDarkGrey,
-                borderColor: errors.theme
+                borderColor: (touched.theme && errors.theme)
                   ? Colors.dark.mainErrorRed
                   : values.theme
                   ? Colors.dark.mainPurple
