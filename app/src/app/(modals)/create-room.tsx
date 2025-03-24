@@ -18,16 +18,16 @@ import RoomsService from "@/services/RoomsService";
 export interface CreateRoomFormValues {
   title: string;
   description?: string;
-  theme: RoomTheme;
+  theme: RoomTheme | null;
   languages: RoomLanguageCode[];
   tags: string[];
   make_public: boolean;
 }
 
 const validationSchema = Yup.object({
-  title: Yup.string().required("Room title is required"),
-  description: Yup.string(),
-  theme: Yup.string(),
+  title: Yup.string().min(1, "Too short room title").max(16, "Too long room title").required("Room title is required"),
+  description: Yup.string().max(16, "Too long room description"),
+  theme: Yup.mixed<RoomTheme>().required("Room theme is required").oneOf(RoomThemes),
   languages: Yup.array(),
   tags: Yup.array(Yup.string()),
   makePublic: Yup.boolean(),
@@ -38,16 +38,11 @@ interface CreateRoomFormProps {
 }
 
 const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
-  // const [hidePassword, setHidePassword] = useState(true);
-
   const titleRef = useRef<TextInput>(null);
   const descriptionRef = useRef<TextInput>(null);
-  // const themeRef = useRef<TextInput>(null);
-  // const languagesRef = useRef<TextInput>(null);
-  // const tagsRef = useRef<TextInput>(null);
-  // const makePublicRef = useRef<TextInput>(false);
 
   const [themeOpen, setThemeOpen] = useState(false);
+  const [themeValue, setThemeValue] = useState(null);
   const [languagesOpen, setLanguagesOpen] = useState(false);
   const [languagesValue, setLanguagesValue] = useState(null);
 
@@ -66,9 +61,13 @@ const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
     }));
   }, []);
 
+  const themeItems = useMemo(() => {
+    return RoomThemes.map((value) => ({ label: value[0].toUpperCase() + value.slice(1), value }));
+  }, []);
+
   return (
     <Formik<CreateRoomFormValues>
-      initialValues={{ title: "", description: "", theme: "art", languages: [], tags: [], make_public: false }}
+      initialValues={{ title: "", description: "", theme: null, languages: [], tags: [], make_public: false }}
       onSubmit={onSubmit}
       validationSchema={validationSchema}
       validateOnBlur={false}
@@ -81,28 +80,30 @@ const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
               onBlur={handleBlur("title")}
               placeholder="Add room title"
               value={values.title}
-              error={touched.title && errors.title}
+              error={errors.title}
               ref={titleRef}
               returnKeyType="next"
-              onSubmitEditing={() => titleRef.current?.focus()}
+              submitBehavior="submit"
+              onSubmitEditing={() => descriptionRef.current?.focus()}
             />
             <InputField
               onChangeText={handleChange("description")}
               onBlur={handleBlur("description")}
               placeholder="Add room description"
               value={values.description}
-              error={touched.description && errors.description}
+              error={errors.description}
               ref={descriptionRef}
               returnKeyType="next"
-              onSubmitEditing={() => descriptionRef.current?.focus()}
+              submitBehavior="submit"
             />
             <DropDownPicker
               open={themeOpen}
               onOpen={onThemeOpen}
-              value={values.theme}
-              items={RoomThemes.map((value) => ({ label: value[0].toUpperCase() + value.slice(1), value }))}
+              value={themeValue}
+              items={themeItems}
               setOpen={setThemeOpen}
-              setValue={(callback) => setFieldValue("theme", callback(values.theme))}
+              setValue={setThemeValue}
+              onChangeValue={(value) => setFieldValue("theme", value)}
               placeholder="Choose room theme"
               style={{
                 marginBottom: 24,
@@ -111,7 +112,11 @@ const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
                 paddingHorizontal: 16,
                 paddingRight: 8,
                 backgroundColor: Colors.dark.mainDarkGrey,
-                borderColor: Colors.dark.secondaryLightGrey,
+                borderColor: errors.theme
+                  ? Colors.dark.mainErrorRed
+                  : values.theme
+                  ? Colors.dark.mainPurple
+                  : Colors.dark.secondaryLightGrey,
                 borderRadius: 12,
               }}
               textStyle={{ color: Colors.dark.text, ...Fonts[14] }}
@@ -141,7 +146,7 @@ const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
                 paddingHorizontal: 16,
                 paddingRight: 8,
                 backgroundColor: Colors.dark.mainDarkGrey,
-                borderColor: Colors.dark.secondaryLightGrey,
+                borderColor: values.languages?.length ? Colors.dark.mainPurple : Colors.dark.secondaryLightGrey,
                 borderRadius: 12,
               }}
               textStyle={{ color: Colors.dark.text, ...Fonts[14] }}
@@ -169,40 +174,6 @@ const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
               searchContainerStyle={{ borderColor: Colors.dark.mainDarkGrey }}
               searchTextInputStyle={{ borderColor: Colors.dark.secondaryLightGrey, color: Colors.dark.text }}
             />
-            {/* <InputField
-              onChangeText={handleChange("password")}
-              onBlur={handleBlur("password")}
-              placeholder="Enter your password"
-              value={values.password}
-              error={touched.password && errors.password}
-              isPassword
-              toggleHidePassword={() => setHidePassword(!hidePassword)}
-              secureTextEntry={hidePassword}
-              autoCapitalize="none"
-              textContentType="password"
-              ref={passwordRef}
-              returnKeyType="next"
-              blurOnSubmit={false}
-              onSubmitEditing={() => passwordConfirmRef.current?.focus()}
-              autoComplete="password"
-            />
-            <InputField
-              onChangeText={handleChange("passwordConfirm")}
-              onBlur={handleBlur("passwordConfirm")}
-              placeholder="Confirm your password"
-              value={values.passwordConfirm}
-              error={touched.passwordConfirm && errors.passwordConfirm}
-              isPassword
-              toggleHidePassword={() => setHidePassword(!hidePassword)}
-              secureTextEntry={hidePassword}
-              autoCapitalize="none"
-              textContentType="password"
-              ref={passwordConfirmRef}
-              returnKeyType="done"
-              blurOnSubmit={false}
-              onSubmitEditing={() => handleSubmit()}
-              autoComplete="password"
-            /> */}
           </View>
           <Button onPress={() => handleSubmit()} title="Create Room" disabled={isSubmitting} />
         </View>
@@ -217,7 +188,7 @@ export default function CreateRoomModal() {
   const handleSubmit = async (values: CreateRoomFormValues, { setSubmitting }: FormikHelpers<CreateRoomFormValues>) => {
     console.log(values);
     try {
-      const res = await RoomsService.createRoom(values);
+      const res = await RoomsService.createRoom({ ...values, theme: values.theme! });
       router.back();
     } catch (error) {
       if (isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
@@ -247,11 +218,7 @@ export default function CreateRoomModal() {
         >
           <Icons name="image" size={30} color={Colors.dark.text} />
         </View>
-
         <CreateRoomForm onSubmit={handleSubmit} />
-
-        {/* <Text>Create a new room</Text> */}
-        {/* <Button title="Close" onPress={() => router.back()} /> */}
       </View>
     </>
   );

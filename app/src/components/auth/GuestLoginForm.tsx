@@ -44,7 +44,7 @@ const GuestLoginForm = ({ onGuestLogin }: GuestLoginFormProps) => {
             autoCapitalize="none"
             textContentType="name"
             returnKeyType="done"
-            blurOnSubmit={false}
+            submitBehavior="submit"
             onSubmitEditing={() => handleSubmit()}
             autoComplete="name"
           />

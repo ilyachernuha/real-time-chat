@@ -50,7 +50,7 @@ const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
               autoCapitalize="none"
               textContentType="password"
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => passwordConfirmRef.current?.focus()}
               autoComplete="new-password"
             />
@@ -67,7 +67,7 @@ const ResetPasswordForm = ({ onReset }: ResetPasswordFormProps) => {
               textContentType="password"
               ref={passwordConfirmRef}
               returnKeyType="done"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => handleSubmit()}
               autoComplete="new-password"
             />
