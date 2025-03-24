@@ -4,7 +4,7 @@ import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { SafeAreaView } from "@/components/Themed";
 import { useAuth } from "@/hooks/useAuth";
-import ChannelsHeader from "@/components/ChannelsHeader";
+import ChannelsHeader from "@/components/headers/ChannelsHeader";
 import Fonts from "@/constants/Fonts";
 import StyledText from "@/components/StyledText";
 import Icons from "@/components/Icons";

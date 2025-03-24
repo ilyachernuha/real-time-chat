@@ -1,4 +1,4 @@
-import CreateRoomHeader from "@/components/CreateRoomHeader";
+import CreateRoomHeader from "@/components/headers/CreateRoomHeader";
 import Icons from "@/components/Icons";
 import Colors from "@/constants/Colors";
 import { Stack, useRouter } from "expo-router";
