@@ -18,7 +18,8 @@ async def get_notification_if_exists(db: AsyncSession, notification_id: uuid.UUI
 
 
 def check_if_notification_can_be_deleted(notification: db_models.Notification, session_id: uuid.UUID):
-    if notification.type == db_models.Notification.Type.new_login and notification.details["session_id"] == str(session_id):
+    if notification.type == db_models.Notification.Type.new_login and \
+            notification.details["session_id"] == str(session_id):
         raise HTTPException(status_code=403, detail="You cannot delete this notification")
 
 
@@ -33,9 +34,10 @@ async def create_new_login_notification(db: AsyncSession, session: db_models.Ses
         "device_info": session.device_info
     }
     notification = await crud.create_notification(db=db, user_id=session.user_id,
-                                                 type=db_models.Notification.Type.new_login, details=details)
+                                                  type=db_models.Notification.Type.new_login, details=details)
     await sio.emit_notification(user_id=session.user_id, notification_id=notification.notification_id,
-                                type="new_login", details=details, skip_session=session.session_id)
+                                type="new_login", details=details, timestamp=notification.timestamp.timestamp(),
+                                skip_session=session.session_id)
 
 
 async def create_added_to_room_notification(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID,
@@ -44,10 +46,11 @@ async def create_added_to_room_notification(db: AsyncSession, user_id: uuid.UUID
         "room_id": str(room_id),
         "added_by": str(adder_id)
     }
-    notification = await crud.create_notification(db=db, user_id=user_id, type=db_models.Notification.Type.added_to_room,
-                                                 details=details)
+    notification = await crud.create_notification(db=db, user_id=user_id,
+                                                  type=db_models.Notification.Type.added_to_room,
+                                                  details=details)
     await sio.emit_notification(user_id=user_id, notification_id=notification.notification_id, type="added_to_room", 
-                                details=details)
+                                details=details, timestamp=notification.timestamp.timestamp())
 
 
 async def create_banned_from_room_notification(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID,
@@ -58,10 +61,10 @@ async def create_banned_from_room_notification(db: AsyncSession, user_id: uuid.U
         "reason": reason
     }
     notification = await crud.create_notification(db=db, user_id=user_id,
-                                                 type=db_models.Notification.Type.banned_from_room,
-                                                 details=details)
+                                                  type=db_models.Notification.Type.banned_from_room,
+                                                  details=details)
     await sio.emit_notification(user_id=user_id, notification_id=notification.notification_id, type="banned_from_room",
-                                details=details)
+                                details=details, timestamp=notification.timestamp.timestamp())
 
 
 async def create_unbanned_from_room_notification(db: AsyncSession, user_id: uuid.UUID, room_id: uuid.UUID,
@@ -71,7 +74,8 @@ async def create_unbanned_from_room_notification(db: AsyncSession, user_id: uuid
         "unbanned_by": str(unbanner_id)
     }
     notification = await crud.create_notification(db=db, user_id=user_id,
-                                                 type=db_models.Notification.Type.unbanned_from_room,
-                                                 details=details)
+                                                  type=db_models.Notification.Type.unbanned_from_room,
+                                                  details=details)
     await sio.emit_notification(user_id=user_id, notification_id=notification.notification_id,
-                                type="unbanned_from_room", details=details)
+                                type="unbanned_from_room", details=details,
+                                timestamp=notification.timestamp.timestamp())
