@@ -2,15 +2,15 @@ import { ExpoConfig, ConfigContext } from "expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
-  androidStatusBar: {
-    translucent: true,
-    barStyle: "light-content",
-    backgroundColor: "#030708",
-  },
-  androidNavigationBar: {
-    barStyle: "light-content",
-    backgroundColor: "#030708",
-  },
+  // androidStatusBar: {
+  //   translucent: true,
+  //   barStyle: "light-content",
+  //   backgroundColor: "#030708",
+  // },
+  // androidNavigationBar: {
+  //   barStyle: "light-content",
+  //   backgroundColor: "#030708",
+  // },
   name: "Whisper",
   slug: "real-time-chat",
   version: "1.0.0",

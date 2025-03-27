@@ -73,7 +73,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               autoCapitalize="none"
               textContentType="emailAddress"
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => passwordRef.current?.focus()}
               autoComplete="email"
             />
@@ -90,7 +90,7 @@ const LoginForm = ({ onLogin }: LoginFormProps) => {
               textContentType="password"
               ref={passwordRef}
               returnKeyType="done"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => handleSubmit()}
               autoComplete="password"
             />

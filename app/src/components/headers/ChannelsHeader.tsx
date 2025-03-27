@@ -1,20 +1,21 @@
 import Colors from "@/constants/Colors";
 import { StyleSheet, TextInput, View } from "react-native";
 import Fonts from "@/constants/Fonts";
-import { Ionicons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import StyledText from "./StyledText";
-import { StatusBar } from "expo-status-bar";
+import StyledText from "@/components/StyledText";
+import { useRouter } from "expo-router";
+import IconButton from "@/components/common/buttons/IconButton";
 
 const ChannelsHeader = ({ top }: { top: number }) => {
+  const router = useRouter();
+
   return (
     <>
-      <StatusBar translucent style="light" backgroundColor="transparent" />
       <View style={{ paddingTop: top, ...styles.container }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-          <Ionicons name="filter-sharp" size={24} color={Colors.dark.mainPurple} style={{ padding: 10 }} />
+          <IconButton name="filter" onPress={() => {}} />
           <StyledText font="14">Channels</StyledText>
-          <MaterialIcons name="add-circle-outline" size={24} color={Colors.dark.mainPurple} style={{ padding: 10 }} />
+          <IconButton name="add" onPress={() => router.push("/create-room")} />
         </View>
         <View style={styles.input}>
           <TextInput

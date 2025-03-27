@@ -60,7 +60,7 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               autoCapitalize="none"
               textContentType="emailAddress"
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => usernameRef.current?.focus()}
               autoComplete="email"
             />
@@ -74,7 +74,7 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               textContentType="username"
               ref={usernameRef}
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => passwordRef.current?.focus()}
               autoComplete="username"
             />
@@ -91,7 +91,7 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               textContentType="password"
               ref={passwordRef}
               returnKeyType="next"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => passwordConfirmRef.current?.focus()}
               autoComplete="password"
             />
@@ -108,7 +108,7 @@ const RegistrationForm = ({ onRegister }: RegistrationFormProps) => {
               textContentType="password"
               ref={passwordConfirmRef}
               returnKeyType="done"
-              blurOnSubmit={false}
+              submitBehavior="submit"
               onSubmitEditing={() => handleSubmit()}
               autoComplete="password"
             />

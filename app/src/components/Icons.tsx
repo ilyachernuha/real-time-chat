@@ -1,5 +1,5 @@
 import { createIconSet } from "@expo/vector-icons";
-import { OpaqueColorValue, TextProps, View } from "react-native";
+import { OpaqueColorValue, TextProps } from "react-native";
 
 export const glyphMap = {
   "visibility": "visibility",
@@ -41,7 +41,7 @@ export const glyphMap = {
 
 const IconSet = createIconSet(glyphMap, "icons", "icons.ttf");
 
-interface IconProps extends TextProps {
+export interface IconProps extends TextProps {
   size?: number;
   name: keyof typeof glyphMap;
   color?: string | OpaqueColorValue;

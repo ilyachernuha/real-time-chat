@@ -3,37 +3,41 @@ import Colors from "@/constants/Colors";
 import { MaterialIcons } from "@expo/vector-icons";
 import { FlatList, Image, ListRenderItem, StyleSheet, TouchableOpacity } from "react-native";
 import icon from "../../../assets/images/icon.png";
-import { Link } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import StyledText from "@/components/StyledText";
+import { useCallback, useEffect, useState } from "react";
+import { RoomLanguages } from "@/constants/RoomLanguages";
+import RoomsService from "@/services/RoomsService";
+import { Room } from "@/services/types";
 
 interface Chat {
-  id: string;
+  room_id: string;
   title: string;
-  message: string;
-  time: string;
-  messagesCount: number;
+  // message: string;
+  // time: string;
+  // messagesCount: number;
 }
 
-const data: Chat[] = [
-  { id: "1", title: "Whisper Community", message: "No messages yet", time: "12:23", messagesCount: 100 },
-  { id: "2", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "3", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "4", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "5", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "6", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "7", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "8", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "9", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "10", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "11", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "12", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
-  { id: "13", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+// const data: Chat[] = [
+//   { id: "1", title: "Whisper Community", message: "No messages yet", time: "12:23", messagesCount: 100 },
+//   { id: "2", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "3", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "4", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "5", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "6", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "7", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "8", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "9", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "10", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "11", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "12", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
+//   { id: "13", title: "Whisper Tutorial", message: "No messages yet", time: "12:23", messagesCount: 5 },
 
-  // Add more items here
-];
+//   // Add more items here
+// ];
 
 const renderItem: ListRenderItem<Chat> = ({ item }) => (
-  <Link href={`/chat/${item.id}`} asChild>
+  <Link href={`/chat/${item.room_id}`} asChild>
     <TouchableOpacity>
       <View style={styles.chat}>
         <Image source={icon} width={44} height={44} style={{ width: 44, height: 44, borderRadius: 12 }} />
@@ -48,14 +52,14 @@ const renderItem: ListRenderItem<Chat> = ({ item }) => (
               darkColor={Colors.dark.secondaryLightGrey}
               lightColor={Colors.light.secondaryLightGrey}
             >
-              {item.message}
+              No messages yet
             </StyledText>
           </View>
 
           <View style={{ alignItems: "flex-end", gap: 8 }}>
-            <StyledText font="12">{item.time}</StyledText>
+            <StyledText font="12">12:23</StyledText>
             <View style={{ backgroundColor: Colors.dark.mainPurple, padding: 4, borderRadius: 12 }}>
-              <StyledText font="light">{item.messagesCount}</StyledText>
+              <StyledText font="light">1488</StyledText>
             </View>
           </View>
         </View>
@@ -65,10 +69,31 @@ const renderItem: ListRenderItem<Chat> = ({ item }) => (
 );
 
 const Chats = () => {
+  const [rooms, setRooms] = useState<Room[]>([]);
+
+  const fetchRooms = useCallback(async () => {
+    try {
+      const response = await RoomsService.myRooms();
+      setRooms(response.rooms);
+      console.log("Fetched rooms:", response.rooms);
+    } catch (error) {
+      console.error("Failed to fetch rooms", error);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchRooms();
+    }, [fetchRooms])
+  );
+
   return (
-    <View style={styles.container}>
-      <FlatList<Chat> renderItem={renderItem} data={data} keyExtractor={(item) => item.id} />
-    </View>
+    <>
+      <View style={styles.container}>
+        <FlatList<Chat> renderItem={renderItem} data={rooms} keyExtractor={(room) => room.room_id} />
+        {/* <FlatList<Chat> renderItem={renderItem} data={data} keyExtractor={(item) => item.id} /> */}
+      </View>
+    </>
   );
 };
 

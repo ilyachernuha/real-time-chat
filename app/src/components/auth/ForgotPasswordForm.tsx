@@ -37,7 +37,7 @@ const ForgotPasswordForm = ({ onForgot }: ForgotPasswordFormProps) => {
             autoCapitalize="none"
             textContentType="emailAddress"
             returnKeyType="done"
-            blurOnSubmit={false}
+            submitBehavior="submit"
             onSubmitEditing={() => handleSubmit()}
             autoComplete="email"
           />
