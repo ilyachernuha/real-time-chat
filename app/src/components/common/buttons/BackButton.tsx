@@ -1,8 +1,8 @@
 import Fonts from "@/constants/Fonts";
 import { Pressable, PressableProps, StyleSheet, Text } from "react-native";
-import Icons from "../Icons";
 import { PropsWithChildren } from "react";
 import { getActionColor } from "@/utils/getActionColor";
+import Icons from "@/components/Icons";
 
 export default function BackButton({ children, disabled, ...props }: PressableProps & PropsWithChildren) {
   return (

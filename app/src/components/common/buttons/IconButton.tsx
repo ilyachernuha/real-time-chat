@@ -1,6 +1,6 @@
 import { Pressable, PressableProps, StyleSheet } from "react-native";
-import Icons, { IconProps } from "../Icons";
 import { getActionColor } from "@/utils/getActionColor";
+import Icons, { IconProps } from "@/components/Icons";
 
 type IconButtonProps = IconProps & PressableProps;
 

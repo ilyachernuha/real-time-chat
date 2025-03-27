@@ -1,4 +1,3 @@
-import "@/polyfills";
 import axios from "axios";
 import API from "@/constants/API";
 import * as SecureStore from "expo-secure-store";

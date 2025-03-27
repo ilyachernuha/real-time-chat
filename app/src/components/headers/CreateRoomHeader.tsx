@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
-import Header from "./Header";
-import BackButton from "../buttons/BackButton";
+import Header from "@/components/headers/Header";
+import BackButton from "@/components/common/buttons/BackButton";
 
 export default function CreateRoomHeader() {
   const router = useRouter();

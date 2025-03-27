@@ -1,11 +1,10 @@
 import Colors from "@/constants/Colors";
-import { Pressable, StyleSheet, TextInput, View } from "react-native";
+import { StyleSheet, TextInput, View } from "react-native";
 import Fonts from "@/constants/Fonts";
-import { Ionicons } from "@expo/vector-icons";
 import { MaterialIcons } from "@expo/vector-icons";
-import StyledText from "../StyledText";
+import StyledText from "@/components/StyledText";
 import { useRouter } from "expo-router";
-import IconButton from "../buttons/IconButton";
+import IconButton from "@/components/common/buttons/IconButton";
 
 const ChannelsHeader = ({ top }: { top: number }) => {
   const router = useRouter();

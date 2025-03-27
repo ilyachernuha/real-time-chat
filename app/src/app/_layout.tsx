@@ -1,3 +1,5 @@
+import "expo-dev-client";
+import { KeyboardProvider } from "react-native-keyboard-controller";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { DarkTheme, DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { useFonts } from "expo-font";
@@ -46,37 +48,39 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <StatusBar style="light" backgroundColor="transparent" translucent />
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
-          headerShown: false,
-          headerStyle: {
-            backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey,
-          },
-          headerTitleStyle: {
-            color: Colors[colorScheme ?? "light"].text,
-            fontFamily: Fonts[14].fontFamily,
-            fontSize: Fonts[14].fontSize,
-            fontWeight: Fonts[14].fontWeight,
-          },
-          headerTintColor: Colors[colorScheme ?? "light"].mainPurple,
-          headerTitleAlign: "center",
-          headerBackTitleStyle: {
-            fontFamily: Fonts[14].fontFamily,
-            fontSize: Fonts[14].fontSize,
-          },
-          statusBarTranslucent: true,
-          statusBarBackgroundColor: "transparent",
-          statusBarStyle: "light",
-          navigationBarTranslucent: true,
-          navigationBarColor: "transparent",
-          animation: "fade",
-        }}
-      >
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(tabs)" options={{ headerTitleAlign: "center" }} />
-        <Stack.Screen name="chat/[id]" />
-      </Stack>
+      <KeyboardProvider>
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: Colors[colorScheme ?? "light"].background },
+            headerShown: false,
+            headerStyle: {
+              backgroundColor: Colors[colorScheme ?? "light"].mainDarkGrey,
+            },
+            headerTitleStyle: {
+              color: Colors[colorScheme ?? "light"].text,
+              fontFamily: Fonts[14].fontFamily,
+              fontSize: Fonts[14].fontSize,
+              fontWeight: Fonts[14].fontWeight,
+            },
+            headerTintColor: Colors[colorScheme ?? "light"].mainPurple,
+            headerTitleAlign: "center",
+            headerBackTitleStyle: {
+              fontFamily: Fonts[14].fontFamily,
+              fontSize: Fonts[14].fontSize,
+            },
+            statusBarTranslucent: true,
+            statusBarBackgroundColor: "transparent",
+            statusBarStyle: "light",
+            navigationBarTranslucent: true,
+            navigationBarColor: "transparent",
+            animation: "fade",
+          }}
+        >
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" options={{ headerTitleAlign: "center" }} />
+          <Stack.Screen name="chat/[id]" />
+        </Stack>
+      </KeyboardProvider>
     </ThemeProvider>
   );
 }
