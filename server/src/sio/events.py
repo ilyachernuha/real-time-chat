@@ -101,6 +101,34 @@ async def private_message(sid: str, data: schemas.PrivateMessage):
 
 
 @sio.event
+@handle_exceptions
+@validators.validate_model(model=schemas.ReadPrivateMessages)
+async def read_private_messages(sid: str, data: schemas.ReadPrivateMessages):
+    async with db_session() as db:
+        user_id = (await sio.get_session(sid))["user_id"]
+        messages = [await crud.get_private_message_by_id(db=db, message_id=message_id) for message_id in data.messages]
+        if any(message is None or message.receiver_id != user_id for message in messages):
+            return "Error", {"detail": "Invalid messages"}
+        for message in messages:
+            await crud.read_private_message(db=db, message_id=message.message_id)
+            task1 = asyncio.create_task(
+                sio.emit(
+                    event="private_message_read",
+                    data={"message_id": str(message.message_id)},
+                    room=message.sender_id
+                )
+            )
+            task2 = asyncio.create_task(
+                sio.emit(
+                    event="private_message_read",
+                    data={"message_id": str(message.message_id)},
+                    room=message.receiver_id,
+                    skip_sid=sid
+                )
+            )
+        
+
+@sio.event
 @validators.validate_model(model=schemas.UserTyping)
 @validators.validate_user_in_room
 async def start_typing(sid: str, data: schemas.UserTyping):
