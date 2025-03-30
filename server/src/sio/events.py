@@ -109,23 +109,30 @@ async def read_private_messages(sid: str, data: schemas.ReadPrivateMessages):
         messages = [await crud.get_private_message_by_id(db=db, message_id=message_id) for message_id in data.messages]
         if any(message is None or message.receiver_id != user_id for message in messages):
             return "Error", {"detail": "Invalid messages"}
+        if len({message.sender_id for message in messages}) != 1:
+            return "Error", {"detail": "Message sender mismatch"}
+        str_list = []
         for message in messages:
-            await crud.read_private_message(db=db, message_id=message.message_id)
+            if message.read_time is None:
+                await crud.read_private_message(db=db, message_id=message.message_id)
+                str_list.append(str(message.message_id))
+        if str_list:
             task1 = asyncio.create_task(
                 sio.emit(
                     event="private_message_read",
-                    data={"message_id": str(message.message_id)},
+                    data={"messages": str_list},
                     room=message.sender_id
                 )
             )
             task2 = asyncio.create_task(
                 sio.emit(
                     event="private_message_read",
-                    data={"message_id": str(message.message_id)},
+                    data={"messages": str_list},
                     room=message.receiver_id,
                     skip_sid=sid
                 )
             )
+        
         
 
 @sio.event
