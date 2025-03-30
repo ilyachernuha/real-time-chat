@@ -115,6 +115,17 @@ async def get_private_messages_of_user_updated_after_timestamp(db: AsyncSession,
     return result.scalars().all()
 
 
+async def get_private_messages_of_user_created_before_and_read_after_timestamp(db: AsyncSession, user_id: uuid.UUID,
+                                                                               timestamp: datetime):
+    stmt = (
+        select(db_models.PrivateMessage)
+        .filter(or_(db_models.PrivateMessage.receiver_id == user_id, db_models.PrivateMessage.sender_id == user_id))
+        .filter(and_(db_models.PrivateMessage.timestamp <= timestamp, db_models.PrivateMessage.read_time >= timestamp))
+    )
+    result = await db.execute(stmt)
+    return result.scalars().all()
+
+
 async def get_conversation_partners_by_user_id(db: AsyncSession, user_id: uuid.UUID):
     stmt = (
         union(
@@ -164,6 +175,13 @@ async def update_private_message(db: AsyncSession, message_id: uuid.UUID, text: 
     message = await get_private_message_by_id(db, message_id)
     message.text = text
     message.update_time = datetime.now(timezone.utc)
+    await db.commit()
+    return message
+
+
+async def read_private_message(db: AsyncSession, message_id: uuid.UUID):
+    message = await get_private_message_by_id(db, message_id)
+    message.read_time = datetime.now(timezone.utc)
     await db.commit()
     return message
 

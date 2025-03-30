@@ -107,6 +107,7 @@ async def private_message_to_dict(message: db_models.PrivateMessage, include_mes
         "text": message.text,
         "created_at": message.timestamp.timestamp(),
         "updated_at": message.update_time.timestamp() if message.update_time is not None else None,
+        "read": message.read_time is not None,
         "attachments": await attachments_to_dict(message)
     }
     if include_message_id:

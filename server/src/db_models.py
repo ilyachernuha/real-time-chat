@@ -237,6 +237,7 @@ class PrivateMessage(Base):
     text = Column(String, nullable=True)
     timestamp = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     update_time = Column(DateTime(timezone=True), nullable=True, default=None)
+    read_time = Column(DateTime(timezone=True), nullable=True, default=None)
     sender = relationship("User", back_populates="sent_private_messages", foreign_keys=[sender_id])
     receiver = relationship("User", back_populates="received_private_messages", foreign_keys=[receiver_id])
     reply_to = relationship("PrivateMessage", back_populates="replies", remote_side=[message_id])
