@@ -36,6 +36,6 @@ export const authApi = {
   },
 
   resetPassword: async (credentials: ResetPasswordCredentials) => {
-    return (await api.put<PasswordResponse>(AUTH_ROUTES.RESET_PASSWORD, credentials)).data;
+    return (await api.post<PasswordResponse>(AUTH_ROUTES.RESET_PASSWORD, credentials)).data;
   },
 };
