@@ -17,20 +17,13 @@ const CreateRoomScreen = () => {
 
   const handleSubmit = async (values: CreateRoomFormData) => {
     try {
-      const newRoom = await db.write(async () => {
-        return await roomsCollection.create((room) => {
-          // room._raw.id = room_id;
-          room.title = values.title;
-        });
-      });
-
       const { room_id } = await roomsApi.createRoom(values);
 
       await db.write(async () => {
-        await newRoom.update((room) => {
+        await roomsCollection.create((room) => {
           room._raw.id = room_id;
+          room.title = values.title;
           room._raw._status = "synced";
-          // room.title = values.title;
         });
       });
 
