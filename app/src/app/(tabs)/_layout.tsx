@@ -1,25 +1,23 @@
 import React from "react";
-import { Redirect, Tabs, useRouter } from "expo-router";
+import { Redirect, Tabs } from "expo-router";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { SafeAreaView } from "@/components/Themed";
-import { useAuth } from "@/hooks/useAuth";
-import ChannelsHeader from "@/components/headers/ChannelsHeader";
+import ChannelsHeader from "@/features/rooms/screens/components/ChannelsHeader";
 import Fonts from "@/constants/Fonts";
 import StyledText from "@/components/StyledText";
 import Icons from "@/components/Icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Pressable } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { useAuthStore } from "@/features/auth/services/authStore";
+import { useSocket } from "@/hooks/useSocket";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const router = useRouter();
-  const { refreshToken, isLoading } = useAuth();
   const colorScheme = useColorScheme();
+  const hasHydrated = useAuthStore((state) => state._hasHydrated);
 
   // You can keep the splash screen open, or render a loading screen like we do here.
-  if (isLoading) {
+  if (!hasHydrated) {
     return (
       <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
         <StyledText font="bold" style={{ textAlign: "center" }}>
@@ -29,9 +27,12 @@ export default function TabLayout() {
     );
   }
 
+  const accessToken = useAuthStore((state) => state.accessToken);
+  useSocket();
+
   // Only require authentication within the (app) group's layout as users
   // need to be able to access the (auth) group and sign in again.
-  if (!refreshToken) {
+  if (!accessToken) {
     // On web, static rendering will stop here as the user is not authenticated
     // in the headless Node process that the pages are rendered in.
     return <Redirect href="/login" />;
@@ -69,16 +70,16 @@ export default function TabLayout() {
         name="index"
         options={{
           headerTitleAlign: "center",
-          title: "Channels",
+          title: "Rooms",
           tabBarIcon: ({ color }) => <Icons name="browse" size={24} color={color} />,
           header: () => <ChannelsHeader top={insets.top + 8} />,
         }}
       />
       <Tabs.Screen
-        name="chat"
+        name="chats"
         options={{
           headerTitleAlign: "center",
-          title: "Chat",
+          title: "Chats",
           tabBarIcon: ({ color }) => <Icons name="chats" size={24} color={color} />,
         }}
       />

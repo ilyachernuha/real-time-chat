@@ -1,23 +1,3 @@
-import { StyleSheet } from "react-native";
-import { View } from "@/components/Themed";
+const Notifications = () => null;
 
-export default function Notifications() {
-  return <View style={styles.container}></View>;
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-  separator: {
-    marginVertical: 30,
-    height: 1,
-    width: "80%",
-  },
-});
+export default Notifications;
