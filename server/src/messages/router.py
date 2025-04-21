@@ -168,9 +168,17 @@ async def private_message_updates(after: float, credentials: HTTPAuthorizationCr
             await crud.get_private_messages_of_user_updated_after_timestamp(db=db, user_id=user_id, timestamp=timestamp)
         )
     ]
+    read_messages = [
+        message.message_id
+        for message in (
+            await crud.get_private_messages_of_user_created_before_and_read_after_timestamp(db=db, user_id=user_id,
+                                                                                            timestamp=timestamp)
+        )
+    ]
     return {
         "new_messages": new_messages,
-        "updated_messages": updated_messages
+        "updated_messages": updated_messages,
+        "read_messages": read_messages
     }
 
 

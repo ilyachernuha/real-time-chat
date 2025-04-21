@@ -13,6 +13,10 @@ class PrivateMessage(BaseModel):
     reply_message_id: UUID4 | None = None
 
 
+class ReadPrivateMessages(BaseModel):
+    messages: set[UUID4]
+
+
 class UserTyping(BaseModel):
     room_id: UUID4
 

@@ -50,6 +50,7 @@ class PrivateMessageInfo(BaseModel):
     text: str | None
     created_at: float
     updated_at: float | None
+    read: bool
     attachments: list[Attachment]
 
 
@@ -65,12 +66,14 @@ class PrivateMessageInfoWithId(BaseModel):
     text: str | None
     created_at: float
     updated_at: float | None
+    read: bool
     attachments: list[Attachment]
 
 
 class PrivateMessageUpdates(BaseModel):
     new_messages: list[PrivateMessageInfoWithId]
     updated_messages: list[PrivateMessageInfoWithId]
+    read_messages: list[UUID4]
 
 
 class OldPrivateMessages(BaseModel):
