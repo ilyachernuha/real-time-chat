@@ -13,7 +13,9 @@ export default function EmailSent() {
 
   return (
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 48 }}>
-      <Logo />
+      <View style={{ alignItems: "center" }}>
+        <Logo />
+      </View>
       <View style={{ marginTop: 24, marginBottom: 32, alignItems: "center" }}>
         <StyledText font="bold" style={{ textAlign: "center" }}>
           Follow the instructions
@@ -32,9 +34,7 @@ export default function EmailSent() {
         </TextButton>
       </View>
       <View style={{ flex: 1 }}></View>
-      <DefaultLink href="/login" asChild>
-        <Button title="Log In" />
-      </DefaultLink>
+      <Button title="Log In" onPress={() => router.replace("/")} />
     </SafeAreaView>
   );
 }

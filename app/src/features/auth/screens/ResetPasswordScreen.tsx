@@ -16,7 +16,9 @@ export const ResetPasswordScreen = () => {
 
   return (
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingTop: 48 }}>
-      <Logo />
+      <View style={{ alignItems: "center" }}>
+        <Logo />
+      </View>
       <View style={{ marginTop: 24, marginBottom: 32 }}>
         <StyledText font="bold" style={{ textAlign: "center" }}>
           Reset password!
