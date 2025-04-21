@@ -3,7 +3,7 @@ import { Pressable } from "react-native";
 import Colors from "@/constants/Colors";
 import StyledText from "./StyledText";
 
-const Link = <T,>({ children, ...props }: LinkProps<T>) => (
+const Link = ({ children, ...props }: LinkProps) => (
   <DefaultLink asChild {...props}>
     <Pressable>
       {({ pressed }) => (

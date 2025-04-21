@@ -1,13 +1,15 @@
-import Logo from "@/components/auth/Logo";
-import { Button } from "@/components/Buttons";
-import Link from "@/components/Link";
+import Logo from "@/components/Logo";
+import { Button } from "@/components/buttons/Buttons";
 import StyledText from "@/components/StyledText";
 import { SafeAreaView, View } from "@/components/Themed";
 import Colors from "@/constants/Colors";
-import { useLocalSearchParams, Link as DefaultLink } from "expo-router";
+import { useLocalSearchParams, Link as DefaultLink, useRouter } from "expo-router";
+import TextButton from "@/components/buttons/TextButton";
 
 export default function EmailSent() {
   const { email } = useLocalSearchParams<{ email: string }>();
+
+  const router = useRouter();
 
   return (
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 24, paddingVertical: 48 }}>
@@ -25,9 +27,9 @@ export default function EmailSent() {
           We have sent confirmation email to{"\n"}
           {email}
         </StyledText>
-        <Link href="/forgot" style={{ paddingVertical: 15 }}>
+        <TextButton style={{ paddingVertical: 15 }} onPress={() => router.back()}>
           Change email
-        </Link>
+        </TextButton>
       </View>
       <View style={{ flex: 1 }}></View>
       <DefaultLink href="/login" asChild>

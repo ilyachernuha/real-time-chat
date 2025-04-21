@@ -1,6 +1,6 @@
 import { TextStyle } from "react-native";
 
-export type Font = "14" | "12" | "10" | "bold" | "light";
+export type Font = "14" | "12" | "10" | "bold" | "light" | "light_12";
 
 type Fonts = {
   [F in Font]: TextStyle;
@@ -36,6 +36,12 @@ const Fonts: Fonts = {
     fontSize: 10,
     lineHeight: 12,
     letterSpacing: 1,
+  },
+  light_12: {
+    fontFamily: "e-Ukraine Head Light",
+    fontSize: 12,
+    lineHeight: 14,
+    letterSpacing: 0.5,
   },
 };
 

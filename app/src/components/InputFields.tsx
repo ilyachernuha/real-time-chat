@@ -35,7 +35,7 @@ const InputField = forwardRef<TextInput, InputFieldProps>(
               {
                 flex: 1,
                 color: error ? Colors.dark.mainErrorRed : Colors.dark.text,
-                height: "100%",
+                paddingVertical: 13,
                 paddingLeft: 16,
                 paddingRight: isPassword ? 0 : 16,
               },
@@ -66,20 +66,16 @@ const InputField = forwardRef<TextInput, InputFieldProps>(
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
     borderWidth: 1,
     borderRadius: 12,
-    height: 44,
     backgroundColor: Colors.dark.mainDarkGrey,
-  },
-  input: {
-    flex: 1,
+    // height: 44,
   },
   error: {
     color: Colors.dark.mainErrorRed,
     position: "absolute",
     bottom: 0,
+    left: 0,
     paddingVertical: 5,
   },
 });

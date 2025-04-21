@@ -7,7 +7,6 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
 import { useColorScheme } from "@/components/useColorScheme";
-import { AuthProvider } from "@/contexts/AuthProvider";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
 import { StatusBar } from "expo-status-bar";
@@ -35,11 +34,7 @@ export default function RootLayout() {
     return null;
   }
 
-  return (
-    <AuthProvider>
-      <RootLayoutNav />
-    </AuthProvider>
-  );
+  return <RootLayoutNav />;
 }
 
 function RootLayoutNav() {
@@ -75,11 +70,7 @@ function RootLayoutNav() {
             navigationBarColor: "transparent",
             animation: "fade",
           }}
-        >
-          <Stack.Screen name="(auth)" />
-          <Stack.Screen name="(tabs)" options={{ headerTitleAlign: "center" }} />
-          <Stack.Screen name="chat/[id]" />
-        </Stack>
+        />
       </KeyboardProvider>
     </ThemeProvider>
   );
