@@ -9,7 +9,7 @@ interface ServerToClientEvents {
   message: (data: ReceiveMessageEventData) => void;
 }
 
-export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io("https://aerocock.com/", {
+export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io("https://aerocock.space/", {
   autoConnect: false,
   // tryAllTransports: true,
   // forceNew: true,
