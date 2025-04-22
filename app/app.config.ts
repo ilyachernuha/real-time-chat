@@ -46,7 +46,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         data: [
           {
             scheme: "https",
-            host: "aerocock.com",
+            host: "aerocock.space",
           },
         ],
         category: ["BROWSABLE", "DEFAULT"],
