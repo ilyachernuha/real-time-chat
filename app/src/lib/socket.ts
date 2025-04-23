@@ -1,3 +1,4 @@
+import API from "@/constants/API";
 import { io, Socket } from "socket.io-client";
 
 interface ClientToServerEvents {
@@ -9,18 +10,9 @@ interface ServerToClientEvents {
   message: (data: ReceiveMessageEventData) => void;
 }
 
-export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io("https://aerocock.space/", {
+export const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(API.apiURL, {
   autoConnect: false,
-  // tryAllTransports: true,
-  // forceNew: true,
-  // withCredentials: true,
-  // secure: true,
-  // reconnection: false,
-
-  // reconnection: false,
-  // secure: true,
-  // withCredentials: true, // Send cookies with the request
-  // transports: ["websocket"],
+  transports: ["websocket"],
 });
 
 type User = {
