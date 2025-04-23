@@ -4,7 +4,7 @@ import { socket } from "@/lib/socket";
 import Room from "@/model/Room";
 
 export const sendMessage = async (text: string, room: Room) => {
-  if (!text) return;
+  if (!text.trim()) return;
 
   const timestamp = new Date();
 
