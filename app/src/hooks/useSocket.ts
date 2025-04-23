@@ -1,3 +1,4 @@
+import { useAuthStore } from "@/features/auth/services/authStore";
 import { db, messagesCollection, roomsCollection } from "@/index.native";
 import { refreshAccessToken } from "@/lib/api";
 import { socket } from "@/lib/socket";
@@ -5,14 +6,20 @@ import { useEffect } from "react";
 
 export const useSocket = () => {
   useEffect(() => {
-    const connectSocket = async () => {
+    const connectSocket = async (token: string) => {
       socket.io.opts.extraHeaders = {
-        Authorization: `Bearer ${await refreshAccessToken()}`,
+        // Authorization: `Bearer ${await refreshAccessToken()}`,
+        Authorization: `Bearer ${token}`,
       };
       socket.connect();
     };
 
-    connectSocket();
+    const token = useAuthStore.getState().accessToken;
+
+    if (token) {
+      connectSocket(token);
+    }
+
     socket.onAny((event) => {
       console.log(event);
     });
