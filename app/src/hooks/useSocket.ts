@@ -8,8 +8,8 @@ export const useSocket = () => {
   useEffect(() => {
     const connectSocket = async (token: string) => {
       socket.io.opts.extraHeaders = {
-        // Authorization: `Bearer ${await refreshAccessToken()}`,
-        Authorization: `Bearer ${token}`,
+        Authorization: `Bearer ${await refreshAccessToken()}`,
+        // Authorization: `Bearer ${token}`,
       };
       socket.connect();
     };
