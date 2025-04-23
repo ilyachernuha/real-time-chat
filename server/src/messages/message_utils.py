@@ -120,6 +120,8 @@ def validate_message_text(text: str):
         raise MessageValidationError("Message cannot be empty")
     if len(text) > 1000:
         raise MessageValidationError("Message cannot contain > 1000 characters")
+    if text.isspace():
+        raise MessageValidationError("Message cannot contain whitespace only")
 
 
 def validate_text_and_attachments_logic(text: str, attachments: bool):
@@ -127,8 +129,6 @@ def validate_text_and_attachments_logic(text: str, attachments: bool):
         validate_message_text(text)
     if text is None and not attachments:
         raise MessageValidationError("Message cannot be empty")
-    if text.isspace():
-        raise MessageValidationError("Message cannot contain whitespace only")
 
 
 def check_if_reply_message_exists(message: db_models.Message | db_models.PrivateMessage):
