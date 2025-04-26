@@ -19,7 +19,6 @@ export const useLogin = () => {
       router.replace("/");
     } catch (error) {
       if (isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
-        console.error(error.response.data);
         return error.response.data.detail;
       } else {
         Alert.alert("Unexpected Error", "An unexpected error occurred. Please try again later.");

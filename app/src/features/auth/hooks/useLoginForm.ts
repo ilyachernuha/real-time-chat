@@ -25,7 +25,10 @@ export const useLoginForm = () => {
 
   const submit = handleSubmit(async (data) => {
     const error = await handleLogin(data);
-    if (error) setError("username", { message: error });
+    if (error) {
+      setError("username", { message: error });
+      setError("password", { message: " " });
+    }
   });
 
   return { control, submit, isSubmitting };
