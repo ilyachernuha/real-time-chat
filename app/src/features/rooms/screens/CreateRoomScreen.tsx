@@ -1,49 +1,15 @@
 import { DropdownBackdrop } from "@/components/dropdown/DropdownBackdrop";
-import { CreateRoomForm, CreateRoomFormData } from "@/features/rooms/screens/components/CreateRoomForm";
+import { CreateRoomForm } from "@/features/rooms/screens/components/CreateRoomForm";
 import CreateRoomHeader from "@/features/rooms/screens/components/CreateRoomHeader";
 import Icons from "@/components/Icons";
-import { isAxiosError } from "axios";
-import { useRouter, Stack } from "expo-router";
-import { Alert, View, StyleSheet } from "react-native";
+import { Stack } from "expo-router";
+import { View, StyleSheet } from "react-native";
 import { KeyboardAwareScrollView } from "react-native-keyboard-controller";
 import Colors from "@/constants/Colors";
-import { roomsApi } from "@/features/rooms/services/roomsApi";
-import { db, roomsCollection } from "@/index.native";
-import { useEffect } from "react";
-import { useDropdownStore } from "@/stores/dropdownStore";
+import { useCreateRoomForm } from "@/features/rooms/hooks/useCreateRoomForm";
 
 const CreateRoomScreen = () => {
-  const router = useRouter();
-
-  const handleSubmit = async (values: CreateRoomFormData) => {
-    try {
-      const { room_id } = await roomsApi.createRoom(values);
-
-      await db.write(async () => {
-        await roomsCollection.create((room) => {
-          room._raw.id = room_id;
-          room.title = values.title;
-          room._raw._status = "synced";
-        });
-      });
-
-      router.back();
-    } catch (error) {
-      if (isAxiosError(error) && error.response && error.response.data && error.response.data.detail) {
-        Alert.alert("Validation Error", error.response.data.detail);
-      } else {
-        console.error(error);
-        // Alert.alert("Unexpected Error", "An unexpected error occurred. Please try again later.");
-      }
-    }
-  };
-
-  useEffect(() => {
-    return () => {
-      useDropdownStore.getState().closeDropdown();
-    };
-  });
-
+  const { control, submit, isSubmitting } = useCreateRoomForm();
   return (
     <>
       <Stack.Screen options={{ presentation: "modal", headerShown: true, header: () => <CreateRoomHeader /> }} />
@@ -57,7 +23,7 @@ const CreateRoomScreen = () => {
           <Icons name="image" size={40} color={Colors.dark.text} />
         </View>
         <DropdownBackdrop />
-        <CreateRoomForm onSubmit={handleSubmit} />
+        <CreateRoomForm control={control} submit={submit} isSubmitting={isSubmitting} />
       </KeyboardAwareScrollView>
     </>
   );
