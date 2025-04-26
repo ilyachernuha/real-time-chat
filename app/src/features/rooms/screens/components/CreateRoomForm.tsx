@@ -5,72 +5,24 @@ import Icons from "@/components/Icons";
 import InputField from "@/components/InputFields";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
-import { RoomLanguages } from "@/features/rooms/constants/RoomLanguages";
-import { RoomThemes } from "@/features/rooms/constants/RoomThemes";
+import { themeOptions } from "@/features/rooms/constants/RoomThemes";
+import { CreateRoomFormData } from "@/features/rooms/validators/createRoomSchema";
 import { useDropdownStore } from "@/stores/dropdownStore";
-import { typedEntries } from "@/utils/typedEntries";
-import { zEnumFromObject } from "@/utils/zEnumFromObject";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useRef } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useRef } from "react";
+import { Control, Controller } from "react-hook-form";
 import { TextInput, View, Text, Pressable } from "react-native";
-import { z } from "zod";
 
-const formSchema = z.object({
-  title: z.string().min(1, "Too short room title").max(16, "Too long room title"),
-  description: z.string().max(16, "Too long room description").optional(),
-  theme: z.enum(RoomThemes, {
-    required_error: "Room theme is required",
-    invalid_type_error: "Invalid theme",
-    message: "Please choose room theme",
-  }),
-  languages: z.array(zEnumFromObject(RoomLanguages)),
-  tags: z.array(z.string()),
-  make_public: z.boolean(),
-});
-
-export type CreateRoomFormData = z.infer<typeof formSchema>;
-
-export type CreateRoomFormProps = {
-  onSubmit: (values: CreateRoomFormData) => void;
+type Props = {
+  control: Control<CreateRoomFormData>;
+  submit: () => Promise<void>;
+  isSubmitting: boolean;
 };
 
-export const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
+export const CreateRoomForm = ({ control, submit, isSubmitting }: Props) => {
   const titleRef = useRef<TextInput>(null);
   const descriptionRef = useRef<TextInput>(null);
 
-  const {
-    control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm<CreateRoomFormData>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      // @ts-ignore
-      theme: "",
-      languages: [],
-      tags: [],
-      make_public: false,
-    },
-  });
-
-  const { closeDropdown } = useDropdownStore();
-
-  const themeOptions = useMemo(() => {
-    return RoomThemes.map((theme) => ({
-      label: theme[0].toUpperCase() + theme.slice(1),
-      optionValue: theme,
-    }));
-  }, []);
-
-  const languageOptions = useMemo(() => {
-    return typedEntries(RoomLanguages).map(([code, name]) => ({
-      label: name,
-      optionValue: code,
-    }));
-  }, []);
+  const closeDropdown = useDropdownStore.getState().closeDropdown;
 
   return (
     <View style={{ gap: 24 }}>
@@ -78,14 +30,14 @@ export const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
         <Controller
           control={control}
           name="title"
-          render={({ field: { onChange, onBlur, value } }) => (
+          render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
             <InputField
               onChangeText={onChange}
               onFocus={closeDropdown}
               onBlur={onBlur}
               placeholder="Add room title"
               value={value}
-              error={errors.title?.message}
+              error={error?.message}
               ref={titleRef}
               returnKeyType="next"
               submitBehavior="submit"
@@ -97,18 +49,20 @@ export const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
         <Controller
           control={control}
           name="description"
-          render={({ field: { onChange, onBlur, value } }) => (
+          render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
             <InputField
               onFocus={closeDropdown}
               onChangeText={onChange}
               onBlur={onBlur}
               placeholder="Add room description"
               value={value}
-              error={errors.description?.message}
+              error={error?.message}
               ref={descriptionRef}
               returnKeyType="next"
               submitBehavior="submit"
               onSubmitEditing={() => descriptionRef.current?.blur()}
+              multiline
+              numberOfLines={7}
             />
           )}
         />
@@ -116,11 +70,11 @@ export const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
         <Controller
           control={control}
           name="theme"
-          render={({ field: { onChange, value } }) => (
+          render={({ field: { onChange, value }, fieldState: { error } }) => (
             <Dropdown
               id="theme"
               value={value && value[0].toLocaleUpperCase() + value.slice(1)}
-              error={errors.theme?.message}
+              error={error?.message}
               placeholder="Choose room theme"
               zIndex={1000}
             >
@@ -181,7 +135,7 @@ export const CreateRoomForm = ({ onSubmit }: CreateRoomFormProps) => {
           )}
         />
       </View>
-      <Button title="Create Room" onPress={handleSubmit(onSubmit)} disabled={isSubmitting} />
+      <Button title="Create Room" onPress={submit} disabled={isSubmitting} />
     </View>
   );
 };
