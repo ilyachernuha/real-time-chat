@@ -10,6 +10,7 @@ import Icons from "@/components/Icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useAuthStore } from "@/features/auth/services/authStore";
 import { useSocket } from "@/hooks/useSocket";
+import { useResetDatabase } from "@/hooks/useResetDatabase";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -29,6 +30,7 @@ export default function TabLayout() {
 
   const accessToken = useAuthStore((state) => state.accessToken);
   useSocket();
+  useResetDatabase();
 
   // Only require authentication within the (app) group's layout as users
   // need to be able to access the (auth) group and sign in again.

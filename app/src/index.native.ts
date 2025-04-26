@@ -40,3 +40,9 @@ export const db = new Database({
 export const roomsCollection = db.get<Room>(TableName.ROOMS);
 export const messagesCollection = db.get<Message>(TableName.MESSAGES);
 export const usersCollection = db.get<User>(TableName.USERS);
+
+export const resetDatabase = async () => {
+  await db.write(async () => {
+    await db.unsafeResetDatabase();
+  });
+};
