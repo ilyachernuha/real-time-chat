@@ -1,4 +1,3 @@
-// model/schema.js
 import { appSchema, tableSchema } from "@nozbe/watermelondb";
 
 export enum TableName {
