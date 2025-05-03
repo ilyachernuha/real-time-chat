@@ -118,7 +118,7 @@ async def private_message_to_dict(message: db_models.PrivateMessage, include_mes
 def validate_message_text(text: str):
     if not text:
         raise MessageValidationError("Message cannot be empty")
-    if len(text) > 1000:
+    if len(text) > 5000:
         raise MessageValidationError("Message cannot contain > 1000 characters")
     if text.isspace():
         raise MessageValidationError("Message cannot contain whitespace only")
