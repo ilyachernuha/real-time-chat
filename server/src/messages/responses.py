@@ -5,6 +5,7 @@ from ..responses_global import GenericConfirmation
 class MessageCreated(BaseModel):
     status: str
     message_id: UUID4
+    timestamp: float
 
 
 class Attachment(BaseModel):

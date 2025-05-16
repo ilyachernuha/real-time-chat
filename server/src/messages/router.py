@@ -84,7 +84,7 @@ async def send_message(body: schemas.Message = Depends(),
         await message_utils.add_attachments_to_message_and_upload_to_s3(db=db, message=message,
                                                                         attachments=body.attachments)
     await sio.emit_message(user=user, message=message, skip_session=session_id)
-    return {"status": "success", "message_id": message.message_id}
+    return {"status": "success", "message_id": message.message_id, "timestamp": message.timestamp.timestamp()}
 
 
 @router.post("/send_voice_message", response_model=responses.MessageCreated)
@@ -101,7 +101,7 @@ async def send_voice_message(body: schemas.VoiceMessage = Depends(),
     await message_utils.add_attachments_to_message_and_upload_to_s3(db=db, message=message,
                                                                     attachments=[body.voice])
     await sio.emit_message(user=user, message=message, skip_session=session_id)
-    return {"status": "success", "message_id": message.message_id}
+    return {"status": "success", "message_id": message.message_id, "timestamp": message.timestamp.timestamp()}
 
 
 @router.patch("/edit_message/{message_id}", response_model=responses.GenericConfirmation)
@@ -220,7 +220,7 @@ async def send_private_message(body: schemas.PrivateMessage = Depends(),
         await message_utils.add_attachments_to_message_and_upload_to_s3(db=db, message=message,
                                                                         attachments=body.attachments)
     await sio.emit_private_message(message=message, skip_session=session_id)
-    return {"status": "success", "message_id": message.message_id}
+    return {"status": "success", "message_id": message.message_id, "timestamp": message.timestamp.timestamp()}
 
 
 @router.post("/send_private_voice_message", response_model=responses.MessageCreated)
