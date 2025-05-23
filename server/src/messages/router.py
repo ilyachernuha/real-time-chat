@@ -8,6 +8,7 @@ from ..security import security_bearer
 from ..database import get_db
 from ..auth import auth_utils
 from ..rooms import room_utils
+from ..users import user_utils
 from ..sio import external as sio
 
 
@@ -277,6 +278,7 @@ async def block_user(body: schemas.BlockUser, credentials: HTTPAuthorizationCred
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     if await crud.get_user_ban(db=db, banner_id=user_id, banned_id=body.user_id) is not None:
         raise HTTPException(status_code=409, detail="User is already blocked")
+    await user_utils.get_user_if_exists(db=db, user_id=body.user_id)
     await crud.create_user_ban(db=db, banner_id=user_id, banned_id=body.user_id)
     return {"status": "success"}
 
@@ -286,7 +288,7 @@ async def unblock_user(body: schemas.BlockUser, credentials: HTTPAuthorizationCr
                        db: AsyncSession = Depends(get_db)):
     user_id = auth_utils.extract_user_id_from_access_token(credentials.credentials)
     if await crud.get_user_ban(db=db, banner_id=user_id, banned_id=body.user_id) is None:
-        raise HTTPException(status_code=409, detail="User is already blocked")
+        raise HTTPException(status_code=409, detail="User is not blocked")
     await crud.remove_user_ban(db=db, banner_id=user_id, banned_id=body.user_id)
     return {"status": "success"}
 
