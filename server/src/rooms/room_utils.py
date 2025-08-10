@@ -11,7 +11,7 @@ from .room_languages import RoomLanguage
 from .schemas import RoomUpdate, UserToAdd
 from ..s3 import S3
 from ..exceptions import FieldSubmitError
-from ..sio import external as sio
+from ..sio import external as sio, search
 from ..notifications import notification_utils
 
 
@@ -80,8 +80,16 @@ def get_language_list_from_codes(language_codes: set[str]):
     return [get_language_from_code(code) for code in language_codes]
 
 
+async def get_or_create_tag(db: AsyncSession, tag_name: str):
+    tag = await crud.get_tag_by_name(db, tag_name)
+    if tag is None:
+        tag = await crud.create_tag(db, tag_name)
+        search.TagTrie.add_tag(tag=tag_name)
+    return tag
+
+
 async def get_or_create_tags_from_string_set(db: AsyncSession, tag_str_set: set[str]):
-    return [await crud.get_or_create_tag(db, tag_str) for tag_str in tag_str_set]
+    return [await get_or_create_tag(db, tag_str) for tag_str in tag_str_set]
 
 
 def validate_room_update_data(update: RoomUpdate):

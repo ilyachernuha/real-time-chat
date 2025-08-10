@@ -8,6 +8,7 @@ from .database import init_db
 from .bg_tasks import scheduler
 from . import html_generator
 from .sio.sio import sio
+from .sio.search import UserTrie, TagTrie
 from .exceptions import AccessTokenValidationError, FieldSubmitError, MessageValidationError, PrivateMessageDeliveryError
 from .users.router import router as users_router
 from .auth.router import router as auth_router
@@ -35,6 +36,8 @@ async def startup():
     html_generator.preload_templates()
     scheduler.start()
     await S3.create_client()
+    await UserTrie.build()
+    await TagTrie.build()
 
 
 @app.on_event("shutdown")
