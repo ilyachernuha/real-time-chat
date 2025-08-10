@@ -11,7 +11,7 @@ from ..auth import auth_utils
 from .. import image_utils, file_utils
 from ..s3 import S3
 from ..security import security_bearer
-from ..sio import external as sio
+from ..sio import external as sio, search
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -68,6 +68,8 @@ async def change_name(body: schemas.UpdateName, credentials: HTTPAuthorizationCr
     user_utils.validate_name(body.new_name)
     user = await crud.update_user_name(db, user_id, body.new_name)
     await sio.update_user_name(user_id, user.name)
+    if (not user.is_guest):
+        search.UserTrie.update_user_name(username=(await user.awaitable_attrs.account_data).username, name=user.name)
     return {"status": "success", "new_name": user.name}
 
 
@@ -91,6 +93,9 @@ async def set_profile_picture(image: BytesIO = Depends(file_utils.verify_profile
     if old_profile_picture_id is not None:
         await user_utils.delete_profile_picture_from_s3(old_profile_picture_id)
     await sio.update_user_profile_picture(user_id=user.user_id, new_picture_id=new_profile_picture_id)
+    if (not user.is_guest):
+        search.UserTrie.update_user_profile_picture(username=(await user.awaitable_attrs.account_data).username,
+                                                 profile_picture_id=new_profile_picture_id)
     return {"status": "success", "profile_picture_id": new_profile_picture_id}
 
 
@@ -104,4 +109,7 @@ async def delete_profile_picture(credentials: HTTPAuthorizationCredentials = Dep
     await user_utils.delete_profile_picture_from_s3(profile_picture_id)
     await crud.update_profile_picture_id(db=db, user_id=user.user_id, new_profile_picture_id=None)
     await sio.update_user_profile_picture(user_id=user.user_id, new_picture_id=None)
+    if (not user.is_guest):
+        search.UserTrie.update_user_profile_picture(username=(await user.awaitable_attrs.account_data).username,
+                                                 profile_picture_id=None)
     return {"status": "success"}

@@ -186,13 +186,6 @@ async def get_tag_by_name(db: AsyncSession, tag_name: str):
     return await db.get(db_models.Tag, tag_name)
 
 
-async def get_or_create_tag(db: AsyncSession, tag_name: str):
-    tag = await get_tag_by_name(db, tag_name)
-    if tag is None:
-        tag = await create_tag(db, tag_name)
-    return tag
-
-
 async def delete_tag(db: AsyncSession, tag_name: str):
     tag = await get_tag_by_name(db, tag_name)
     await db.delete(tag)

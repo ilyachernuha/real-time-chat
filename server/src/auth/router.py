@@ -7,7 +7,7 @@ from . import crud, schemas, responses, auth_utils, email_utils
 from ..users import user_utils
 from ..database import get_db
 from ..security import security_basic, security_bearer
-from ..sio import external as sio
+from ..sio import external as sio, search
 from ..notifications import notification_utils
 from .. import html_generator
 
@@ -49,6 +49,7 @@ async def finish_registration(body: schemas.RegistrationConfirmation, db: AsyncS
     refresh_token = auth_utils.generate_refresh_token()
     session = await crud.create_session(db, user=user, refresh_token_hash=auth_utils.hash_refresh_token(refresh_token),
                                         device_info=application.device_info)
+    search.UserTrie.add_user(username=application.username, name=application.name, profile_picture_id=None)
     return auth_utils.generate_successful_login_dict(user_id=user.user_id, session_id=session.session_id,
                                                      refresh_token=refresh_token)
 
@@ -98,7 +99,9 @@ async def change_username(body: schemas.UpdateUsername, credentials: HTTPBasicCr
     user = await auth_utils.get_user_by_basic_auth(db, credentials)
     user_utils.validate_username(body.new_username)
     await auth_utils.check_if_username_is_available(db, body.new_username)
+    old_username = (await user.awaitable_attrs.account_data).username
     user = await crud.update_username(db, user.user_id, body.new_username)
+    search.UserTrie.change_username(old_username=old_username, new_username=body.new_username)
     return {"status": "success", "new_username": user.account_data.username}
 
 
@@ -233,6 +236,8 @@ async def finish_upgrade_account(body: schemas.UpgradeAccountConfirmation,
     await auth_utils.invalidate_all_applications_with_email(db, application.email)
     await crud.upgrade_user_account(db=db, user_id=user_id, username=application.username,
                                     hashed_password=application.hashed_password, email=application.email)
+    user = await crud.get_user_by_id(db=db, user_id=user_id)
+    search.UserTrie.add_user(username=application.username, name=user.name, profile_picture_id=user.profile_picture_id)
     return {"status": "success"}
 
 
