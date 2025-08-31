@@ -9,24 +9,24 @@ import Room from "@/model/Room";
 import User from "@/model/User";
 
 const adapter = new SQLiteAdapter({
-  schema,
-  // (You might want to comment it out for development purposes -- see Migrations documentation)
-  // migrations,
-  // (optional database name or file system path)
-  // dbName: 'myapp',
-  // (recommended option, should work flawlessly out of the box on iOS. On Android,
-  // additional installation steps have to be taken - disable if you run into issues...)
-  jsi: true /* Platform.OS === 'ios' */,
-  // (optional, but you should implement this method)
-  onSetUpError: (error) => {
-    // Database failed to load -- offer the user to reload the app or log out
-    console.error(error);
-  },
+    schema,
+    // (You might want to comment it out for development purposes -- see Migrations documentation)
+    // migrations,
+    // (optional database name or file system path)
+    // dbName: 'myapp',
+    // (recommended option, should work flawlessly out of the box on iOS. On Android,
+    // additional installation steps have to be taken - disable if you run into issues...)
+    jsi: true /* Platform.OS === 'ios' */,
+    // (optional, but you should implement this method)
+    onSetUpError: (error) => {
+        // Database failed to load -- offer the user to reload the app or log out
+        console.error(error);
+    },
 });
 
 export const db = new Database({
-  adapter,
-  modelClasses: [Message, Room, User],
+    adapter,
+    modelClasses: [Message, Room, User],
 });
 
 export const roomsCollection = db.get<Room>(TableName.ROOMS);
@@ -34,7 +34,7 @@ export const messagesCollection = db.get<Message>(TableName.MESSAGES);
 export const usersCollection = db.get<User>(TableName.USERS);
 
 export const resetDatabase = async () => {
-  await db.write(async () => {
-    await db.unsafeResetDatabase();
-  });
+    await db.write(async () => {
+        await db.unsafeResetDatabase();
+    });
 };
