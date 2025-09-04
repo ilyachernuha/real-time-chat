@@ -5,48 +5,48 @@ import { text, children, lazy, date, writer } from "@nozbe/watermelondb/decorato
 import { Associations } from "@nozbe/watermelondb/Model";
 
 type NewMessage = {
-  text: string;
-  messageId?: string;
-  userId: string;
-  timestamp: Date;
+    text: string;
+    messageId?: string;
+    userId: string;
+    timestamp: Date;
 };
 
 export default class Room extends Model {
-  static table = TableName.ROOMS;
+    static table = TableName.ROOMS;
 
-  static associations: Associations = {
-    [TableName.MESSAGES]: { type: "has_many", foreignKey: "room_id" },
-    [TableName.ROOM_USERS]: { type: "has_many", foreignKey: "room_id" },
-  };
+    static associations: Associations = {
+        [TableName.MESSAGES]: { type: "has_many", foreignKey: "room_id" },
+        [TableName.ROOM_USERS]: { type: "has_many", foreignKey: "room_id" },
+    };
 
-  @text("title") title!: string;
-  @date("last_synced_at") lastSyncedAt!: Date;
-  @date("last_message_at") lastMessageAt!: Date;
+    @text("title") title!: string;
+    @date("last_synced_at") lastSyncedAt!: Date;
+    @date("last_message_at") lastMessageAt!: Date;
 
-  @children(TableName.MESSAGES) messages!: Query<Message>;
+    @children(TableName.MESSAGES) messages!: Query<Message>;
 
-  @lazy unreadMessages = this.messages.extend(Q.where("is_read", false));
+    @lazy unreadMessages = this.messages.extend(Q.where("is_read", false));
 
-  @lazy sortedMessages = this.messages.extend(Q.sortBy("timestamp_at", Q.desc));
+    @lazy sortedMessages = this.messages.extend(Q.sortBy("timestamp_at", Q.desc));
 
-  @lazy lastMessage = this.sortedMessages.extend(Q.take(1));
+    @lazy lastMessage = this.sortedMessages.extend(Q.take(1));
 
-  @lazy
-  users = this.collections.get(TableName.USERS).query(Q.on(TableName.ROOM_USERS, "room_id", this.id));
+    @lazy
+    users = this.collections.get(TableName.USERS).query(Q.on(TableName.ROOM_USERS, "room_id", this.id));
 
-  @writer async addMessage({ text, timestamp, userId, messageId }: NewMessage) {
-    const newMessage = await this.collections.get<Message>(TableName.MESSAGES).create((message) => {
-      message.room.set(this);
-      message.text = text;
-      message.user.id = userId;
-      message.timestamp = timestamp;
-      if (messageId) {
-        message._raw.id = messageId;
-      }
-    });
-    await this.update((room) => {
-      room.lastMessageAt = timestamp;
-    });
-    return newMessage;
-  }
+    @writer async addMessage({ text, timestamp, userId, messageId }: NewMessage) {
+        const newMessage = await this.collections.get<Message>(TableName.MESSAGES).create((message) => {
+            message.room.set(this);
+            message.text = text;
+            message.user.id = userId;
+            message.timestamp = timestamp;
+            if (messageId) {
+                message.server_id = messageId;
+            }
+        });
+        await this.update((room) => {
+            room.lastMessageAt = timestamp;
+        });
+        return newMessage;
+    }
 }
