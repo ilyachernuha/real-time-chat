@@ -26,7 +26,7 @@ async def verify_image(image: UploadFile):
     if image.size > 2 * 1024 * 1024:
         raise HTTPException(status_code=413, detail="File too large")
     image_bytes = BytesIO(await image.read())
-    await run_in_threadpool(image_utils.validate_image(image_bytes))
+    await run_in_threadpool(image_utils.validate_image, image_bytes)
     return Attachment(type=AttachmentType.image, file=image_bytes)
 
 
