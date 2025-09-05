@@ -4,6 +4,8 @@ import {
   CreateRoomResponse,
   MessagesResponse,
   MyRoomResponse,
+  SendMessagePayload,
+  SendMessageResponse,
   SyncRoomMessagesRequest,
   SyncRoomMessagesResponse,
   UserResponse,
@@ -25,5 +27,14 @@ export const roomsApi = {
   },
   user: async (userId: string) => {
     return (await api.get<UserResponse>(`${ROOMS_ROUTES.USER}/${userId}`)).data;
+  },
+  sendMessage: async (message: FormData) => {
+    const response = await api.post<SendMessageResponse>(ROOMS_ROUTES.SEND_MESSAGE, message, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    console.log(response);
+    return response.data;
   },
 };

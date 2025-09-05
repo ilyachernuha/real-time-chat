@@ -43,7 +43,7 @@ export type Message = {
       type: string;
       presigned_url: string;
       original_name: string;
-    }
+    },
   ];
 };
 
@@ -66,4 +66,23 @@ export type UserResponse = {
   guest: boolean;
   username: string;
   profile_picture_id: string;
+};
+
+export type SendMessagePayload = {
+  text?: string;
+  room_id: string;
+  reply_message_id?: string;
+  attachments?: Attachment[];
+};
+
+export type SendMessageResponse = {
+  status: string;
+  message_id: string;
+  timestamp: number;
+};
+
+type Attachment = {
+  type: "file" | "image" | "video" | "audio" | "voice_message";
+  file: BytesIO;
+  filename: string;
 };

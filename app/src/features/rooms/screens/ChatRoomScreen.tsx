@@ -9,6 +9,10 @@ import { Observable } from "@nozbe/watermelondb/utils/rx";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useState } from "react";
 import { KeyboardAvoidingView } from "react-native-keyboard-controller";
+import * as ImagePicker from "expo-image-picker";
+import { roomsApi } from "../services/roomsApi";
+import { isAxiosError } from "axios";
+import { Alert } from "react-native";
 
 type Props = {
   room: Room;
@@ -26,6 +30,38 @@ export const ChatRoomScreenBase = ({ room }: Props) => {
     setText("");
   };
 
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (status !== "granted") {
+      Alert.alert("Permission required", "We need photo library access.");
+      return;
+    }
+
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (result.canceled) return;
+
+    const image = result.assets[0];
+
+    const formData = new FormData();
+
+    formData.append("room_id", room.id);
+    formData.append("attachments", { uri: image.uri, type: image.mimeType, name: image.fileName } as any);
+
+    try {
+      await roomsApi.sendMessage(formData);
+    } catch (error) {
+      if (isAxiosError(error)) {
+        console.log(error?.response?.data);
+      }
+    }
+  };
+
   return (
     <>
       <Stack.Screen
@@ -36,7 +72,12 @@ export const ChatRoomScreenBase = ({ room }: Props) => {
       />
       <KeyboardAvoidingView behavior="translate-with-padding" style={{ flex: 1 }}>
         <EnchancedMessagesList room={room} />
-        <MessageInput value={text} handleChangeText={handleChangeText} sendMessage={handleSendMessage} />
+        <MessageInput
+          value={text}
+          handleChangeText={handleChangeText}
+          sendMessage={handleSendMessage}
+          pickImage={pickImage}
+        />
       </KeyboardAvoidingView>
     </>
   );
