@@ -205,7 +205,7 @@ async def check_if_user_can_access_attachment(db: AsyncSession, user_id: uuid.UU
     if attachment.message_type == db_models.Attachment.MessageType.public:
         message = await attachment.awaitable_attrs.message
         room = await message.awaitable_attrs.room
-        if not await room_utils.check_if_user_is_room_member(db=db, user_id=user_id, room_id=room.room_id):
+        if not await room_utils.user_is_in_room(db=db, user_id=user_id, room_id=room.room_id):
             raise HTTPException(status_code=403, detail="You don't have access to this attachment")
     else:
         message = await attachment.awaitable_attrs.private_message
