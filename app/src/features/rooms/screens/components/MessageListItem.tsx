@@ -3,22 +3,21 @@ import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
 import Message from "@/model/Message";
 import User from "@/model/User";
-import { Relation } from "@nozbe/watermelondb";
 import { withObservables } from "@nozbe/watermelondb/react";
-import React from "react";
 import { View, Text } from "react-native";
 import { Image } from "expo-image";
+import Attachment from "@/model/Attachment";
+import { Relation } from "@nozbe/watermelondb";
+import { AttachmentImage } from "./AttachmentImage";
 
 type Props = {
   message: Message;
   user: User;
+  attachments: Attachment[];
   isOwn: boolean;
 };
 
-const blurhash =
-  "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
-
-export const MessageListItem = ({ message: { text, timestamp }, user, isOwn }: Props) => {
+export const MessageListItem = ({ message: { text, timestamp }, user, isOwn, attachments }: Props) => {
   const date = new Intl.DateTimeFormat("en-GB", {
     weekday: "short", // Tue
     day: "2-digit", // 06
@@ -42,34 +41,53 @@ export const MessageListItem = ({ message: { text, timestamp }, user, isOwn }: P
       <View
         style={{
           backgroundColor: isOwn ? Colors.dark.mainBlue : Colors.dark.mainDarkGrey,
-          paddingVertical: 8,
-          paddingHorizontal: 12,
           borderRadius: 16,
           maxWidth: "75%",
+          overflow: "hidden",
           gap: 4,
+          paddingTop: isOwn && attachments.length < 1 ? 8 : 0,
         }}
       >
-        {!isOwn && <Text style={[{ color: Colors.dark.secondaryLightGrey }, Fonts[12]]}>{user.name}</Text>}
-        <Image
-          style={{ flex: 1, width: "100%", backgroundColor: "#0553", aspectRatio: 1 / 1 }}
-          source="https://picsum.photos/seed/696/3000/2000"
-          placeholder={{ blurhash }}
-          contentFit="cover"
-          transition={1000}
-        />
-        <Text style={[{ color: Colors.dark.text }, Fonts.light_12]}>{text}</Text>
+        {!isOwn && (
+          <Text style={[{ paddingHorizontal: 12, paddingTop: 8, color: Colors.dark.secondaryLightGrey }, Fonts[12]]}>
+            {user.name}
+          </Text>
+        )}
+
+        {attachments.map((attachment) => {
+          return <AttachmentImage key={attachment.id} attachment={attachment} />;
+        })}
+
+        {text && (
+          <Text
+            style={[
+              {
+                paddingHorizontal: 12,
+                color: Colors.dark.text,
+              },
+              Fonts.light_12,
+            ]}
+          >
+            {text}
+          </Text>
+        )}
+
         <View
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
-            gap: 12,
             alignItems: "flex-end",
-            paddingTop: 4,
+            paddingHorizontal: 12,
+            paddingBottom: 8,
+            gap: 8,
           }}
         >
           <Text
             style={[
-              { color: isOwn ? Colors.dark.secondaryLightBlue : Colors.dark.secondaryLightGrey, flexGrow: 1 },
+              {
+                color: isOwn ? Colors.dark.secondaryLightBlue : Colors.dark.secondaryLightGrey,
+                flexGrow: 1,
+              },
               Fonts.light,
             ]}
           >
@@ -95,6 +113,7 @@ type InjectedProps = {
 const enhance = withObservables<OuterProps, InjectedProps>(["message"], ({ message }) => ({
   message,
   user: message.user,
+  attachments: message.attachments,
 }));
 
 export const EnhancedMessageListItem = enhance(MessageListItem);

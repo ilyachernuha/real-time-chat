@@ -1,10 +1,11 @@
 import { ROOMS_ROUTES } from "@/features/rooms/constants/roomsApiRoutes";
 import {
+  AttachmentResponse,
   CreateRoom,
   CreateRoomResponse,
+  GetMessageInfoResponse,
   MessagesResponse,
   MyRoomResponse,
-  SendMessagePayload,
   SendMessageResponse,
   SyncRoomMessagesRequest,
   SyncRoomMessagesResponse,
@@ -34,7 +35,14 @@ export const roomsApi = {
         "Content-Type": "multipart/form-data",
       },
     });
-    console.log(response);
+    return response.data;
+  },
+  getAttachment: async (id: string) => {
+    const response = await api.get<AttachmentResponse>(`${ROOMS_ROUTES.GET_ATTACHMENT}/${id}`);
+    return response.data;
+  },
+  getMessageInfo: async (message_id: string) => {
+    const response = await api.get<GetMessageInfoResponse>(`${ROOMS_ROUTES.MESSAGE_INFO}/${message_id}`);
     return response.data;
   },
 };

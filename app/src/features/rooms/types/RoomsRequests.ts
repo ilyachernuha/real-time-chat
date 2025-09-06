@@ -42,7 +42,7 @@ export type Message = {
       attachment_id: string;
       type: string;
       presigned_url: string;
-      original_name: string;
+      original_name?: string;
     },
   ];
 };
@@ -68,21 +68,27 @@ export type UserResponse = {
   profile_picture_id: string;
 };
 
-export type SendMessagePayload = {
-  text?: string;
-  room_id: string;
-  reply_message_id?: string;
-  attachments?: Attachment[];
-};
-
 export type SendMessageResponse = {
   status: string;
   message_id: string;
   timestamp: number;
 };
 
-type Attachment = {
-  type: "file" | "image" | "video" | "audio" | "voice_message";
-  file: BytesIO;
-  filename: string;
+type AttachmentType = "file" | "image" | "video" | "audio" | "voice_message";
+
+export type AttachmentResponse = {
+  attachment_id: string;
+  type: AttachmentType;
+  presigned_url: string;
+  original_name?: string | null;
+};
+
+export type GetMessageInfoResponse = {
+  user_id: string;
+  room_id: string;
+  reply_to?: string | null;
+  text?: string | null;
+  created_at: number;
+  updated_at: number;
+  attachments: AttachmentResponse[];
 };
