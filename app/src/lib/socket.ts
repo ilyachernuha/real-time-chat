@@ -34,7 +34,7 @@ type ReceiveMessageEventData = {
   text: string;
   room_id: string;
   timestamp: number;
-  attachments: Attachment[];
+  attachments?: Attachment[];
 };
 
 type SendMessageEventData = {

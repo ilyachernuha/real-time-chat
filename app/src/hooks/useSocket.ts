@@ -34,8 +34,6 @@ export const useSocket = () => {
     });
     socket.on("message", async ({ message_id, text, user: { id: user_id }, timestamp, room_id, attachments }) => {
       const date = new Date(timestamp * 1000);
-      const room = await roomsCollection.find(room_id);
-
       await db.write(async () => {
         const messageUpdate = messagesCollection.prepareCreate((msg) => {
           msg.room.id = room_id;
@@ -44,6 +42,8 @@ export const useSocket = () => {
           msg.text = text;
           msg.timestamp = date;
         });
+
+        attachments = attachments ?? [];
 
         const attachmentUpdates = attachments.map(({ original_name, attachment_id, type }) => {
           return attachmentsCollection.prepareCreate((a) => {
@@ -54,11 +54,13 @@ export const useSocket = () => {
           });
         });
 
-        const roomUpdate = room.prepareUpdate((room) => {
-          room.lastMessageAt = date;
+        const room = await roomsCollection.find(room_id);
+
+        const roomUpdate = room.prepareUpdate((r) => {
+          r.lastMessageAt = date;
         });
 
-        await db.batch([messageUpdate, roomUpdate, ...attachmentUpdates]);
+        await db.batch([messageUpdate, ...attachmentUpdates, roomUpdate]);
       });
     });
 
