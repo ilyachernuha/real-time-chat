@@ -4,4 +4,7 @@ export const ROOMS_ROUTES = {
   MESSAGES: "/messages/old_messages",
   SYNC_ROOM_MESSAGES: "/messages/room_updates",
   USER: "/users/profile",
+  SEND_MESSAGE: "/messages/send_message",
+  GET_ATTACHMENT: "/messages/attachment",
+  MESSAGE_INFO: "/messages/message_info",
 };

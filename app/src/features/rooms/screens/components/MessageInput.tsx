@@ -1,18 +1,19 @@
 import Icons from "@/components/Icons";
 import Colors from "@/constants/Colors";
 import Fonts from "@/constants/Fonts";
-import { Pressable, PressableProps, StyleSheet, TextInput, TextInputProps, View } from "react-native";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
 type Props = {
   value: string;
   handleChangeText: (value: string) => void;
   sendMessage: () => void;
+  pickImage: () => void;
 };
 
-export const MessageInput = ({ value, handleChangeText, sendMessage }: Props) => {
+export const MessageInput = ({ value, handleChangeText, sendMessage, pickImage }: Props) => {
   return (
     <View style={styles.container}>
-      <Pressable style={styles.button}>
+      <Pressable style={styles.button} onPress={pickImage}>
         <Icons name="attach" color={Colors.dark.secondaryLightGrey} size={24} />
       </Pressable>
 

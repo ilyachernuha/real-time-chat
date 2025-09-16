@@ -1,54 +1,52 @@
 import { useAuthStore } from "@/features/auth/services/authStore";
 import { EnhancedMessageListItem } from "@/features/rooms/screens/components/MessageListItem";
 import Message from "@/model/Message";
-import Room from "@/model/Room";
-import { Query } from "@nozbe/watermelondb";
 import { withObservables } from "@nozbe/watermelondb/react";
-import { FlatList, Text, View } from "react-native";
+import { FlatList, ListRenderItemInfo, StyleSheet } from "react-native";
 
 type Props = {
   messages: Message[];
 };
 
-export const MessagesList = ({ messages }: Props) => {
-  const userId = useAuthStore((state) => state.user?.id);
+const keyExtractor = (m: Message) => m.id;
 
+const renderItem = ({ item }: ListRenderItemInfo<Message>) => {
+  const isOwn = item.user.id === useAuthStore.getState().user?.id;
+  return <EnhancedMessageListItem message={item} isOwn={isOwn} />;
+};
+
+const mvp = { minIndexForVisible: 0, autoscrollToTopThreshold: 48 };
+
+export const MessagesList = ({ messages }: Props) => {
   return (
     <FlatList
-      // style={{
-      //   backgroundColor: "green",
-      // }}
-      contentContainerStyle={{
-        paddingTop: 80,
-        paddingBottom: 16,
-        paddingHorizontal: 8,
-        // justifyContent: "flex-end",
-        // flexGrow: 1,
-        // backgroundColor: "red",
-      }}
-      ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
       data={messages}
-      renderItem={({ item }) => <EnhancedMessageListItem message={item} isOwn={item.user.id === userId} />}
-      keyExtractor={(message) => message.id}
-      ListEmptyComponent={<Text style={{ color: "red" }}>No messages available</Text>}
-      // initialNumToRender={15}
-      // maxToRenderPerBatch={10}
-      // windowSize={5}
-      // removeClippedSubviews={true}
       inverted
+      keyExtractor={keyExtractor}
+      renderItem={renderItem}
+      removeClippedSubviews={false}
+      windowSize={10}
+      maxToRenderPerBatch={8}
+      updateCellsBatchingPeriod={50}
+      initialNumToRender={14}
+      scrollEventThrottle={16}
+      maintainVisibleContentPosition={mvp}
+      showsVerticalScrollIndicator={false}
+      showsHorizontalScrollIndicator={false}
+      decelerationRate="fast"
+      contentContainerStyle={styles.content}
     />
   );
 };
 
-type OuterProps = {
-  room: Room;
-};
+const styles = StyleSheet.create({
+  content: {
+    paddingBottom: 16,
+    paddingTop: 80,
+  },
+});
 
-type InjectedProps = {
-  messages: Query<Message>;
-};
-
-const enhance = withObservables<OuterProps, InjectedProps>(["room"], ({ room }) => ({
+const enhance = withObservables(["room"], ({ room }) => ({
   messages: room.sortedMessages,
 }));
 

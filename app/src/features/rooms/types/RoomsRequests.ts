@@ -24,7 +24,8 @@ export type CreateRoomResponse = {
 export type Room = {
   room_id: string;
   title: string;
-  room_picture_id: string;
+  description?: string | null;
+  room_picture_id?: string | null;
 };
 
 export type MyRoomResponse = {
@@ -42,8 +43,8 @@ export type Message = {
       attachment_id: string;
       type: string;
       presigned_url: string;
-      original_name: string;
-    }
+      original_name?: string;
+    },
   ];
 };
 
@@ -66,4 +67,29 @@ export type UserResponse = {
   guest: boolean;
   username: string;
   profile_picture_id: string;
+};
+
+export type SendMessageResponse = {
+  status: string;
+  message_id: string;
+  timestamp: number;
+};
+
+type AttachmentType = "file" | "image" | "video" | "audio" | "voice_message";
+
+export type AttachmentResponse = {
+  attachment_id: string;
+  type: AttachmentType;
+  presigned_url: string;
+  original_name?: string | null;
+};
+
+export type GetMessageInfoResponse = {
+  user_id: string;
+  room_id: string;
+  reply_to?: string | null;
+  text?: string | null;
+  created_at: number;
+  updated_at: number;
+  attachments: AttachmentResponse[];
 };

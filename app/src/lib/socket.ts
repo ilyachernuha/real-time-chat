@@ -21,12 +21,20 @@ type User = {
   profile_picture_id: string;
 };
 
+type Attachment = {
+  attachment_id: string;
+  type: "image" | "video";
+  presigned_url: string;
+  original_name: string | null;
+};
+
 type ReceiveMessageEventData = {
   message_id: string;
   user: User;
   text: string;
   room_id: string;
   timestamp: number;
+  attachments?: Attachment[];
 };
 
 type SendMessageEventData = {
@@ -61,10 +69,10 @@ type FindRoomsEventRespone = {
 
 type FindRoomsEvent = (
   data: FindRoomsEventData,
-  ack?: (status: Status, response: FindRoomsEventRespone) => void
+  ack?: (status: Status, response: FindRoomsEventRespone) => void,
 ) => void;
 
 type SendMessageEvent = (
   data: SendMessageEventData,
-  ack?: (status: Status, response: SendMessageEventResponse) => void
+  ack?: (status: Status, response: SendMessageEventResponse) => void,
 ) => void;
