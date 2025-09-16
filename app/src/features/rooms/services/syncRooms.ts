@@ -51,13 +51,15 @@ export const syncRooms = async () => {
       const operations = [];
 
       // 5.1 Prepare room creations/updates
-      const roomOperations = remoteRooms.map(({ room_id, title }) => {
+      const roomOperations = remoteRooms.map(({ room_id, title, description, room_picture_id }) => {
         const existing = existingRooms.get(room_id);
         const timestamp = newSyncTimestamps.get(room_id);
 
         if (existing) {
           return existing.prepareUpdate((room) => {
             room.title = title;
+            room.description = description;
+            room.pictureId = room_picture_id;
             if (timestamp) {
               room.lastSyncedAt = new Date(timestamp);
               room.lastMessageAt = new Date(timestamp);
@@ -67,7 +69,8 @@ export const syncRooms = async () => {
           return roomsCollection.prepareCreate((room) => {
             room._raw.id = room_id;
             room.title = title;
-            room._raw._status = "synced";
+            room.description = description;
+            room.pictureId = room_picture_id;
             if (timestamp) {
               room.lastSyncedAt = new Date(timestamp);
               room.lastMessageAt = new Date(timestamp);

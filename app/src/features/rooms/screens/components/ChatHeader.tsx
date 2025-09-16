@@ -1,13 +1,15 @@
 import { useRouter } from "expo-router";
 import BackButton from "@/components/buttons/BackButton";
 import { Header } from "@/components/Header";
-import { Image } from "react-native";
+import { Image } from "expo-image";
+import API from "@/constants/API";
+import Room from "@/model/Room";
 
 type Props = {
-  title: string;
+  room: Room;
 };
 
-export const ChatHeader = ({ title }: Props) => {
+export const ChatHeader = ({ room: { title, pictureId } }: Props) => {
   const router = useRouter();
 
   return (
@@ -16,10 +18,13 @@ export const ChatHeader = ({ title }: Props) => {
       left={<BackButton onPress={() => router.back()}>Back</BackButton>}
       right={
         <Image
-          source={require("../../../../../assets/images/icon.png")}
-          width={44}
-          height={44}
-          style={{ width: 44, height: 44, borderRadius: 12 }}
+          source={
+            pictureId
+              ? `${API.apiURL}/room-pictures/100p/${pictureId}.jpeg`
+              : require("../../../../../assets/images/icon.png")
+          }
+          style={{ width: 44, height: 44, borderRadius: 12, aspectRatio: 1 / 1 }}
+          placeholder={require("../../../../../assets/images/icon.png")}
         />
       }
     />

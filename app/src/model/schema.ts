@@ -9,13 +9,14 @@ export enum TableName {
 }
 
 export default appSchema({
-  version: 23,
+  version: 24,
   tables: [
     tableSchema({
       name: TableName.ROOMS,
       columns: [
         { name: "title", type: "string" },
         { name: "description", type: "string", isOptional: true },
+        { name: "picture_id", type: "string", isOptional: true },
         { name: "last_synced_at", type: "number" },
         { name: "last_message_at", type: "number" },
       ],

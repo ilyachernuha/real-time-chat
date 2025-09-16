@@ -94,7 +94,7 @@ export const ChatRoomScreenBase = ({ room }: Props) => {
       <Stack.Screen
         options={{
           headerShown: true,
-          header: () => <ChatHeader title={room?.title} />,
+          header: () => <ChatHeader room={room} />,
         }}
       />
       <KeyboardAvoidingView behavior="translate-with-padding" style={{ flex: 1 }}>

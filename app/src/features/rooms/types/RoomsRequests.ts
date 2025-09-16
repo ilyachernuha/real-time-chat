@@ -24,7 +24,8 @@ export type CreateRoomResponse = {
 export type Room = {
   room_id: string;
   title: string;
-  room_picture_id: string;
+  description?: string | null;
+  room_picture_id?: string | null;
 };
 
 export type MyRoomResponse = {

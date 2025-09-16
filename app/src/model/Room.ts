@@ -1,7 +1,7 @@
 import Message from "@/model/Message";
 import { TableName } from "@/model/schema";
 import { Model, Q, Query } from "@nozbe/watermelondb";
-import { text, children, lazy, date, writer } from "@nozbe/watermelondb/decorators";
+import { text, children, lazy, date, writer, field } from "@nozbe/watermelondb/decorators";
 import { Associations } from "@nozbe/watermelondb/Model";
 import Attachment from "./Attachment";
 
@@ -28,6 +28,10 @@ export default class Room extends Model {
   };
 
   @text("title") title!: string;
+  @text("description") description?: string | null;
+
+  @field("picture_id") pictureId?: string | null;
+
   @date("last_synced_at") lastSyncedAt!: Date;
   @date("last_message_at") lastMessageAt!: Date;
 
