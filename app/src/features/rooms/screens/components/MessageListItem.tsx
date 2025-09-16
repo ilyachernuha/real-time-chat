@@ -1,14 +1,30 @@
-import Icons from "@/components/Icons";
-import Colors from "@/constants/Colors";
-import Fonts from "@/constants/Fonts";
 import Message from "@/model/Message";
 import User from "@/model/User";
 import { withObservables } from "@nozbe/watermelondb/react";
-import { View, Text } from "react-native";
-import { Image } from "expo-image";
+import { View, Text, StyleSheet } from "react-native";
 import Attachment from "@/model/Attachment";
-import { Relation } from "@nozbe/watermelondb";
+import { memo } from "react";
+import Colors from "@/constants/Colors";
+import Fonts from "@/constants/Fonts";
+import { Image } from "expo-image";
 import { AttachmentImage } from "./AttachmentImage";
+import Icons from "@/components/Icons";
+
+function formatDate(date: Date, locale = undefined) {
+  const options = {
+    weekday: "short", // Tue / Di / mar / etc
+    day: "2-digit", // 06
+    month: "2-digit", // 02
+    hour: "2-digit", // 18
+    minute: "2-digit", // 28
+    hour12: false, // 24h clock
+  } as Intl.DateTimeFormatOptions;
+
+  const parts = new Intl.DateTimeFormat(locale, options).formatToParts(date);
+  const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+
+  return `${map.weekday} ${map.day}.${map.month} ${map.hour}:${map.minute}`;
+}
 
 type Props = {
   message: Message;
@@ -17,105 +33,105 @@ type Props = {
   isOwn: boolean;
 };
 
-export const MessageListItem = ({ message: { text, timestamp }, user, isOwn, attachments }: Props) => {
-  const date = new Intl.DateTimeFormat("en-GB", {
-    weekday: "short", // Tue
-    day: "2-digit", // 06
-    month: "2-digit", // 02
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: false,
-  })
-    .format(timestamp)
-    .replaceAll(", ", " ");
-
+export const MessageListItem = memo(({ message: { text, timestamp }, isOwn, user, attachments }: Props) => {
   return (
-    <View style={{ flexDirection: "row", gap: 4, alignSelf: isOwn ? "flex-end" : "flex-start" }}>
-      {!isOwn && (
-        <Image
-          source={require("../../../../../assets/images/icon.png")}
-          style={{ width: 44, height: 44, borderRadius: 12 }}
-        />
-      )}
-
+    <View style={[styles.row, isOwn ? styles.rowOwn : styles.rowOther]}>
+      {!isOwn && <Image source={require("../../../../../assets/images/icon.png")} style={styles.profilePicture} />}
       <View
-        style={{
-          backgroundColor: isOwn ? Colors.dark.mainBlue : Colors.dark.mainDarkGrey,
-          borderRadius: 16,
-          maxWidth: "75%",
-          overflow: "hidden",
-          gap: 4,
-          paddingTop: isOwn && attachments.length < 1 ? 8 : 0,
-        }}
+        style={[
+          styles.bubble,
+          isOwn ? styles.bubbleOwn : styles.bubbleOther,
+          { paddingTop: isOwn && attachments.length < 1 ? 8 : 0 },
+        ]}
       >
-        {!isOwn && (
-          <Text style={[{ paddingHorizontal: 12, paddingTop: 8, color: Colors.dark.secondaryLightGrey }, Fonts[12]]}>
-            {user.name}
-          </Text>
-        )}
+        {!isOwn && <UserName text={user.name} />}
 
-        {attachments.map((attachment) => {
-          return <AttachmentImage key={attachment.id} attachment={attachment} />;
-        })}
+        {attachments &&
+          attachments.map((attachment) => <AttachmentImage key={attachment.id} attachment={attachment} />)}
 
-        {text && (
-          <Text
-            style={[
-              {
-                paddingHorizontal: 12,
-                color: Colors.dark.text,
-              },
-              Fonts.light_12,
-            ]}
-          >
-            {text}
-          </Text>
-        )}
-
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "flex-end",
-            paddingHorizontal: 12,
-            paddingBottom: 8,
-            gap: 8,
-          }}
-        >
-          <Text
-            style={[
-              {
-                color: isOwn ? Colors.dark.secondaryLightBlue : Colors.dark.secondaryLightGrey,
-                flexGrow: 1,
-              },
-              Fonts.light,
-            ]}
-          >
-            {date}
-          </Text>
-
-          <Icons name="message-read" size={16} color={isOwn ? Colors.dark.text : "transparent"} />
+        {text && <TextSelectable text={text} />}
+        <View style={styles.footer}>
+          <MessageDate date={timestamp} isOwn={isOwn} />
+          {isOwn && <Icons name="message-read" size={16} color={Colors.dark.text} />}
         </View>
       </View>
     </View>
   );
-};
+});
 
-type OuterProps = {
-  message: Message;
-};
+const styles = StyleSheet.create({
+  row: {
+    padding: 8,
+    width: "100%",
+    flexDirection: "row",
+    gap: 4,
+  },
+  rowOwn: { justifyContent: "flex-end" },
+  rowOther: { justifyContent: "flex-start" },
+  bubble: {
+    maxWidth: "75%",
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  bubbleOwn: {
+    backgroundColor: Colors.dark.mainBlue,
+  },
+  bubbleOther: {
+    backgroundColor: Colors.dark.mainDarkGrey,
+  },
+  profilePicture: {
+    aspectRatio: 1 / 1,
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+  },
+  footer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 12,
+    paddingBottom: 8,
+    paddingTop: 12,
+    gap: 12,
+  },
+});
 
-type InjectedProps = {
-  message: Message;
-  user: Relation<User>;
-};
+const textStyle = StyleSheet.create({ t: { color: Colors.dark.text, ...Fonts.light_12, paddingHorizontal: 12 } });
+const TextSelectable = memo(({ text }: { text: string }) => {
+  return (
+    <Text style={textStyle.t} selectable allowFontScaling>
+      {text}
+    </Text>
+  );
+});
 
-const enhance = withObservables<OuterProps, InjectedProps>(["message"], ({ message }) => ({
+const userNameStyle = StyleSheet.create({
+  t: { color: Colors.dark.secondaryLightGrey, ...Fonts["12"], paddingHorizontal: 12, paddingTop: 8, paddingBottom: 4 },
+});
+const UserName = memo(({ text }: { text: string }) => {
+  return (
+    <Text style={userNameStyle.t} allowFontScaling>
+      {text}
+    </Text>
+  );
+});
+
+const messageDateStyle = StyleSheet.create({
+  t: { ...Fonts.light },
+  own: { color: Colors.dark.secondaryLightBlue },
+  other: { color: Colors.dark.secondaryLightGrey },
+});
+const MessageDate = memo(({ date, isOwn }: { date: Date; isOwn: boolean }) => {
+  return (
+    <Text style={[messageDateStyle.t, isOwn ? messageDateStyle.own : messageDateStyle.other]} allowFontScaling>
+      {formatDate(date)}
+    </Text>
+  );
+});
+
+const enhance = withObservables(["message"], ({ message }) => ({
   message,
   user: message.user,
   attachments: message.attachments,
 }));
 
 export const EnhancedMessageListItem = enhance(MessageListItem);
-
-// export const MemoizedMessageListItem = React.memo(MessageListItem);

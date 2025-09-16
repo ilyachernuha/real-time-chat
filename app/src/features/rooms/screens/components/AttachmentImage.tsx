@@ -4,9 +4,6 @@ import { useEffect, useState } from "react";
 import { roomsApi } from "../../services/roomsApi";
 import Attachment from "@/model/Attachment";
 
-const blurhash =
-  "|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj[";
-
 type Props = {
   attachment: Attachment;
 };
@@ -61,9 +58,7 @@ export const AttachmentImage = ({ attachment: { id, server_id, uri: localUri } }
     <Image
       style={{ flex: 1, width: "100%", backgroundColor: "#0553", aspectRatio: 1 / 1 }}
       source={{ uri: source, cacheKey: id }}
-      // placeholder={{ blurhash }}
       contentFit="cover"
-      transition={500}
     />
   );
 };
